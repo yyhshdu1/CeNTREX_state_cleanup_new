@@ -111,7 +111,7 @@ frequency_cleanup = 1.0-frequency_remaining
 print("remaining-population shape [power, detuning] =", frequency_remaining.shape)
 """),
         code("""frequency_file = save_scan_hdf(
-    "SPB_J1_cleanup_scans.h5",
+    "results/SPB_J1_cleanup_scans.h5",
     "power_detuning_no_phase_eom",
     frequency_remaining,
     axes={
@@ -160,7 +160,7 @@ geometry_cleanup = 1.0-geometry_remaining
 print("remaining-population shape [y position, beam diameter] =", geometry_remaining.shape)
 """),
         code("""geometry_file = save_scan_hdf(
-    "SPB_J1_cleanup_scans.h5",
+    "results/SPB_J1_cleanup_scans.h5",
     "vertical_position_beam_diameter",
     geometry_remaining,
     axes={
@@ -192,7 +192,7 @@ plt.show()
         md("""### HDF5 readback example
 
 Loading does not require recreating the OBE system. It returns the result, axes, units, fixed conditions, model information and solver settings together."""),
-        code("""saved_run = load_scan_hdf("SPB_J1_cleanup_scans.h5", "power_detuning_no_phase_eom")
+        code("""saved_run = load_scan_hdf("results/SPB_J1_cleanup_scans.h5", "power_detuning_no_phase_eom")
 print(saved_run["results"].shape)
 print(saved_run["units"])
 print(saved_run["fixed_parameters"])
@@ -281,7 +281,7 @@ detuning_cleanup = 1.0-detuning_remaining
 print("remaining-population shape [F′=3 detuning, F′=4 detuning] =", detuning_remaining.shape)
 """),
         code("""scan_file = save_scan_hdf(
-    "SPB_J2_cleanup_scans.h5",
+    "results/SPB_J2_cleanup_scans.h5",
     "Fprime3_Fprime4_detuning",
     detuning_remaining,
     axes={
@@ -306,7 +306,7 @@ ax.set(xlabel="F′=4 carrier detuning / MHz", ylabel="F′=3 carrier detuning /
 plt.show()
 """),
         md("""### HDF5 readback example"""),
-        code("""saved_run = load_scan_hdf("SPB_J2_cleanup_scans.h5", "Fprime3_Fprime4_detuning")
+        code("""saved_run = load_scan_hdf("results/SPB_J2_cleanup_scans.h5", "Fprime3_Fprime4_detuning")
 print(saved_run["results"].shape)
 print(saved_run["units"])
 print(saved_run["fixed_parameters"])
