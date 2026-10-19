@@ -1,5 +1,120 @@
 # Changelog
 
+## 0.3.0
+
+### Added
+
+- Optional CuPy CUDA fixed-step Lindblad solvers (`fixed_tsit5` and `fixed_ck54`),
+  with batched evolution, CUDA graphs, switching-boundary clipping, and independent
+  full-density snapshots. Install the `cuda` or `cuda13` extra. Fixed-step accuracy
+  is controlled by timestep validation, not ODE tolerances.
+- Opt-in exact density-coordinate reduction and reusable periodic full-density
+  propagators for compatible CUDA problems.
+- Native adjoint observable responses and full-density batch outputs.
+- Automatic CUDA coefficient caching and Hamiltonian component sharing, with
+  independent opt-out controls and conservative fallbacks. A matched 1024-trajectory
+  varying-height cleanup scan improved from 127.6 to 74.7 seconds (1.71 times faster);
+  this additional sharing did not substantially accelerate the tested RC fixture.
+
+### Performance
+
+- Optimize native CPU Hamiltonian assembly, decay updates, output packing, and
+  SIMD/FMA kernels, retaining explicit kernel selection and portable fallbacks.
+- Reuse static dense projections and vectorize full-density reconstruction.
+- Document matched solver benchmarks and density/coherence accuracy checks.
+
+### Fixed
+
+- Use the experimental TlF optical reference, 1103.435082708 THz, for Doppler
+  defaults, while retaining explicit frequency overrides.
+- Preserve mF sectors in exact-zero-field diagonalization to avoid arbitrary
+  mixing within degenerate subspaces.
+
+### Documentation
+
+- Expand CUDA setup, solver controls, performance evidence, and validation guidance.
+- Improve transition-diagram energy axes, overlap stacking, and paired level tables.
+
+## 0.2.10
+
+### Added
+
+- Python 3.14 in the Linux and Windows test matrix and Linux, macOS, and
+  Windows wheel builds.
+
+### Fixed
+
+- Hamiltonian state compaction accepts imaginary diagonal residuals within
+  floating-point roundoff and uses the real mean energy. Significant imaginary
+  energies still raise an error. The tolerance scales with the full numeric
+  diagonal spectrum to account for large energy origins.
+
+### Documentation
+
+- Clarify that raw Hamiltonian dataclass matrices use Hz, while generated
+  Hamiltonian functions and downstream OBE calculations use rad/s.
+
+## 0.2.9
+
+### Added
+
+- `solver="dense_eig"` for time-independent Lindblad problems, with shared
+  eigendecomposition across initial populations, analytic cumulative photon
+  integrals, and full density-matrix reconstruction.
+- `DenseLindbladSession` reuses CPU worker processes and prepared plans across
+  repeated scans. CPU workers default to physical cores with one BLAS thread each.
+- Optional `evolution_device="cuda"` evaluates observable projections using
+  PyTorch after CPU eigendecomposition; install the `gpu` extra to enable it.
+- Static-model validation rejects time-dependent parameters and unsupported
+  solver options. Conditioning and residual checks reject unreliable spectral
+  factorizations with guidance to use an ODE solver.
+
+### Performance
+
+- The R(2) F'=4 validation scan (four independent populations, two powers,
+  three polarizations, 901 detunings, and 1401 sample times) completed in
+  13 min 57 s versus 9 h 45 min with the existing ODE solver on an eight-core
+  Ryzen 7 9800X3D with optional RTX 5070 Ti projection, about 42 times faster.
+  Maximum cumulative-photon discrepancy was 3.42e-10. Speedup depends on the
+  model and output; existing ODE defaults remain unchanged.
+
+## 0.2.8
+
+### Fixed
+
+- X-state Hamiltonian construction now pads the retained parent-J range by two
+  rotational levels on each side, clipped at J=0. This restores omitted lower-J
+  Stark mixing without adding those states to the retained OBE system. Explicit
+  construction bounds override each side independently and must cover every
+  requested parent J and respect the electronic state's physical lower limit.
+- Excited-state matching uses one-to-one assignment in the Omega-to-parity path,
+  preventing duplicate retained eigenstates at transverse electric fields.
+- Custom `H_func_X`, `H_func_B`, and `transform` arguments are honored by the
+  transition-based OBE builder. Custom B physics participates in ground-level
+  discovery as well as final construction. Hamiltonian dimensions, finite values,
+  Hermiticity, and square/unitary X transforms are validated before diagonalization.
+- Microwave-only OBE construction supports empty excited-state and decay blocks;
+  automatic compaction retains both driven X-state rotational manifolds.
+- Additional decay-channel indices remain aligned through level insertion and
+  compaction, including the full internal Hamiltonian and reference transform.
+- `normalize_pol` is honored for automatic main-pair selection.
+- Spontaneous-emission branching ratios sum squared dipole amplitudes over three
+  orthogonal polarizations instead of using a coherent fake unpolarized vector.
+  This restores rotational invariance for mF-mixed states and corrects the
+  resulting collapse-operator population rates. A nonempty final-state list with
+  zero total dipole strength now raises `ValueError` rather than returning NaNs.
+
+### Compatibility notes
+
+- Rebuild cached Hamiltonians, OBE systems, and prepared problems. Missing lower-J
+  mixing can materially change ground-state energies and individual couplings at
+  experimental electric fields; corrected decay branching can change optical
+  pumping in tilted magnetic fields. These are correctness fixes, not an API redesign.
+- Custom Hamiltonian callbacks return rad/s matrices in the full construction
+  basis, with matching explicit J bounds and the package's basis ordering.
+- Unique one-shot matching does not replace adiabatic tracking at strong or
+  reoriented fields; check rotational-basis convergence at large electric fields.
+
 ## 0.2.5
 
 ### Fixed

@@ -49,6 +49,9 @@ default Windows console codec (cp1252) raises `UnicodeEncodeError`.
 - **Electric field `E`: V/cm.** **Magnetic field `B`: Gauss.** Both are 3-vectors, `[Ex, Ey, Ez]`.
 - **All energies, detunings and Rabi rates are angular frequencies in rad/s.** To scan a detuning
   in MHz: `2 * np.pi * 1e6 * detuning_MHz`. To read one out: `value / (2 * np.pi * 1e6)`.
+  **One exception, see the gotcha below:** the raw Hamiltonian *dataclass attributes*
+  (`H.Hff`, `H.Hrot`, `H.HSz`, `H.HZz`, …) are in Hz. The `generate_*_hamiltonian_*_function`
+  builders multiply by 2π, so `H(E, B)` and everything downstream of it follows the rule above.
 - Use `B=[0, 0, 1e-5]` rather than exactly zero — X states become degenerate below roughly that,
   and degenerate eigenvectors break state identification.
 - Primed quantum numbers are the **excited** state. `P(2) F1'=3/2 F'=1` names the *ground* J in
@@ -146,6 +149,22 @@ needed.
 
 Each of these produces plausible-looking but wrong output rather than an error.
 
+- **Hamiltonian dataclass attributes are in Hz; the generated `H(E, B)` functions are in
+  rad/s.** `generate_uncoupled_hamiltonian_X` / `generate_coupled_hamiltonian_B` return a
+  dataclass whose matrices (`Hff`, `Hrot`, `H_mhf_*`, `HSz`, `HZz`, …) are **frequencies in
+  Hz** — the X J=2 rotational eigenvalue is 4.0004e10, i.e. `6·B_rot` exactly, matching the
+  40005.98 MHz in `examples/hamiltonian/j2_mf0_crossing_report.md`.
+  `generate_uncoupled_hamiltonian_X_function` / `generate_coupled_hamiltonian_B_function`
+  multiply by 2π, so `H(E, B)` — and `H_int`, `H_symbolic`, detunings, Rabi rates and `Γ`
+  downstream of it — are in **rad/s**. `utils.plotting._x_matrices` / `_b_matrices` build
+  from the attributes and correspondingly report `energy_MHz = w / 1e6`.
+  You only meet the attributes when you need the Stark and Zeeman terms *separately*, which
+  the function does not expose — adiabatic field tracking, per-`mF`-block diagonalization,
+  anything that ramps `E` by hand. Reading them as rad/s divides every line spacing by 2π,
+  which is silent: it blends lines that are actually resolved and leaves the physics looking
+  qualitatively fine. Multiply by 2π once at construction and convert in exactly one place.
+  Worked example, including a case where it moved a computed selectivity by more than an
+  order of magnitude: `reports/spb_detection/` (`analysis.to_MHz`, and §15 of its README).
 - **The X Hamiltonian changed; cached or pickled X Hamiltonians are stale.** X now carries a
   quartic centrifugal-distortion term `-D_rot·[J(J+1)]²` (`D0_X = -Y02_X` ≈ 5.84 kHz), and
   `B_rot` moved by ~24 kHz to the Dunham-derived `B0_X = Y01 + Y11/2 + Y21/4` ≈ 6.667355 GHz.
@@ -323,6 +342,26 @@ Capabilities that already exist — check here before building something new.
 - SciPy `scipy_bdf` / `scipy_radau` exist only as stiff fallbacks and are much slower for scans.
   `python_rk45` is for correctness checks.
 - Prepare once, scan many times — symbolic lowering happens in `prepare_lindblad_problem`.
+- Prepack unchanged initial matrices once with `prepared.layout.pack_batch(initial_states)`
+  and reuse the packed snapshot across batch/grid calls. Matrix batch packing is vectorized;
+  CUDA grids pack distinct states before parameter expansion. Regenerate the snapshot when
+  initial states change.
+- Packed Rust D+S+U (`execution_mode="structured_sparse_dense_diag_soa_single_unpack"`)
+  uses `cpu_kernel="auto"` from preparation: AVX2/FMA when available, AVX2
+  otherwise, with original-kernel fallback. Optimized kernels fuse decay and
+  direct packed output and vectorize finalization. Select `"original"` to opt
+  out, or explicitly `"avx2"`, `"avx2_fma"`, `"avx512"`, `"avx512_fma"`.
+  Unsupported explicit ISA choices raise during Rust preparation. Auto never
+  selects AVX-512. Inspect `prepared.resolved_cpu_kernel`; settings travel with
+  batch/grid payloads. Other execution modes, Python and CUDA are unchanged.
+- Decomposed Rust plans also cache static upper-triangle values and update offsets;
+  upper-triangle kernels (including D+S+U) use these automatically. Repeated scalar
+  coefficient expressions share a prepared DAG, with the original evaluator retained
+  when sharing is absent or unsupported. Both use generic kernels, without per-system
+  native compilation. Set `prepared_hamiltonian_assembly=False` and/or
+  `shared_coefficient_dag=False` in `prepare_lindblad_problem` to opt out;
+  both default to True. These choices carry through batch/grid payloads.
+  See `benchmarks/rust_specialized_rhs_results/PREPARED_HAMILTONIAN_INTEGRATION.md`.
 - Cache expensive rebuilds with `@lru_cache` keyed on **integer grid indices**, not floats.
 - Cost anchor (29-level system, 109 µs trajectory, 8-core laptop): ~1 s per OBE build,
   ~130 ms per trajectory, so ~50 s for a 380-point detuning spectrum with `parallel=True`.
@@ -331,6 +370,32 @@ Capabilities that already exist — check here before building something new.
 - On-disk caching convention (from `examples/ramsey_rf/benchmarks/_cache`): the filename encodes
   the physics and solver settings plus a `_v1` version bump, and the `.npz` carries a scalar
   `cache_version` plus every parameter needed to invalidate it, along with timings.
+
+## Static dense solver
+
+- `solver="dense_eig"` is an optional static-generator path in the usual single,
+  batch and grid APIs. CPU decomposition is shared across initial states and
+  sample times. The default remains `dopri5`.
+- It rejects direct/indirect runtime time dependence, terminal events, sampled
+  quadrature, and singular/ill-conditioned eigenbases. ODE tolerances/timesteps
+  do not control its accuracy.
+- `grid_scan(..., rho0=None, rho0_batch=initial_states)` solves independent
+  populations at every parameter point. Result ordering is parameter point,
+  then initial state; metadata records the initial-state count.
+- CPU scans use physical-core process counts by default (or explicit `threads`)
+  and one BLAS thread per worker. Use a main guard for parallel Windows scripts.
+- `prepare_dense_lindblad_propagator` exposes factorization reuse and full density
+  reconstruction. Exact reachability/sink reduction is checked; use `reduce=False`
+  if later initial coherences may lie outside the reduced subspace.
+- CPU full reconstruction reuses one initial coefficient solve for active
+  evolution and sink feed across time chunks; complex density unpacking uses
+  bounded vectorized batches automatically. This speeds reconstruction, not
+  eigendecomposition; no accuracy settings or generator coordinates change.
+- Optional `evolution_device="cuda"`, `gpu_batch_size=8` uses CPU decomposition
+  plus forward-only PyTorch projection. PyTorch is optional (`gpu` extra); full
+  packed and complex density reconstruction can run on the GPU. Reusable
+  propagators retain full-density factors on-device; `clear_cuda_cache()` releases
+  them. See README_OBE_SOLVER.md.
 
 ## Sanity checks worth running
 
@@ -364,3 +429,41 @@ Capabilities that already exist — check here before building something new.
 
 Note that `examples/ramsey_rf/` contains only cached artifacts — its driver scripts are not in the
 working tree.
+
+## Optional CUDA ODE solver
+
+- Opt-in exact CUDA coordinate reduction: `CudaSolverOptions(density_reduction=True)`
+  (default False), compact structured direct RHS, full-density reconstruction,
+  and all existing outputs/integrals. No magnitude cutoff; support is recomputed
+  for each initial batch chunk. May be slower if little support is removed.
+- Opt-in periodic maps: `prepare_periodic_lindblad_propagator(prepared, period,
+  rho0_batch=..., dt=..., parameter_values=...)`, then `.evaluate(initial_states,
+  times, t0=...)` or `.density_matrices(...)`. Fixed periodic generator only;
+  Gaussian envelopes/noncommensurate drives are rejected. J mixtures and
+  duration-only forward velocities reuse maps; changed detuning/power/profile
+  needs new preparation. Prefix/remainder phases are directly integrated.
+  Full/population/selected outputs only; no photon integral. No default changes.
+
+- Use `evolution_device="cuda"`, `solver="fixed_tsit5"` or `"fixed_ck54"`, and
+  `cuda_options=CudaSolverOptions(batch_size=512)` in the usual solve/batch/scan APIs.
+- Requires the optional CuPy `cuda` (CUDA 12) or `cuda13` extra and a compatible GPU.
+  The separate static dense CUDA path uses the PyTorch `gpu` extra.
+- These are fixed-step methods: validate `dt`; `abstol`/`reltol` do not control accuracy.
+  Check complex coherences as well as populations. CPU defaults remain unchanged.
+- Prepared Hamiltonians must be decomposed; execution mode is `expanded_sparse`.
+  Affine polarization-switch boundaries are clipped automatically. Declare other
+  jumps with `CudaSolverOptions(discontinuities=[...])`.
+- `density_saveat=[...]` saves additional packed full-density snapshots in result
+  metadata independently of the population/photon output grid. All density
+  coordinates are evolved by default even with photon-only output; exact
+  coordinate reduction is separately opt-in.
+- No terminal events or sampled quadrature. Prescribed `step_schedule` is supported.
+  See README_OBE_SOLVER.md and benchmarks/CUDA_LIBRARY_INTEGRATION.md.
+- CUDA coefficient/H sharing is controlled independently with
+  `CudaSolverOptions(coefficient_sharing="auto", hamiltonian_sharing="auto")`;
+  use `"off"` to disable either. Shared waveforms/static factors and eligible
+  direct-RHS H components preserve the existing physical model and timestep.
+  `hamiltonian_sharing="on"` bypasses the arithmetic performance heuristic for
+  explicit benchmarking; unsupported factors still fall back. Auto avoids the
+  measured multiple-component RC slowdown. See README_OBE_SOLVER.md for budgets
+  and chunk diagnostics; independently varied powers do not guarantee a speedup.

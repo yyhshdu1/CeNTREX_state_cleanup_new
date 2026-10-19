@@ -4,8 +4,9 @@ use crate::lindblad::rhs::{ExecutionMode, RhsOptions};
 use crate::ode::batch::{solve_single, OdeSolver};
 use crate::ode::common::build_save_plan;
 use crate::ode::output::{
-    FullOutput, OdeOutputResult, OdeOutputValues, PopulationsOutput, SelectedExtraction,
-    SelectedOutput, WeightedIntegralOutput, WeightedRateOutput,
+    FullAndIntegralOutput, FullOutput, IntegralMethod, OdeOutputResult, OdeOutputValues,
+    PopulationsOutput, SelectedExtraction, SelectedOutput, WeightedIntegralOutput,
+    WeightedRateOutput,
 };
 use crate::ode::{OdeOptions, OdeRhs, OdeStats};
 use num_complex::Complex64;
@@ -46,6 +47,7 @@ enum ConcreteOutput {
     Populations(PopulationsOutput),
     Selected(SelectedOutput),
     Full(FullOutput),
+    FullAndIntegral(FullAndIntegralOutput),
     WeightedIntegral(WeightedIntegralOutput),
     WeightedRate(WeightedRateOutput),
 }
@@ -56,6 +58,7 @@ impl ConcreteOutput {
             Self::Populations(o) => o.reset(),
             Self::Selected(o) => o.reset(),
             Self::Full(o) => o.reset(),
+            Self::FullAndIntegral(o) => o.reset(),
             Self::WeightedIntegral(o) => o.reset(),
             Self::WeightedRate(o) => o.reset(),
         }
@@ -74,6 +77,7 @@ impl ConcreteOutput {
             Self::Populations(o) => solve_single(rhs, y0, t0, t1, options, o, solver),
             Self::Selected(o) => solve_single(rhs, y0, t0, t1, options, o, solver),
             Self::Full(o) => solve_single(rhs, y0, t0, t1, options, o, solver),
+            Self::FullAndIntegral(o) => solve_single(rhs, y0, t0, t1, options, o, solver),
             Self::WeightedIntegral(o) => solve_single(rhs, y0, t0, t1, options, o, solver),
             Self::WeightedRate(o) => solve_single(rhs, y0, t0, t1, options, o, solver),
         }
@@ -84,6 +88,7 @@ impl ConcreteOutput {
             Self::Populations(o) => o.snapshot(),
             Self::Selected(o) => o.snapshot(),
             Self::Full(o) => o.snapshot(),
+            Self::FullAndIntegral(o) => o.snapshot(),
             Self::WeightedIntegral(o) => o.snapshot(),
             Self::WeightedRate(o) => o.snapshot(),
         }
@@ -94,6 +99,7 @@ impl ConcreteOutput {
             Self::Populations(o) => o.finish(),
             Self::Selected(o) => o.finish(),
             Self::Full(o) => o.finish(),
+            Self::FullAndIntegral(o) => o.finish(),
             Self::WeightedIntegral(o) => o.finish(),
             Self::WeightedRate(o) => o.finish(),
         }
@@ -111,9 +117,14 @@ enum OutputSpec {
     Full {
         dim: usize,
     },
+    FullAndIntegral {
+        dim: usize,
+        weights: Vec<(usize, f64)>,
+    },
     WeightedIntegral {
         weights: Vec<(usize, f64)>,
         store_trace: bool,
+        method: IntegralMethod,
     },
     WeightedRate {
         weights: Vec<(usize, f64)>,
@@ -130,13 +141,18 @@ impl OutputSpec {
                 ConcreteOutput::Selected(SelectedOutput::new(extractions.clone(), capacity))
             }
             Self::Full { dim } => ConcreteOutput::Full(FullOutput::new(*dim, capacity)),
+            Self::FullAndIntegral { dim, weights } => ConcreteOutput::FullAndIntegral(
+                FullAndIntegralOutput::new(*dim, weights.clone(), capacity),
+            ),
             Self::WeightedIntegral {
                 weights,
                 store_trace,
+                method,
             } => ConcreteOutput::WeightedIntegral(WeightedIntegralOutput::new_with_trace(
                 weights.clone(),
                 *store_trace,
                 capacity,
+                *method,
             )),
             Self::WeightedRate { weights } => {
                 ConcreteOutput::WeightedRate(WeightedRateOutput::new(weights.clone(), capacity))
@@ -149,6 +165,7 @@ impl OutputSpec {
             Self::Populations { indices } => indices.len(),
             Self::Selected { extractions } => extractions.len(),
             Self::Full { dim } => *dim,
+            Self::FullAndIntegral { dim, .. } => *dim + 1,
             Self::WeightedIntegral { .. } | Self::WeightedRate { .. } => 1,
         }
     }
@@ -187,6 +204,7 @@ pub fn solve_batch_ode(
     output_when: &str,
     output_indices: Option<&[(usize, usize)]>,
     integral_weights: Option<&[(usize, f64)]>,
+    integral_method: IntegralMethod,
     parameter_slot_indices: &[usize],
     parameter_batch: Option<&[Complex64]>,
     stop_event: Option<LindbladStopEvent>,
@@ -196,6 +214,15 @@ pub fn solve_batch_ode(
     let dim = plan.layout.packed_len();
     let n = plan.layout.n;
     let parameter_width = parameter_slot_indices.len();
+
+    if output_mode == "full_and_integral"
+        && matches!(
+            solver,
+            OdeSolver::FixedDopri5 | OdeSolver::FixedRk2 | OdeSolver::FixedRk4
+        )
+    {
+        return Err("output='full_and_integral' currently supports only adaptive solvers".into());
+    }
 
     if y0_batch.len() != trajectory_count * dim {
         return Err(format!(
@@ -219,12 +246,25 @@ pub fn solve_batch_ode(
             }
         }
         "full" => OutputSpec::Full { dim },
+        "full_and_integral" => {
+            if integral_method != IntegralMethod::Solver {
+                return Err("output='full_and_integral' requires integral_method='solver'".into());
+            }
+            let weights = integral_weights.ok_or_else(|| {
+                "output='full_and_integral' requires integral_weights".to_string()
+            })?;
+            OutputSpec::FullAndIntegral {
+                dim,
+                weights: weights.to_vec(),
+            }
+        }
         "weighted_integral" | "photon_integral" | "excited_population" => {
             let weights = integral_weights
                 .ok_or_else(|| format!("output='{output_mode}' requires integral_weights"))?;
             OutputSpec::WeightedIntegral {
                 weights: weights.to_vec(),
                 store_trace: output_when == "saveat",
+                method: integral_method,
             }
         }
         "weighted_rate" | "photon_rate" | "excited_population_rate" => {
@@ -264,7 +304,15 @@ pub fn solve_batch_ode(
         } else {
             None
         };
-        worker.solve_batch(y0, t0, t1, options, solver, parameter_slot_indices, param_values)
+        worker.solve_batch(
+            y0,
+            t0,
+            t1,
+            options,
+            solver,
+            parameter_slot_indices,
+            param_values,
+        )
     };
 
     let results: Vec<Result<(OdeOutputResult, OdeStats), String>> =
@@ -783,13 +831,13 @@ fn solve_grid_ode_direct(
                 .enumerate()
                 .map_init(
                     || {
-                            GridWorker::new(
-                                plan,
-                                execution_mode,
-                                rhs_options,
-                                output_spec,
-                                capacity,
-                                parameter_slot_indices.len(),
+                        GridWorker::new(
+                            plan,
+                            execution_mode,
+                            rhs_options,
+                            output_spec,
+                            capacity,
+                            parameter_slot_indices.len(),
                         )
                     },
                     |worker, (trajectory, chunk)| {
@@ -873,6 +921,7 @@ pub fn solve_grid_ode(
     output_when: &str,
     output_indices: Option<&[(usize, usize)]>,
     integral_weights: Option<&[(usize, f64)]>,
+    integral_method: IntegralMethod,
     parameter_slot_indices: &[usize],
     axes: &[Complex64],
     axis_offsets: &[usize],
@@ -887,6 +936,15 @@ pub fn solve_grid_ode(
     let n = plan.layout.n;
     let capacity = options.saveat.as_ref().map_or(1, |s| s.len() + 1);
 
+    if output_mode == "full_and_integral"
+        && matches!(
+            solver,
+            OdeSolver::FixedDopri5 | OdeSolver::FixedRk2 | OdeSolver::FixedRk4
+        )
+    {
+        return Err("output='full_and_integral' currently supports only adaptive solvers".into());
+    }
+
     let output_spec = match output_mode {
         "populations" => OutputSpec::Populations {
             indices: (0..n).collect(),
@@ -899,12 +957,25 @@ pub fn solve_grid_ode(
             }
         }
         "full" => OutputSpec::Full { dim },
+        "full_and_integral" => {
+            if integral_method != IntegralMethod::Solver {
+                return Err("output='full_and_integral' requires integral_method='solver'".into());
+            }
+            let weights = integral_weights.ok_or_else(|| {
+                "output='full_and_integral' requires integral_weights".to_string()
+            })?;
+            OutputSpec::FullAndIntegral {
+                dim,
+                weights: weights.to_vec(),
+            }
+        }
         "weighted_integral" | "photon_integral" | "excited_population" => {
             let weights = integral_weights
                 .ok_or_else(|| format!("output='{output_mode}' requires integral_weights"))?;
             OutputSpec::WeightedIntegral {
                 weights: weights.to_vec(),
                 store_trace: output_when == "saveat",
+                method: integral_method,
             }
         }
         "weighted_rate" | "photon_rate" | "excited_population_rate" => {

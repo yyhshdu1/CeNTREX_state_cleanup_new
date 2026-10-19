@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
 from fractions import Fraction
-from itertools import pairwise
 from typing import Any, Mapping, Sequence, cast
 
 import matplotlib.pyplot as plt
@@ -11,6 +10,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
+from matplotlib.ticker import FormatStrFormatter, MaxNLocator
 from scipy.linalg import eigh
 from scipy.optimize import linear_sum_assignment
 
@@ -1029,10 +1029,10 @@ _FRAC_LEFT, _FRAC_LEVELS, _FRAC_RIGHT = 0.20, 0.62, 0.18
 
 # Vertical layout of the main axes, in axes fractions (ylim is fixed to (0, 1)).
 _Y_EXCITED_TICKS = 0.945
-_Y_EXCITED_BAND = (0.660, 0.925)
-_Y_ARROW = (0.460, 0.615)
-_Y_GROUND_BAND = (0.115, 0.380)
-_Y_GROUND_HEADERS = 0.425
+_Y_EXCITED_BAND = (0.610, 0.925)
+_Y_ARROW = (0.470, 0.575)
+_Y_GROUND_BAND = (0.115, 0.430)
+_Y_GROUND_HEADERS = 0.475
 _Y_GROUND_TICKS = 0.075
 
 
@@ -1532,20 +1532,21 @@ def _band_y(
     y_low: float,
     y_high: float,
     min_separation: float,
+    overlap_threshold: float | None = None,
 ) -> list[float]:
     """Map level energies onto a vertical band, parallel to `levels`.
 
     Energies are scaled linearly into `[y_low, y_high]`. Levels sharing an mF
-    column that would end up closer than `min_separation` are then pushed apart,
-    which is purely cosmetic -- it keeps near-degenerate levels distinguishable
-    at the cost of the exact vertical spacing inside a column.
+    column closer than `overlap_threshold` (default `min_separation`) are separated
+    locally to `min_separation`; levels outside the crowded group stay fixed.
+    This is cosmetic: true energies are shown separately when bars are displaced.
     """
     if not levels:
         return []
 
     energies = np.array([lv.energy_MHz for lv in levels], dtype=float)
     lo, hi = float(energies.min()), float(energies.max())
-    if np.isclose(lo, hi):
+    if hi - lo < 1e-12:
         y = np.full(energies.shape, 0.5 * (y_low + y_high))
     else:
         y = y_low + (energies - lo) / (hi - lo) * (y_high - y_low)
@@ -1559,23 +1560,59 @@ def _band_y(
             if len(idx) < 2:
                 continue
             order = sorted(idx, key=lambda i: y[i])
-            for a, b in pairwise(order):
-                y[b] = max(y[b], y[a] + min_separation)
-
-            top, bottom = y[order[-1]], y[order[0]]
-            if top > y_high:
-                shift = top - y_high
-                if bottom - shift >= y_low:
-                    for i in order:
-                        y[i] -= shift
-                elif top > bottom:
-                    # does not fit even after shifting: compress into the band
-                    for i in order:
-                        y[i] = y_low + (y[i] - bottom) / (top - bottom) * (
-                            y_high - y_low
-                        )
+            threshold = min_separation if overlap_threshold is None else overlap_threshold
+            original = y.copy()
+            clusters: list[list[int]] = []
+            for i in order:
+                if clusters and original[i] - original[clusters[-1][-1]] < threshold:
+                    clusters[-1].append(i)
+                else:
+                    clusters.append([i])
+            while True:
+                for cluster in clusters:
+                    if len(cluster) == 1:
+                        y[cluster] = original[cluster]
+                        continue
+                    gap = min(min_separation, (y_high - y_low) / (len(cluster) - 1))
+                    offsets = (np.arange(len(cluster)) - (len(cluster) - 1) / 2) * gap
+                    center = float(np.mean(original[cluster]))
+                    center = np.clip(center, y_low - offsets[0], y_high - offsets[-1])
+                    y[cluster] = center + offsets
+                # Merge only if separating a group would overlap its neighbour.
+                merged: list[list[int]] = []
+                for cluster in clusters:
+                    if merged and y[cluster[0]] - y[merged[-1][-1]] < threshold - 1e-12:
+                        merged[-1].extend(cluster)
+                    else:
+                        merged.append(cluster.copy())
+                if len(merged) == len(clusters):
+                    break
+                clusters = merged
 
     return [float(value) for value in y]
+
+
+def _draw_band_energy_axis(
+    ax: Axes,
+    levels: Sequence[DressedLevel],
+    reference: float,
+    band: tuple[float, float],
+    x: float,
+    tick_width: float,
+    fontsize: float,
+) -> None:
+    """Draw ticks using the same exact linear energy mapping as the level bars."""
+    lo = min(lv.energy_MHz for lv in levels) - reference
+    hi = max(lv.energy_MHz for lv in levels) - reference
+    if hi - lo < 1e-12:
+        ticks = [lo]
+    else:
+        ticks = [v for v in MaxNLocator(nbins=4).tick_values(lo, hi) if lo <= v <= hi]
+    ax.plot([x, x], band, color="0.35", lw=0.8)
+    for value in ticks:
+        y = 0.5 * sum(band) if hi - lo < 1e-12 else band[0] + (value - lo) / (hi - lo) * (band[1] - band[0])
+        ax.plot([x - tick_width, x], [y, y], color="0.35", lw=0.8)
+        ax.text(x - 1.6 * tick_width, y, f"{value:g}", ha="right", va="center", fontsize=fontsize)
 
 
 def _draw_segmented_level(
@@ -1598,6 +1635,16 @@ def _draw_segmented_level(
         x1 = x0 + width * float(fraction) / total
         ax.plot([x0, x1], [y, y], lw=lw, color=color, solid_capstyle="butt")
         x0 = x1
+
+
+def _draw_true_energy_mark(ax: Axes, x: float, actual_y: float, bar_y: float, width: float) -> None:
+    """Anchor a cosmetically displaced bar to its true energy at its left edge."""
+    if abs(actual_y - bar_y) < 1e-12:
+        return
+    edge = x - width / 2
+    ax.plot([edge - 0.24 * width, edge - 0.10 * width], [actual_y, actual_y],
+            color="0.45", lw=1.4)
+    ax.plot([edge - 0.10 * width, edge], [actual_y, bar_y], color="0.65", lw=1.2)
 
 
 def _level_segments(
@@ -1632,31 +1679,6 @@ def _even_spacing(n: int, y_low: float, y_high: float) -> list[float]:
     return list(np.linspace(y_high, y_low, n))
 
 
-def _draw_family_bracket(
-    ax: Axes,
-    x_line: float,
-    x_label: float,
-    y_values: Sequence[float],
-    label: str,
-    color: Any,
-    fontsize: float,
-    lw: float = 1.4,
-) -> float:
-    """Vertical bracket spanning a group of levels, with a label at its centre.
-
-    Replaces labelling a group at the mean of its levels, which stops pointing
-    at anything once the Stark effect spreads the group out.
-    """
-    y_lo, y_hi = float(min(y_values)), float(max(y_values))
-    y_mid = 0.5 * (y_lo + y_hi)
-    if y_hi - y_lo > 1e-9:
-        ax.plot([x_line, x_line], [y_lo, y_hi], lw=lw, color=color,
-                solid_capstyle="butt")
-    ax.text(x_label, y_mid, label, ha="center", va="center", fontsize=fontsize,
-            color=color)
-    return y_mid
-
-
 # ---------------- information panel ----------------
 _INFO_ROW_UNITS: dict[str, float] = {
     "title": 1.90,
@@ -1682,7 +1704,9 @@ _INFO_FONT_SCALE: dict[str, float] = {
 
 def _info_row_units(kind: str, payload: Any) -> float:
     if kind == "sticks":
-        return 8.6 if payload[1] else 5.4
+        return 9.0
+    if kind == "energy_table":
+        return 1.6 * (len(payload) + 1)
     if kind == "gap":
         return float(payload)
     return _INFO_ROW_UNITS[kind]
@@ -1797,28 +1821,60 @@ def _render_info_panel(info: Axes, rows: Sequence[tuple[str, Any]], base_fs: flo
             )
             continue
 
-        if kind == "sticks":
-            labels, rotate = payload
-            n = len(labels)
-            base = y_bot + 0.08 * height
-            top = base + 0.30 * height
-            xs = (
-                np.linspace(0.17, 0.83, n)
-                if n > 1
-                else np.array([0.5])
-            )
-            info.plot([0.08, 0.92], [base, base], lw=1.1, color="black")
-            for x, label in zip(xs, labels, strict=True):
-                info.plot([x, x], [base, top], lw=2.3, color="black")
-                info.text(
-                    x,
-                    top + 0.06 * height,
-                    label,
-                    ha="center",
-                    va="bottom",
-                    rotation=90 if rotate else 0,
-                    fontsize=fs * _INFO_FONT_SCALE["sticks"],
+        if kind == "energy_table":
+            table_rows = [(r"$|m_F'|$", r"$-|m_F'|$", r"$+|m_F'|$"), *payload]
+            row_height = height / len(table_rows)
+            for index, cells in enumerate(table_rows):
+                row_y = y_top - (index + 0.5) * row_height
+                positions = ((0.17, cells[0]), (0.65, cells[1])) if cells[2] is None else zip(
+                    (0.17, 0.49, 0.81), cells, strict=True
                 )
+                for x, cell in positions:
+                    info.text(x, row_y, cell, ha="center", va="center",
+                              fontsize=fs * 0.85)
+            info.plot([0.06, 0.94], [y_top - row_height] * 2, lw=0.6, color="0.65")
+            continue
+
+        if kind == "sticks":
+            levels, reference, colors = payload
+            spectrum = info.inset_axes([0.10, y_bot + 0.48 * height, 0.82, 0.46 * height])
+            offsets = [lv.energy_MHz - reference for lv in levels]
+            span = max(max(offsets) - min(offsets), 1.0)
+            spectrum.set_xlim(min(offsets) - 0.06 * span, max(offsets) + 0.06 * span)
+            spectrum.set_ylim(0, 1.55)
+            spectrum.set_yticks([])
+            spectrum.spines[["left", "right", "top"]].set_visible(False)
+            spectrum.spines["bottom"].set_position(("axes", -0.52))
+            spectrum.xaxis.set_major_locator(MaxNLocator(nbins=5))
+            spectrum.xaxis.set_major_formatter(FormatStrFormatter("%.1f"))
+            spectrum.tick_params(axis="x", labelsize=fs * 0.72, length=3)
+            spectrum.set_xlabel("Energy offset (MHz)", fontsize=fs * 0.78, labelpad=3)
+            spectrum.axhline(0, color="black", lw=1.0)
+            # Pair opposite mF signs by their tracked zero-field parity parent.
+            # The inset uses pair averages; the table retains signed energies.
+            groups: dict[tuple[int, int | None], list[DressedLevel]] = defaultdict(list)
+            for lv in levels:
+                groups[(abs(lv.mF), lv.P)].append(lv)
+            for group in sorted(groups.values(), key=lambda g: np.mean([lv.energy_MHz for lv in g])):
+                energy = float(np.mean([lv.energy_MHz - reference for lv in group]))
+                bottom = 0.0
+                for parity in (-1, +1):
+                    top = bottom + float(np.mean([lv.character.get(parity, 0.0) for lv in group]))
+                    spectrum.plot([energy, energy], [bottom, top],
+                                  color=colors[parity], lw=2.5, solid_capstyle="butt")
+                    bottom = top
+                rounded = f"{energy:.1f}" if abs(energy) >= 0.05 else "0.0"
+                spectrum.text(energy, 1.12, rounded, ha="center", va="bottom",
+                              fontsize=fs * 0.72)
+                signs = sorted({lv.mF for lv in group})
+                if len(signs) == 2 and signs[0] == -signs[1]:
+                    label = rf"$\pm{signs[1]}$"
+                else:
+                    label = ",".join("0" if m == 0 else f"{m:+d}" for m in signs)
+                spectrum.text(energy, -0.12, label, ha="center", va="top",
+                              transform=spectrum.get_xaxis_transform(), fontsize=fs * 0.72)
+            spectrum.text(0.015, -0.12, r"$m_F'$", ha="right", va="top",
+                          transform=spectrum.transAxes, fontsize=fs * 0.72)
             continue
 
         raise ValueError(f"unknown info-panel row kind: {kind!r}")
@@ -1866,29 +1922,29 @@ def _build_info_rows(
         else min(lv.energy_MHz for lv in excited)
     )
 
-    offsets: list[float] = []
-    for value in sorted(lv.energy_MHz - reference for lv in excited):
-        if not offsets or abs(value - offsets[-1]) > 1e-4:
-            offsets.append(float(value))
-    stick_labels = [
-        "0 MHz" if abs(v) < 5e-4 else f"{v:+.3f} MHz" for v in offsets
-    ]
-
     rows: list[tuple[str, Any]] = [
         ("box_start", None),
         ("title", "Relative excited-state offsets"),
         ("subtitle", r"(relative to lowest $m_F'=0$ level)"),
-        ("sticks", (stick_labels, len(stick_labels) > 3)),
+        ("note", r"Inset marks and labels average the $\pm m_F'$ partners."),
+        ("sticks", (excited, reference, parity_colors)),
         ("box_end", None),
         ("gap", 0.8),
-        ("header", f"Opposite-parity-parent separation at {E:g} V/cm"),
+        ("header", "Energy offsets (MHz)"),
     ]
 
-    for label, pair in mF_groups:
-        if len(pair) != 2:
-            continue
-        separation = abs(pair[0].energy_MHz - pair[1].energy_MHz)
-        rows.append(("line", rf"${label}:\ {separation:.3f}\ \mathrm{{MHz}}$"))
+    energy_table = []
+    energy_groups: dict[tuple[int, int | None], list[DressedLevel]] = defaultdict(list)
+    for lv in excited:
+        energy_groups[(abs(lv.mF), lv.P)].append(lv)
+    for group in sorted(energy_groups.values(), key=lambda g: np.mean([lv.energy_MHz for lv in g])):
+        mF = abs(group[0].mF)
+        signed_offsets = {lv.mF: f"{lv.energy_MHz - reference:.1f}" for lv in group}
+        if mF == 0:
+            energy_table.append(("0", signed_offsets[0], None))
+        else:
+            energy_table.append((str(mF), signed_offsets[-mF], signed_offsets[mF]))
+    rows.append(("energy_table", energy_table))
 
     splittings = list(structure.zero_field_parity_splitting_MHz.values())
     rows.append(("rule", None))
@@ -1904,14 +1960,23 @@ def _build_info_rows(
         rows.append(("line", rf"${np.mean(splittings):.3f}\ \mathrm{{MHz}}$"))
 
     rows.append(("rule", None))
-    rows.append(("header", f"Parity mixing at {E:g} V/cm (lower level)"))
+    rows.append(("header", f"Parity mixing at {E:g} V/cm"))
+    mixing_rows: dict[int, tuple[str, str]] = {}
     for label, pair in mF_groups:
         if not pair:
             continue
         lower = min(pair, key=lambda lv: lv.energy_MHz)
         minus = 100 * lower.character.get(-1, 0.0)
         plus = 100 * lower.character.get(+1, 0.0)
-        rows.append(("line", rf"${label}:\ {minus:.1f}/{plus:.1f}$"))
+        mixing_rows[pair[0].mF] = (label, f"{minus:.1f}/{plus:.1f}")
+    for mF in sorted(mixing_rows, key=lambda m: (abs(m), m)):
+        label, percentages = mixing_rows[mF]
+        partner = mixing_rows.get(-mF)
+        if mF and partner is not None and partner[1] == percentages:
+            if mF < 0:
+                continue
+            label = rf"|m_F'|={mF}"
+        rows.append(("line", rf"${label}:\ {percentages}$"))
 
     rows.append(("gap", 0.5))
     rows.append(("swatch", (parity_colors[-1], r"zero-field $P'=-1$ character")))
@@ -1970,11 +2035,13 @@ def plot_transition_level_diagram(
     figsize: tuple[float, float] = (17.2, 9.2),
     base_fontsize: float = 13.0,
     show_info_panel: bool = True,
+    show_energy_axes: bool = True,
     title: str | None = None,
     # appearance
     level_width: float = 0.62,
-    level_lw: float = 4.2,
-    min_level_separation: float = 0.012,
+    level_lw: float = 2.4,
+    min_level_separation: float = 0.0,
+    stack_overlapping_levels: bool = True,
     residual_threshold: float = 0.01,
     ground_colors: Sequence[Any] | None = None,
     parity_colors: Sequence[Any] | None = None,
@@ -2016,7 +2083,16 @@ def plot_transition_level_diagram(
         diagram scales with one number.
     min_level_separation
         Minimum vertical gap, in axes fractions, between two levels in the same
-        mF column. Cosmetic; set to 0 for exact energy positions.
+        mF column. Cosmetic; must be 0 with energy axes unless stacking is enabled.
+    stack_overlapping_levels
+        Enabled by default. Separate overlapping bars with a 0.8-point gap beyond
+        their line thickness, adjusting only the crowded group.
+        Displaced bars have grey ticks at their true energies and short connectors;
+        the energy axes refer to those ticks, not the displaced bars.
+    show_energy_axes
+        Show separate quantitative X and B axes in MHz. X is relative to the
+        lowest displayed ground level; B is relative to the lowest mF'=0 level,
+        matching the inset and table. The optical gap remains schematic.
     residual_threshold
         Show the grey "other character" segment once any level's residual
         exceeds this.
@@ -2030,6 +2106,8 @@ def plot_transition_level_diagram(
         Holds the figure, the axes, and the underlying
         `TransitionLevelStructure`, so every plotted number can be read back.
     """
+    if show_energy_axes and min_level_separation > 0 and not stack_overlapping_levels:
+        raise ValueError("energy axes require min_level_separation=0; disable show_energy_axes for cosmetic spacing")
     if structure is not None:
         specified = (
             transition,
@@ -2092,6 +2170,8 @@ def plot_transition_level_diagram(
         else:
             ax = fig.add_subplot(1, 1, 1)
             info_ax = None
+        # The transition subtitle is gone; use its former margin for the diagram.
+        fig.subplots_adjust(top=0.93, bottom=0.06)
     else:
         ax = cast(Axes, ax)
         fig = cast(Figure, ax.get_figure())
@@ -2111,16 +2191,20 @@ def plot_transition_level_diagram(
     )
     ax.set_ylim(0.0, 1.0)
     ax.axis("off")
+    overlap_threshold = None
+    if stack_overlapping_levels:
+        height_points = fig.get_figheight() * 72.0 * ax.get_position().height
+        overlap_threshold = min_level_separation or level_lw / height_points
+        min_level_separation = max(min_level_separation, (level_lw + 0.8) / height_points)
 
     # mF axis names sit left of the levels; the F / F1 key occupies the right
     # gutter, so neither can collide with the outermost mF column.
     x_axis_name = -mf_max - 0.075 * total_width
     x_f_label = mf_max + 0.075 * total_width
-    x_f1_line = mf_max + 0.130 * total_width
     x_f1_label = mf_max + 0.168 * total_width
+    x_energy_axis = -mf_max - 0.050 * total_width
 
     fs_title = 1.85 * base_fontsize
-    fs_subtitle = 1.25 * base_fontsize
     fs_electronic = 1.60 * base_fontsize
     fs_j = 1.35 * base_fontsize
     fs_tick = 1.30 * base_fontsize
@@ -2139,33 +2223,25 @@ def plot_transition_level_diagram(
         fig.suptitle(title, fontsize=fs_title, y=0.985)
     elif title:
         # The caller owns this figure -- a suptitle would overwrite theirs. Put
-        # the title in the axes instead, offset above the subtitle drawn below.
+        # the title in the axes instead.
         ax.annotate(
             title,
             xy=(0.5, 1.0),
             xycoords="axes fraction",
-            xytext=(0.0, 1.6 * fs_subtitle),
+            xytext=(0.0, base_fontsize),
             textcoords="offset points",
             ha="center",
             va="bottom",
             fontsize=fs_title,
         )
 
-    ax.text(
-        0.5,
-        1.0,
-        rf"${tr.t.name}({tr.J_ground}),\ B:\ J'={tr.J_excited},\ "
-        rf"F_1'={f1_excited_str},\ F'={tr.F_excited}$",
-        transform=ax.transAxes,
-        ha="center",
-        va="bottom",
-        fontsize=fs_subtitle,
-    )
-
     # ---------------- excited manifold ----------------
-    y_excited = _band_y(excited, *_Y_EXCITED_BAND, min_level_separation)
+    y_excited = _band_y(excited, *_Y_EXCITED_BAND, min_level_separation, overlap_threshold)
+    actual_excited_y = _band_y(excited, *_Y_EXCITED_BAND, 0.0)
 
-    for lv, y in zip(excited, y_excited, strict=True):
+    for lv, y, actual_y in zip(excited, y_excited, actual_excited_y, strict=True):
+        if stack_overlapping_levels:
+            _draw_true_energy_mark(ax, lv.mF, actual_y, y, level_width)
         fractions, colors = _level_segments(
             lv, (-1, +1), parity_map, show_excited_residual, residual_color
         )
@@ -2192,14 +2268,22 @@ def plot_transition_level_diagram(
     )
 
     y_excited_mid = 0.5 * (_Y_EXCITED_BAND[0] + _Y_EXCITED_BAND[1])
+    if show_energy_axes:
+        mF0 = [lv for lv in excited if lv.mF == 0]
+        reference = min(lv.energy_MHz for lv in (mF0 or excited))
+        _draw_band_energy_axis(ax, excited, reference, _Y_EXCITED_BAND,
+                               x_energy_axis, 0.012 * total_width, 0.8 * base_fontsize)
+        ax.text(0.075, y_excited_mid, "MHz", transform=ax.transAxes,
+                rotation=90, ha="center", va="center", fontsize=0.85 * base_fontsize)
     ax.text(
-        0.0,
-        y_excited_mid + 0.035,
-        r"$B\,^3\Pi_1\;(v'=0)$",
+        0.015 if show_energy_axes else 0.0,
+        y_excited_mid if show_energy_axes else y_excited_mid + 0.035,
+        r"$B\,^3\Pi_1\;(v'=0)$" + ("\n" + rf"$J'={tr.J_excited}$" if show_energy_axes else ""),
         transform=ax.transAxes,
-        ha="left",
+        rotation=90 if show_energy_axes else 0,
+        ha="center" if show_energy_axes else "left",
         va="center",
-        fontsize=fs_electronic,
+        fontsize=base_fontsize if show_energy_axes else fs_electronic,
     )
     ax.text(
         0.0,
@@ -2209,6 +2293,7 @@ def plot_transition_level_diagram(
         ha="left",
         va="center",
         fontsize=fs_j,
+        visible=not show_energy_axes,
     )
 
     ax.text(x_f_label, _Y_EXCITED_TICKS, r"$F'$", ha="center", va="center",
@@ -2239,9 +2324,12 @@ def plot_transition_level_diagram(
     )
 
     # ---------------- ground manifold ----------------
-    y_ground = _band_y(ground, *_Y_GROUND_BAND, min_level_separation)
+    y_ground = _band_y(ground, *_Y_GROUND_BAND, min_level_separation, overlap_threshold)
+    actual_ground_y = _band_y(ground, *_Y_GROUND_BAND, 0.0)
 
-    for lv, y in zip(ground, y_ground, strict=True):
+    for lv, y, actual_y in zip(ground, y_ground, actual_ground_y, strict=True):
+        if stack_overlapping_levels:
+            _draw_true_energy_mark(ax, lv.mF, actual_y, y, level_width)
         fractions, colors = _level_segments(
             lv, families, ground_map, show_ground_residual, residual_color
         )
@@ -2263,14 +2351,21 @@ def plot_transition_level_diagram(
             fontsize=fs_column)
 
     y_ground_mid = 0.5 * (_Y_GROUND_BAND[0] + _Y_GROUND_BAND[1])
+    if show_energy_axes:
+        ground_reference = min(ground, key=lambda lv: lv.energy_MHz)
+        _draw_band_energy_axis(ax, ground, ground_reference.energy_MHz, _Y_GROUND_BAND,
+                               x_energy_axis, 0.012 * total_width, 0.8 * base_fontsize)
+        ax.text(0.075, y_ground_mid, "MHz", transform=ax.transAxes,
+                rotation=90, ha="center", va="center", fontsize=0.85 * base_fontsize)
     ax.text(
-        0.0,
-        y_ground_mid + 0.035,
-        r"$X\,^1\Sigma^+\;(v=0)$",
+        0.015 if show_energy_axes else 0.0,
+        y_ground_mid if show_energy_axes else y_ground_mid + 0.035,
+        r"$X\,^1\Sigma^+\;(v=0)$" + ("\n" + rf"$J={tr.J_ground}$" if show_energy_axes else ""),
         transform=ax.transAxes,
-        ha="left",
+        rotation=90 if show_energy_axes else 0,
+        ha="center" if show_energy_axes else "left",
         va="center",
-        fontsize=fs_electronic,
+        fontsize=base_fontsize if show_energy_axes else fs_electronic,
     )
     ax.text(
         0.0,
@@ -2280,6 +2375,7 @@ def plot_transition_level_diagram(
         ha="left",
         va="center",
         fontsize=fs_j,
+        visible=not show_energy_axes,
     )
 
     ax.text(x_f_label, _Y_GROUND_HEADERS, r"$F$", ha="center", va="center",
@@ -2310,9 +2406,8 @@ def plot_transition_level_diagram(
             for fam, y in zip(families, family_label_y, strict=True)
             if fam[0] == F1
         ]
-        _draw_family_bracket(
-            ax, x_f1_line, x_f1_label, ys, rf"${as_frac2(F1)}$", "black", fs_value
-        )
+        ax.text(x_f1_label, 0.5 * (min(ys) + max(ys)), rf"${as_frac2(F1)}$",
+                ha="center", va="center", fontsize=fs_value, color="black")
 
     # ---------------- information panel ----------------
     if info_ax is not None:
