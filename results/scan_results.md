@@ -6,7 +6,7 @@
 
 | 文件 | 内容 | 结果个数 | 大小 |
 |---|---|---|---|
-| `SPB_J1_cleanup_scans.h5` | CU1：X J=1，R(1) F1'=5/2 F'=2，150 V/cm，80 mW | 17 | 12.1 MB |
+| `SPB_J1_cleanup_scans.h5` | CU1：X J=1，R(1) F1'=5/2 F'=2，150 V/cm，80 mW | 19 | 12.1 MB |
 | `SPB_J2_cleanup_scans.h5` | CU2：X J=2，R(2) F1'=7/2 F'=3 + F'=4，80 + 24 mW，17.5 MHz EOM β=1.5 | 22 | 2.4 MB |
 
 ## 约定
@@ -55,6 +55,13 @@ run["results"], run["axes"], run["fixed_parameters"]
 |---|---|---|---|---|---|---|---|
 | `detuning_vx_y_cu1_spb_3cm_coarse` | 失谐 17–23 MHz × vx × y0（0–9 mm） | 不加 EOM，SPB 8 态 | 13×11×4 | laser_detuning_MHz 17…23 (13)；vx_m_per_s -1…1 (11)；y0_mm 0…9 (4) | 99.999 % | 表 5.5 | 2026-10-09 |
 | `doppler_cu1_spb_3cm_det19MHz` | vx × y0 细网格（设定点） | +19.0 MHz，不加 EOM，SPB 8 态；接受范围内平均 98.7 % | 21×11 | vx_m_per_s -1…1 (21)；y0_mm 0…15 (11) | 99.9942 % | 图 5.8 | 2026-10-08 |
+
+### CU1 50 mW、2 cm
+
+| 名字 | 内容 | 条件 | 形状 | 坐标轴 | 最好 | 报告 | 创建 |
+|---|---|---|---|---|---|---|---|
+| `detuning_vx_y_cu1_spb_2cm_50mW_coarse` | 失谐 17–23 MHz × vx × y0（0–9 mm） | 50 mW，2 cm（σy = 5 mm），不加 EOM，SPB 8 态；centrex-tlf 0.3.0 | 13×11×4 | laser_detuning_MHz 17…23 (13)；vx_m_per_s -1…1 (11)；y0_mm 0…9 (4) | 99.9981 % | — | 2026-10-19 |
+| `doppler_cu1_spb_2cm_50mW_det19MHz` | vx × y0 细网格 | +19.0 MHz，50 mW，2 cm，SPB 8 态；接受范围内平均 96.5 %；centrex-tlf 0.3.0 | 21×11 | vx_m_per_s -1…1 (21)；y0_mm 0…15 (11) | 99.9903 % | 图 cleanup_map_vx_y_CU1_2cm_50mW_vs_3cm_80mW（未放入报告） | 2026-10-19 |
 
 ### CU1 逐态结果与轨迹
 
