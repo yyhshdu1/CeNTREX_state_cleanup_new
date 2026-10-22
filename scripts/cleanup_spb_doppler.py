@@ -44,11 +44,13 @@ Y_GRID = np.round(np.linspace(0.0, 15e-3, 11), 9)          # m
 CHUNK, THREADS = 40, 8
 
 
-def build_cu1(return_obe=False, doppler=False, sigma_y_m=None):
+def build_cu1(return_obe=False, doppler=False, sigma_y_m=None, n_pass=None):
     """CU1 model of SPB_cleanup_J1-J2F2.ipynb: R(1) F1'=5/2 F'=2 at 150 V/cm, both parities (26 levels).
 
     sigma_y_m sets the beam height (sigma, m) and the power normalisation together, so a different height is
     compared at constant power (default CU1_SIGMA_Y = 12 mm, 4.8 cm full 4-sigma height).
+    n_pass (default N_PASS = 13) keeps the first n_pass passes of the multipass, e.g. 2 for a single
+    retro-reflection; the Doppler sign still alternates pass by pass.
     """
     from centrex_tlf import couplings, lindblad, states, transitions, utils
     warnings.simplefilter("ignore")
@@ -62,7 +64,9 @@ def build_cu1(return_obe=False, doppler=False, sigma_y_m=None):
                                                     electronic_state=B)])
     obe = lindblad.generate_OBE_system_transitions(trans, sel, qn_compact=True, E=np.array([0.0, 0.0, CU1_E]),
                                                    B=B_FIELD, retain_opposite_parity_levels=True)
-    order = utils.multipass.multipass_prism_order(N_PASS)
+    npass = N_PASS if n_pass is None else int(n_pass)
+    # two-prism ordering needs an odd count; a single retro-reflection (2 passes) is simply pass 1 then pass 2
+    order = utils.multipass.multipass_prism_order(npass) if npass % 2 else list(range(1, npass + 1))
     pass_power = [(1.0 - LOSS) ** (p - 1) for p in order]
     params = lindblad.LindbladParameters()
     t = params.time()
@@ -74,8 +78,8 @@ def build_cu1(return_obe=False, doppler=False, sigma_y_m=None):
     sigma_z = params.real("sigma_z", SIGMA_Z); sigma_y = params.real("sigma_y", sy)
     profile = params.real("intensities_per_watt",
                           tuple(np.asarray(pass_power) / (2 * np.pi * SIGMA_Z * sy)))
-    xlocs = params.real("xlocs", tuple(FIRST_PASS + i * PASS_SPACING for i in range(N_PASS)))
-    ylocs = params.real("ylocs", tuple([0.0] * N_PASS))
+    xlocs = params.real("xlocs", tuple(FIRST_PASS + i * PASS_SPACING for i in range(npass)))
+    ylocs = params.real("ylocs", tuple([0.0] * npass))
     mc = params.real("main_coupling", float(abs(obe.couplings[0].main_coupling)))
     spatial = lindblad.multipass_2d_rabi(VZ * t, y0, profile, xlocs, ylocs, sigma_z, sigma_y, mc, DIPOLE)
     # optional phase EOM (CU1 has none in the baseline: eom_beta = 0 gives exactly the unmodulated drive)
