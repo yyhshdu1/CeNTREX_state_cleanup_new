@@ -2,6 +2,7 @@
 
     python scripts/detection_level_diagrams.py compute   # probe OBE: photons per molecule per J=1 sublevel (~4 min)
     python scripts/detection_level_diagrams.py plot      # diagrams (slides style) from the cached yields
+    python scripts/detection_level_diagrams.py plot_nonum   # no numbers: highlight = couples to the probe (_nonum)
     python scripts/detection_level_diagrams.py info      # slide schematic: what each line tells about CU1
 
 Lines: R(1) F1'=5/2 F'=3 (the AP-paper detection line, sees F=2 only) and Q(1) F1'=1/2 F'=1 (sees all of J=1).
@@ -150,7 +151,10 @@ def excited_manifold(key):
     return Je, exc, gl
 
 
-def plot():
+def plot(numbers=True):
+    """numbers=False (files end in _nonum): no photon yields, no CU1-residual band, no outlines; a blue highlight
+    marks the sublevels that couple to the probe (Q(1): x polarization only, i.e. the "perp" runs), and the
+    title gives the present 1.5 cm high probe."""
     import matplotlib as mpl
     mpl.use("Agg")
     import matplotlib.pyplot as plt
@@ -159,6 +163,7 @@ def plot():
     data = json.loads(CACHE.read_text())
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     YELLOW, GREY, INK, BLUE = "#f3d36b", "#b9b9b9", "#111111", "#1537a6"
+    TALK = "#bfd0f4"                                                     # highlight: couples to the probe
     PCOL = {-1: "#1f77b4", 1: "#ff7f0e"}                                 # excited parity P' = -, +
     GCOL = {(1.5, 2): "#2ca02c", (1.5, 1): "#d62728", (0.5, 1): "#9467bd", (0.5, 0): "#8c564b"}
     width, pad, lw = 0.34, 0.03, 4.2
@@ -215,12 +220,16 @@ def plot():
         ax.text(-mfmax - 3.2, 0.69, rf"$B\,^3\Pi_1\ (v'=0)$" + "\n" + rf"$J'={Je}$", ha="left", va="center",
                 fontsize=16, linespacing=1.6)
 
-        # probe: dashed line through the probed level, outlines of the driven sublevels
+        # probe: dashed line through the probed level; driven sublevels outlined (numbers) or highlighted (no numbers)
         yt = y_exc[target[key]]
         ax.plot([-mfmax - 0.55, mfmax + 0.45], [yt, yt], ls=(0, (6, 3)), lw=1.8, color=BLUE, zorder=1)
         for m in range(-tF, tF + 1):
-            ax.add_patch(Rectangle((m - width / 2 - pad, yt - 0.011), width + 2 * pad, 0.022, facecolor="none",
-                                   edgecolor=BLUE, lw=2.2, zorder=3))
+            if numbers:
+                ax.add_patch(Rectangle((m - width / 2 - pad, yt - 0.011), width + 2 * pad, 0.022, facecolor="none",
+                                       edgecolor=BLUE, lw=2.2, zorder=3))
+            else:
+                ax.add_patch(Rectangle((m - width / 2 - pad, yt - 0.012), width + 2 * pad, 0.024, facecolor=TALK,
+                                       edgecolor="none", zorder=1.5))
 
         # ---- ground J = 1: hyperfine levels in energy order, the two F1 pairs apart (not to scale) ------------
         gorder = sorted(gl, key=lambda g: gl[g])                          # (1/2,0), (1/2,1), (3/2,1), (3/2,2)
@@ -229,20 +238,25 @@ def plot():
         for (F1, F), yy in y_g.items():
             for m in range(-F, F + 1):
                 k = (F1, F, m)
-                band = YELLOW if k in cu1_off else GREY if k in cu1_res else None
+                band = YELLOW if k in cu1_off else (GREY if k in cu1_res and numbers else None)
                 if band:                                                   # larger than the outline, so it shows
-                    ax.add_patch(Rectangle((m - width / 2 - pad - 0.05, yy - 0.016), width + 2 * pad + 0.10, 0.032,
+                    h_ = 0.032 if numbers else 0.040
+                    ax.add_patch(Rectangle((m - width / 2 - pad - 0.05, yy - h_ / 2), width + 2 * pad + 0.10, h_,
                                            facecolor=band, edgecolor="none", zorder=0))
                 ax.plot([m - width / 2, m + width / 2], [yy, yy], color=GCOL[(F1, F)], lw=lw, solid_capstyle="butt",
                         zorder=2)
                 lo, hi = min(par[k], perp[k]), max(par[k], perp[k])
-                if hi > 0.05:                                              # detected in at least one polarization
+                if numbers and hi > 0.05:                                  # detected in at least one polarization
                     ax.add_patch(Rectangle((m - width / 2 - pad, yy - 0.010), width + 2 * pad, 0.020,
                                            facecolor="none", edgecolor=BLUE, lw=2.0,
                                            ls="solid" if lo > 0.05 else (0, (3, 2)), zorder=3))
-                lab = fmt(par[k]) if same else f"{fmt(par[k])}|{fmt(perp[k])}"
-                ax.text(m + width / 2 + pad + 0.07, yy, lab, ha="left", va="center", fontsize=10.5,
-                        color=INK if hi > 0.05 else "0.55", fontweight="bold" if hi > 0.05 else "normal")
+                elif not numbers and (perp[k] if key == "Q1F1" else hi) > 0.05:    # Q(1): x polarization only
+                    ax.add_patch(Rectangle((m - width / 2 - pad, yy - 0.012), width + 2 * pad, 0.024,
+                                           facecolor=TALK, edgecolor="none", zorder=1))
+                if numbers:
+                    lab = fmt(par[k]) if same else f"{fmt(par[k])}|{fmt(perp[k])}"
+                    ax.text(m + width / 2 + pad + 0.07, yy, lab, ha="left", va="center", fontsize=10.5,
+                            color=INK if hi > 0.05 else "0.55", fontweight="bold" if hi > 0.05 else "normal")
             ax.text(xF, yy, f"{F}", ha="center", va="center", fontsize=13, color=GCOL[(F1, F)])
             ax.text(xO, yy, f"{1e3 * (gl[(F1, F)] - gl[gorder[-1]]):+.1f}".replace("-", "−").replace("+0.0", "0"),
                     ha="left", va="center", fontsize=11)
@@ -260,33 +274,50 @@ def plot():
         ax.text(-mfmax - 3.2, 0.20, r"$X\,^1\Sigma^+\ (v=0)$" + "\n" + r"$J=1$", ha="left", va="center", fontsize=16,
                 linespacing=1.6)
         bx0, bx1, by0, by1 = -2 - width / 2 - 0.2, 2 + width / 2 + 0.85, 0.055, 0.335
-        ax.add_patch(Rectangle((bx0, by0), bx1 - bx0, by1 - by0, fill=False, ls=(0, (5, 3)), lw=1.5,
-                               edgecolor="0.3", zorder=4))
+        if numbers:
+            ax.add_patch(Rectangle((bx0, by0), bx1 - bx0, by1 - by0, fill=False, ls=(0, (5, 3)), lw=1.5,
+                                   edgecolor="0.3", zorder=4))
         # arrow between the m_F columns, so it does not run over the bars it passes
         ax.add_patch(FancyArrowPatch((0.5, by1), (0.5, yt), arrowstyle="-|>", mutation_scale=18, lw=2.0,
                                      color=BLUE, shrinkA=0, shrinkB=0, zorder=2.5))
-        fig.suptitle(f"Detection  |  {LINES[key]['name'].replace('F1', 'F₁')}  |  E = 0  |  probe 2.5 cm × 1.7 cm, "
-                     "single frequency", fontsize=19, y=0.985)
+        probe = ("probe 2.5 cm × 1.7 cm, single frequency" if numbers else
+                 "probe 1.5 cm high, single frequency" + (", x polarization" if key == "Q1F1" else ""))
+        fig.suptitle(f"Detection  |  {LINES[key]['name'].replace('F1', 'F₁')}  |  E = 0  |  {probe}", fontsize=19,
+                     y=0.985)
 
         # ---- key -------------------------------------------------------------------------------------------
         p = f"{I0 / 10:.0f} mW/cm² peak, probe centre, vx = 0"
-        if same:
-            num = (f"Number at each J=1 sublevel: photons per molecule, saturated ({p}), any polarization. "
-                   "Blue box: detected; grey: not detected.")
-            how = "F'=3 decays inside J=1 only to F=2: no dark state, 2.1 photons per F=2 molecule."
+        if not numbers:
+            pol = ("any linear polarization" if same else
+                   "x polarization (along the beamline, ⊥ the CU1 field)")
+            key_text = [
+                f"Blue dashed line: probe on resonance with |F₁'={half(tF1)}, F'={tF}, P'=+⟩, single frequency, {pol}.",
+                "Blue highlight: sublevels that couple to the probe (on B: driven; on J=1: excited by the probe).",
+                "F'=3 decays inside J=1 only to F=2: no dark state, every F=2 sublevel is detected." if same else
+                "12 ground vs 3 excited sublevels: dark states form during detection, so the signal per molecule "
+                "depends on the sublevel.",
+                "Yellow: populated with CU1 off (AP1).",
+                "Levels in energy order, not to scale; right columns: offsets in MHz (B) and kHz (X).",
+            ]
         else:
-            num = (f"Number at each J=1 sublevel: photons per molecule, saturated ({p}), polarization ∥ | ⊥ to the "
-                   "molecules' quantization axis (⊥ approximate). Solid box: detected for both; dashed: only for ⊥.")
-            how = "3 excited vs 12 ground sublevels: fixed polarization leaves dark states. F=0 is never dark."
-        key_text = [
-            f"Blue dashed line: probe on resonance with |F₁'={half(tF1)}, F'={tF}, P'=+⟩, single frequency, fixed "
-            "linear polarization; blue boxes on B: driven.",
-            num,
-            how,
-            f"Yellow: populated with CU1 off (AP1).  Grey: where the CU1 residual sits ({100 * frac_f0:.0f} % F=0, "
-            f"{100 * frac_f22:.0f} % F=2, m_F=±2; +19.0 MHz).",
-            "Levels in energy order, not to scale; right columns: offsets in MHz (B) and kHz (X).",
-        ]
+            if same:
+                num = (f"Number at each J=1 sublevel: photons per molecule, saturated ({p}), any polarization. "
+                       "Blue box: detected; grey: not detected.")
+                how = "F'=3 decays inside J=1 only to F=2: no dark state, 2.1 photons per F=2 molecule."
+            else:
+                num = (f"Number at each J=1 sublevel: photons per molecule, saturated ({p}), polarization ∥ | ⊥ to "
+                       "the molecules' quantization axis (⊥ approximate). Solid box: detected for both; dashed: only "
+                       "for ⊥.")
+                how = "3 excited vs 12 ground sublevels: fixed polarization leaves dark states. F=0 is never dark."
+            key_text = [
+                f"Blue dashed line: probe on resonance with |F₁'={half(tF1)}, F'={tF}, P'=+⟩, single frequency, fixed "
+                "linear polarization; blue boxes on B: driven.",
+                num,
+                how,
+                f"Yellow: populated with CU1 off (AP1).  Grey: where the CU1 residual sits ({100 * frac_f0:.0f} % F=0, "
+                f"{100 * frac_f22:.0f} % F=2, m_F=±2; +19.0 MHz).",
+                "Levels in energy order, not to scale; right columns: offsets in MHz (B) and kHz (X).",
+            ]
         wrapped = [w for par_ in key_text for w in textwrap.wrap(par_, 140)]
         for k, line in enumerate(wrapped):
             fig.text(0.02, 0.215 - 0.024 * k, line, ha="left", va="top", fontsize=15, color=INK)
@@ -295,8 +326,9 @@ def plot():
         plt.close(fig)
         print("wrote", fname)
 
-    figure("R1F3", "detection_level_diagram_R1_F3_0Vcm")
-    figure("Q1F1", "detection_level_diagram_Q1_F1_0Vcm")
+    suffix = "" if numbers else "_nonum"
+    figure("R1F3", f"detection_level_diagram_R1_F3_0Vcm{suffix}")
+    figure("Q1F1", f"detection_level_diagram_Q1_F1_0Vcm{suffix}")
 
 
 def cu1_residual_by_level():
@@ -462,4 +494,4 @@ def plot_info():
 
 
 if __name__ == "__main__":
-    {"compute": compute, "plot": plot, "info": plot_info}[sys.argv[1]]()
+    {"compute": compute, "plot": plot, "plot_nonum": lambda: plot(numbers=False), "info": plot_info}[sys.argv[1]]()
