@@ -126,6 +126,7 @@ def build(return_obe=False, doppler=False, sigma_y_m=None):
     eom0 = params.real("eom0", EOM_FREQUENCY); eom1 = params.real("eom1", EOM_FREQUENCY)
     beta0 = params.real("beta0", BETA); beta1 = params.real("beta1", BETA)
     pol_frequency = params.real("pol_frequency", POL_FREQUENCY)
+    pol_phase = params.real("pol_phase", 0.0)       # switching phase at t = 0 (molecule arrival is random)
     y0 = params.real("y0", 0.0)
     sigma_z = params.real("sigma_z", SIGMA_Z); sigma_y = params.real("sigma_y", sy)
     profile = params.real("intensities_per_watt", intensities_per_watt)
@@ -145,7 +146,7 @@ def build(return_obe=False, doppler=False, sigma_y_m=None):
         params.bind(s.Ω, drive, finalize=False)
         params.bind(s.δ, det + shift, finalize=False)
     # Orthogonal polarizations through one polarization EOM: antiphase X/Z gates.
-    z_gate = lindblad.square_wave(t, pol_frequency, 0.0)
+    z_gate = lindblad.square_wave(t, pol_frequency, pol_phase)
     px0, pz0 = sel[0].polarization_symbols; px1, pz1 = sel[1].polarization_symbols
     params.bind(px0, 1.0 - z_gate, finalize=False); params.bind(pz0, z_gate, finalize=False)
     params.bind(px1, z_gate, finalize=False); params.bind(pz1, 1.0 - z_gate, finalize=False)
