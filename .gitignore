@@ -137,3 +137,6 @@ docs/**/*.lot
 docs/**/*.out
 docs/**/*.toc
 docs/**/*.synctex.gz
+
+# Built report (rebuild with latexmk in docs/state_cleanup)
+docs/state_cleanup/main.pdf
