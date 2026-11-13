@@ -1,0 +1,19 @@
+{
+  "name": "state-cleanup report (LaTeX)",
+  "build": { "dockerfile": "Dockerfile" },
+  "hostRequirements": { "cpus": 2 },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "James-Yu.latex-workshop"
+      ],
+      "settings": {
+        "latex-workshop.latex.recipe.default": "latexmk",
+        "latex-workshop.latex.autoBuild.run": "onSave",
+        "latex-workshop.view.pdf.viewer": "tab",
+        "latex-workshop.latex.autoClean.run": "never"
+      }
+    }
+  },
+  "postCreateCommand": "latexmk -v | head -1"
+}

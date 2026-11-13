@@ -136,3 +136,4 @@ docs/**/*.log
 docs/**/*.lot
 docs/**/*.out
 docs/**/*.toc
+docs/**/*.synctex.gz
