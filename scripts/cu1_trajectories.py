@@ -15,6 +15,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from scripts import vz_paths  # noqa: E402
+sys.path.insert(0, str(ROOT))
 from scripts.cleanup_spb_doppler import CU1_SOLVER, build_cu1, describe  # noqa: E402
 from scripts.cu2_laser_aom_scan import FIRST_PASS, N_PASS, PASS_SPACING, T_END, VZ, log  # noqa: E402
 
@@ -83,7 +85,7 @@ def plot():
     import matplotlib.pyplot as plt
     from scripts.plot_cu1_doppler_map import GRID, INK, MUTED, SERIES  # noqa: F401  (also sets rcParams)
 
-    z = np.load(CACHE)
+    z = np.load(vz_paths.find(CACHE, CACHE.parent))
     t, pops, gidx, labels, spb = z["t"], z["pops"], z["ground_idx"], z["labels"], z["spb"]
     dets = list(z["detunings"])
     k19, k20 = dets.index(19.0), dets.index(20.2)

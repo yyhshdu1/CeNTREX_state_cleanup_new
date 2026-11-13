@@ -19,6 +19,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from scripts import vz_paths  # noqa: E402
+sys.path.insert(0, str(ROOT))
 from scripts.cu2_laser_aom_scan import BETA, CHECKPOINT_DIR, EOM_FREQUENCY, build  # noqa: E402
 
 CACHE = CHECKPOINT_DIR / "level_scheme.npz"
@@ -104,7 +106,7 @@ def plot_slides():
         "xtick.color": GRAY, "ytick.color": GRAY, "xtick.labelcolor": INK, "ytick.labelcolor": INK,
         "axes.spines.top": False, "axes.spines.right": False, "savefig.facecolor": "white",
     })
-    z = np.load(CACHE)
+    z = np.load(vz_paths.find(CACHE))
     rows, pairs, dmain = z["rows"], z["pairs"], float(z["delta_main"])
     orders = np.arange(-3, 4)
     power = jv(orders, BETA) ** 2
@@ -218,7 +220,7 @@ def plot_paper():
         "axes.edgecolor": INK, "axes.labelcolor": INK, "xtick.color": INK, "ytick.color": INK,
         "pdf.fonttype": 42, "savefig.facecolor": "white",
     })
-    z = np.load(CACHE)
+    z = np.load(vz_paths.find(CACHE))
     rows, pairs, dmain = z["rows"], z["pairs"], float(z["delta_main"])
     orders = np.arange(-3, 4)
     power = jv(orders, BETA) ** 2

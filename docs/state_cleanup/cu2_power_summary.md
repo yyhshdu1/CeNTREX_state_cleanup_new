@@ -1,110 +1,131 @@
-# CU2 at the real laser power — summary (2026-11-01)
+# CU2 at the real laser power — summary (updated 2026-11-04)
 
-Simulation study of CU2 with the laser power actually available (at most 60 mW in total, 35 + 25 mW now) and
-5 % window loss per pass, 2026-10-30 to 2026-11-01. Full running log with every table:
-`docs/state_cleanup/cu2_power_study.md` (Steps 1–15). Script: `scripts/cu2_power_check.py`.
+Simulation study of CU2 with the laser power actually available and 5 % window loss per pass,
+2026-10-30 to 2026-11-03. **The CU2 field is 155 V/cm** (confirmed 2026-11-03) and the total UV is **75 mW**
+(measured). The AOM band is 200 ± 15 MHz. Full running log with every table: `docs/state_cleanup/cu2_power_study.md`
+(Steps 1–32). Scripts: `scripts/cu2_power_check.py` (CU2 OBE stages), `scripts/cu2_detection_test.py` (CU2 test
+detection).
 
-## Recommendation
+Figures:
 
-| Parameter | Recommended | Before (report, 80 + 24 mW / 10 % loss) |
+- `docs/state_cleanup/figures/cleanup_map_vx_y_CU2_155Vcm.{pdf,png}`: vx × y0 map at the set point
+  (`scripts/plot_cleanup_maps_current.py cu2_155`).
+- `docs/state_cleanup/figures/CU2_corr_scan_e155_f200.{pdf,png}`: laser scan with the AOM fixed
+  (`scripts/plot_cu2_corr_scan.py`).
+- `docs/state_cleanup/figures/slides/CU2_test_onoff_obe_e155_d12p5_f200.{pdf,png}`: CU2 test on/off schematic.
+- `docs/state_cleanup/figures/CU2_power_study.{pdf,png}`: the earlier 200 V/cm, 60 mW study (history).
+
+## Recommendation (155 V/cm, 75 mW)
+
+| Parameter | Recommended | Note |
 |---|---|---|
-| Power split, F'=3 + F'=4 | **35 + 25 mW** (present); 30 + 30 mW if more than ~13 % of the J=2 population at CU2 is outside m_J = 0 | 80 + 24 mW |
-| Laser detuning δ0/2π (F'=3 beam) | **12.5 MHz** | 11.5 MHz (R1) |
-| AOM frequency f_AOM | **207.5 MHz** (F'=4 beam detuning unchanged, δ1 = +8.17 MHz) | 208.5 MHz (R1) |
-| EOM depth β (17.5 MHz) | **1.5** (unchanged) | 1.5 |
-| X/Z switching | **0.5 MHz** (unchanged) | 0.5 MHz |
-| Beam height | 3 cm is fine; 2.4 cm would gain +0.08 % (SPB) / +0.42 % (uniform) | 3 cm |
+| Power split, F'=3 + F'=4 | **32 + 43 mW** | 26 + 49 mW if more than ~14 % of the J=2 population behaves like the uniform start |
+| Laser detuning δ0/2π (F'=3 beam) | **12.5 MHz** | 12–12.5 MHz equivalent |
+| AOM frequency f_AOM | **200 MHz** (centre of the AOM band) | F'=4 beam δ1 = δ0 + f_AOM − Δ_main = +7.98 MHz, Δ_main = 204.52 MHz |
+| EOM (17.5 MHz), X/Z switching | β = 1.5, 0.5 MHz | unchanged |
+| Beam height | 3 cm | unchanged |
 
-The new set point is R1 with the laser +1 MHz and the AOM −1 MHz, i.e. only the F'=3 beam moves.
+(12, 212) MHz is 0.09 % (SPB) / 0.3 % (uniform) better on the acceptance grid, but 212 MHz is near the edge of the
+AOM band, where the diffraction efficiency may drop.
 
 ## Expected cleanup efficiency
 
-Mean over the detection acceptance (|vx| ≤ 1 m/s with σvx = 0.65 m/s, |y0| ≤ 8.5 mm), 3 cm beam, 13 passes,
-200 V/cm, vz = 184 m/s. *SPB start* = the four J=2, m_J = 0 levels after SPB (the realistic case, since the lens
-focuses m_J = 0); *uniform start* = all 20 J=2 sublevels (worst case).
+Mean over the detection acceptance (|vx| ≤ 1 m/s with σvx = 0.65 m/s, |y0| ≤ 8.5 mm with σy = 10.35 mm), 3 cm
+beam, 13 passes, vz = 184 m/s, reduced 24-point grid (≤ 0.08 % from the full grid). *SPB start* = the four J=2,
+m_J ≈ 0 lens levels, weighted 2/3 (singlet) and 1/9 each (triplets); *uniform start* = all 20 J=2 sublevels.
 
-| Case | SPB start | uniform start |
+| Case (155 V/cm) | SPB start | uniform start |
 |---|---|---|
-| Old model: 80 + 24 mW, 10 % loss, R1 | 99.57 % | 96.66 % |
-| 35 + 25 mW, 5 % loss, R1 | 99.22 % | 96.66 % |
-| **35 + 25 mW, 5 % loss, new set point** | **99.50 %** | **97.26 %** |
-| 30 + 30 mW, 5 % loss, new set point | 99.44 % | 97.66 % |
-| 25 + 35 mW, 5 % loss, new set point | 99.34 % | 97.82 % |
-| 40 + 20 mW, 5 % loss, new set point | 99.50 % | 96.53 % |
+| **32 + 43 mW, (12.5, 200) MHz** | **99.57 %** | **97.01 %** |
+| 32 + 43 mW, (12, 212) MHz | 99.66 % | 97.30 % |
+| 35 + 25 mW (60 mW), (12, 212) MHz | 99.45 % | 94.22 % |
 
-With the new set point, 60 mW at 5 % loss does about as well as the old 104 mW at 10 % loss. On the beam axis
-(vx = 0, y0 = 0) the new set point gives 99.88 % (SPB) and 99.52 % (uniform).
+The full 0.2 m/s × 3 mm map at the set point (Step 31) gives 99.56 % (SPB) and 96.92 % (uniform) over the
+acceptance, and 99.88 % / 99.18 % on axis (vx = 0, y0 = 0). For comparison, 200 V/cm at 32 + 43 mW gave
+99.60 % / 98.91 % (history, not re-optimised).
 
 ## Main findings
 
-1. **Power split (Steps 1, 2, 7, 12).** The SPB levels are pumped mainly by the F'=3 beam, while the stretched
-   m_F = ±3 levels (which dominate the uniform-start residual) are pumped almost only by F'=4. So the SPB start
-   is flat from 35 + 25 to 40 + 20 mW, and the uniform start prefers more F'=4 power. The choice between 35 + 25
-   and 30 + 30 mW is worth ≤ 0.06 % (SPB) or 0.40 % (uniform). If a fraction u of the population is like the
-   uniform start, 30 + 30 is better for u ≳ 13 % and 25 + 35 is better for u ≳ 22 %.
-2. **Set point (Steps 3–6, 13).** R1 was optimised on axis at 80 + 24 mW. At 60 mW the lines are less power
-   broadened, so the efficiency drops faster with transverse velocity. Moving δ0 up by 1 MHz gives up a little on
-   axis and gains it back at |vx| ≈ 0.4 m/s and beyond: +0.28 % (SPB) and +0.60 % (uniform) over the acceptance.
-   (13, 206) MHz is equivalent (99.47 / 97.41 %) and slightly better for wide vx distributions. The new point is
-   better than R1 for every vx width from σvx = 0.4 to 1.28 m/s. The optimum is the same for every split from
-   25 + 35 to 35 + 25 mW, for beam heights of 2.4 and 3 cm, and for 5 and 10 % loss.
-3. **EOM depth and polarization switching (Steps 6, 14, 15).** β = 1.5 is optimal (flat to 1.75). The switching
-   frequency changes the result by ≤ 0.1 % (SPB) and ≤ 0.4 % (uniform) between 0.1 and 2 MHz, with no trend;
-   0.5 MHz is best for the uniform start. The switching phase at the molecule's arrival does not matter
-   (≤ 0.03 %).
-4. **Beam height (Step 7).** At fixed power a smaller beam is brighter but loses the edge of the acceptance. The
-   optimum is 2.4 cm (SPB 99.58 %, uniform 97.68 %): 2 cm gives 99.53 / 97.49 %, 1.6 cm 99.13 / 96.25 % and
-   4 cm 99.24 / 95.78 %. This is tied to the detection acceptance |y0| ≤ 8.5 mm.
-5. **Solver accuracy (Step 7).** Tighter tolerances change single points by ≤ 0.04 %.
+1. **Field 155 V/cm (Steps 16, 17).** The F'=4 − F'=3 line separation drops from 211.83 to 204.52 MHz. With the
+   200 V/cm set point kept, the uniform start falls to 89.6 % (proxy), so the set point has to be re-optimised.
+2. **Power (Steps 19, 23).** The extra 15 mW, put into the F'=4 beam, gains +0.2 % (SPB) and +3.1 % (uniform).
+   Split at (12.5, 212), proxy: 32 + 43 mW is best for SPB (99.70 %); 26 + 49 mW is better beyond ~14 %
+   uniform-like population.
+3. **Where the residual is (Step 24).** All 12 F1 = 5/2 levels are cleaned to ≥ 99.5 %; the uniform-start residual
+   comes entirely from the 8 F1 = 3/2 levels (mean 93.6 %), whose lines are narrow. Efficiency ≈ 99.77 − 6.2 q %
+   for a fraction q in F1 = 3/2 (uniform start q = 0.4). Per-level table at (12, 212):
+   `docs/state_cleanup/data/cu2_perstate_155Vcm_75mW_d12_f212.csv`; any incoherent start is Σ p_i ε_i.
+4. **Laser scan with the AOM fixed (Steps 26, 27).** On axis the efficiency has narrow peaks every 17–18 MHz (EOM)
+   at δ0 = 5, 22, 40 MHz (uniform 99.9 %, 2–3 MHz wide), but over the acceptance they lose 1.6–2.0 % (uniform) to
+   12.5 MHz: Doppler shifts of a few MHz move off-axis molecules into the valleys. The SPB start is ≥ 99 % on axis
+   from δ0 = −13 to 57 MHz.
+5. **Field drift (Step 22).** ±3 V/cm with laser and AOM fixed costs ≤ 0.01 % (SPB) and ≤ 0.3 % (uniform).
 
-## Sensitivities (proxy, at the new set point, 35 + 25 mW)
+Expected shape of an in-situ laser scan at f_AOM = 200 MHz, proxy (%):
 
-Proxy = 6 points (vx = −0.6, 0, 0.6 m/s × y0 = 0, 6 mm). It reads 0.1–0.7 % higher than the full acceptance mean
-but ranks settings in the same order; at the new set point it gives 99.64 % (SPB) and 97.87 % (uniform).
+| δ0/2π (MHz) | 5 | 11.5 | 12 | **12.5** | 13 | 13.5 | 22 | 23 |
+|---|---|---|---|---|---|---|---|---|
+| SPB | 99.44 | 99.58 | 99.67 | **99.64** | 99.55 | 99.49 | 99.48 | 99.55 |
+| uniform | 95.54 | 96.88 | 97.47 | **97.59** | 97.27 | 96.88 | 95.84 | 96.01 |
 
-| Change | SPB start | uniform start |
+## First CU2 test (CU1 and SPB off): detection
+
+Lens start, CU2 at (12.5, 200) MHz; probe DET2, σ+ about k, 15 mW, flat top 1.5 × 1.5 cm, DET plates off. Computed
+with the quantization axis along k (CU2 populations rotated onto k with d^F(π/2)); an exact check with coherent decay
+and the earth field ⊥ k agrees to ≤ 3 % (Step 32, which supersedes the numbers of Steps 29–30). True J=2 left
+0.49–0.50 %, 94 % of it in F1 = 3/2. Test plan `docs/state_cleanup/CU2_test_plan.md`.
+
+| Line (role) | What it sees | Expected reading |
 |---|---|---|
-| Laser δ0 ± 0.5 MHz | ≤ −0.14 % | ≤ −0.24 % |
-| E field ± 2.5 V/cm (laser fixed) | ≤ −0.11 % | ≤ −0.17 % |
-| E field ± 5 V/cm (laser fixed) | −0.2 … −1.0 % | ≤ −0.6 % |
-| Loss per pass 3 / 8 / 10 / 15 % (instead of 5 %) | +0.12 / −0.25 / −0.48 / −1.23 % | +0.61 / −1.17 / −2.13 / −5.03 % |
-| vz = 150 / 220 m/s (instead of 184 m/s) | +0.18 / −0.26 % | +0.98 / −1.22 % |
-| Total power 80 mW (47 + 33) / 100 mW (58 + 42) | +0.24 / +0.31 % | +1.26 / +1.77 % |
+| R(2) F1'=7/2 F'=4 (check) | F=3 only (3 % of the residual) | S_on/S_off = 1.5–3.8 × 10⁻⁴: 13–33× below the true residual |
+| Q(2) F1'=5/2 F'=3 (normalization) | all four lens levels | S_off = 1.4–2.4 photons per J=2 molecule |
+| Q(2) F1'=3/2 F'=2 (residual) | all 8 F1=3/2 levels | S_on = 5.7–5.9 × 10⁻³ photons per J=2 molecule |
 
-- **E field.** The lines shift by different amounts (F'=3 main line −2.19 MHz, SPB-level lines −0.78 MHz per
-  +10 V/cm), so re-tuning the laser to the main line does not compensate a field error. The CU2 field should be
-  known to about ±2 V/cm, or the set point should be found by scanning the laser at the actual field.
-- **Loss per pass.** Each extra % of loss costs ~0.08 % (SPB) and ~0.3 % (uniform), comparable to the effect of
-  the power split. At 10 % loss the optimal set point is unchanged, and its gain over R1 grows to +0.29 % (SPB) and
-  +0.96 % (uniform).
+S_on[Q(2) F1'=3/2 F'=2] / S_off[Q(2) F1'=5/2 F'=3] = 0.24–0.41 %, i.e. the F1 = 3/2 residual divided by a model
+factor 1.1–2.0 set mostly by the lens weighting, which S_off[R(2) F'=4] / S_off[Q(2) F1'=5/2 F'=3] measures (0.43 for
+singlet 2/3, 0.67 equal, 0.75 triplet only). RC on P(2) F'=2 (triplet-rich start) triples the R(2) F'=4 CU2-off
+signal, but not the CU2-on signal.
 
-Expected shape of an in-situ laser scan (SPB start, proxy, f_AOM = 207.5 MHz):
-
-| δ0/2π (MHz) | 10 | 11 | 11.5 | 12 | **12.5** | 13 | 13.5 | 14 | 15 |
-|---|---|---|---|---|---|---|---|---|---|
-| efficiency (%) | 99.30 | 99.25 | 99.38 | 99.56 | **99.64** | 99.50 | 99.19 | 98.77 | 97.36 |
-
-The maximum is shallow (12–13 MHz within 0.15 %) and falls off faster on the blue side.
+**Model caveat.** centrex's decay operators are pairwise (no coherence transfer in spontaneous emission), so its
+results depend on the quantization axis unless the light is pure π or σ about it. The detection numbers above avoid
+this; the CU2/CU1 cleanup OBEs (X/Z light, axis along E) have not been checked for it yet.
 
 ## What would most improve the prediction
 
-1. **The m_J ≠ 0 fraction of J=2 at CU2** (from the lens simulation or a measurement). It decides between 35 + 25
-   and 30 + 30 mW and whether the true efficiency is near 99.5 % or 97 %.
-2. **The real loss per pass.** 5 % vs 10 % is worth 0.5 % (SPB) and 2 % (uniform).
-3. **The CU2 field to ±2 V/cm**, or an in-situ laser scan at the operating field.
+1. **The J=2 population at CU2 outside the four lens levels**, and the singlet/triplet weighting (measurable with
+   R(2) F'=4 and Q(2) F1'=5/2 F'=3 at CU2 off).
+2. **The real loss per pass.** Each extra % costs ~0.08 % (SPB) and ~0.3 % (uniform) (200 V/cm study).
+3. **The AOM diffraction efficiency across 185–215 MHz**, if the (12, 212) point is to be used.
 
 ## Model
 
-56-level OBE (`scripts/cu2_laser_aom_scan.py`). R(2) F1'=7/2 F'=3 and F'=4 from one laser and a single-pass AOM.
-200 V/cm, B = 1 mG, one 17.5 MHz EOM on both beams, X/Z switching in antiphase. 13 passes spaced 3.5 mm,
-σz = 0.75 mm, 3 cm beam (σy = 7.5 mm), Doppler sign flip between passes. Acceptance mean as in
-`scripts/plot_cleanup_maps_current.py` (σvx = 0.65 m/s, σy = 10.35 mm). centrex-tlf 0.3.0, Δ_main = 211.829 MHz.
+56-level OBE (`scripts/cu2_laser_aom_scan.py`). R(2) F1'=7/2 F'=3 and F'=4 from one laser and a single-pass AOM,
+B = 1 mG, one 17.5 MHz EOM on both beams, X/Z switching in antiphase. 13 passes spaced 3.5 mm, σz = 0.75 mm, 3 cm
+beam (σy = 7.5 mm), Doppler sign flip between passes, 5 % loss per pass. centrex-tlf 0.3.0. Checkpoints are in
+`tmp/cu2_power/vz184/` (run at v_z = 184 m/s; the models now default to the measured 156 m/s), not tracked by git; `python scripts/cu2_power_check.py summary vz184` reprints the tables.
 
-Code changes:
+## Earlier study: 200 V/cm, 60 mW (2026-11-01, history)
 
-- `scripts/cu2_power_check.py` contains every stage (`split`, `acceptance`, the set-point grids, `beta`,
-  `efield`, `vz`, `loss`, `power`, `polfreq`, `polphase`, `summary`).
-- `scripts/cu2_laser_aom_scan.py` gained a runtime parameter `pol_phase` (default 0, so earlier results are
-  unchanged).
-- Checkpoints are in `tmp/cu2_power/`, which is not tracked by git. `python scripts/cu2_power_check.py summary`
-  reprints every table from them.
+Steps 1–15 of the study log, before the field was moved to 155 V/cm and the power to 75 mW.
+
+| Parameter | Then recommended | Report (80 + 24 mW, 10 % loss) |
+|---|---|---|
+| Power split | 35 + 25 mW (30 + 30 mW beyond ~13 % off m_J = 0) | 80 + 24 mW |
+| δ0/2π | 12.5 MHz | 11.5 MHz (R1) |
+| f_AOM | 207.5 MHz | 208.5 MHz (R1) |
+
+| Case (200 V/cm, full grid) | SPB start | uniform start |
+|---|---|---|
+| Old model: 80 + 24 mW, 10 % loss, R1 | 99.57 % | 96.66 % |
+| 35 + 25 mW, 5 % loss, R1 | 99.22 % | 96.66 % |
+| 35 + 25 mW, 5 % loss, (12.5, 207.5) | 99.50 % | 97.26 % |
+
+Sensitivities at (12.5, 207.5), 35 + 25 mW, proxy (general trends, not re-run at 155 V/cm):
+
+| Change | SPB start | uniform start |
+|---|---|---|
+| Loss per pass 3 / 8 / 10 / 15 % (instead of 5 %) | +0.12 / −0.25 / −0.48 / −1.23 % | +0.61 / −1.17 / −2.13 / −5.03 % |
+| vz = 150 / 220 m/s (instead of 184 m/s) | +0.18 / −0.26 % | +0.98 / −1.22 % |
+| EOM β | optimum 1.5, flat to 1.75 | |
+| X/Z switching 0.1–2 MHz, switching phase | ≤ 0.1 %, ≤ 0.03 % | ≤ 0.4 % |
+| Beam height 2.4 cm instead of 3 cm | +0.08 % | +0.42 % |

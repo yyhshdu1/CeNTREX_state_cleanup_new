@@ -1527,6 +1527,11 @@ def _fmt_signed_mf(mF: int) -> str:
     return "0" if mF == 0 else f"{mF:+d}"
 
 
+# Bands narrower than this (1 Hz) are degenerate: diagonalization noise at
+# E = 0 (~1e-11 MHz) must not be stretched over the whole band.
+_DEGENERATE_SPAN_MHz = 1e-6
+
+
 def _band_y(
     levels: Sequence[DressedLevel],
     y_low: float,
@@ -1546,7 +1551,7 @@ def _band_y(
 
     energies = np.array([lv.energy_MHz for lv in levels], dtype=float)
     lo, hi = float(energies.min()), float(energies.max())
-    if hi - lo < 1e-12:
+    if hi - lo < _DEGENERATE_SPAN_MHz:
         y = np.full(energies.shape, 0.5 * (y_low + y_high))
     else:
         y = y_low + (energies - lo) / (hi - lo) * (y_high - y_low)
@@ -1604,13 +1609,14 @@ def _draw_band_energy_axis(
     """Draw ticks using the same exact linear energy mapping as the level bars."""
     lo = min(lv.energy_MHz for lv in levels) - reference
     hi = max(lv.energy_MHz for lv in levels) - reference
-    if hi - lo < 1e-12:
-        ticks = [lo]
+    degenerate = hi - lo < _DEGENERATE_SPAN_MHz
+    if degenerate:
+        ticks = [0.0 if abs(lo) < _DEGENERATE_SPAN_MHz else lo]
     else:
         ticks = [v for v in MaxNLocator(nbins=4).tick_values(lo, hi) if lo <= v <= hi]
     ax.plot([x, x], band, color="0.35", lw=0.8)
     for value in ticks:
-        y = 0.5 * sum(band) if hi - lo < 1e-12 else band[0] + (value - lo) / (hi - lo) * (band[1] - band[0])
+        y = 0.5 * sum(band) if degenerate else band[0] + (value - lo) / (hi - lo) * (band[1] - band[0])
         ax.plot([x - tick_width, x], [y, y], color="0.35", lw=0.8)
         ax.text(x - 1.6 * tick_width, y, f"{value:g}", ha="right", va="center", fontsize=fontsize)
 
@@ -1840,7 +1846,6 @@ def _render_info_panel(info: Axes, rows: Sequence[tuple[str, Any]], base_fs: flo
             spectrum = info.inset_axes([0.10, y_bot + 0.48 * height, 0.82, 0.46 * height])
             offsets = [lv.energy_MHz - reference for lv in levels]
             span = max(max(offsets) - min(offsets), 1.0)
-            spectrum.set_xlim(min(offsets) - 0.06 * span, max(offsets) + 0.06 * span)
             spectrum.set_ylim(0, 1.55)
             spectrum.set_yticks([])
             spectrum.spines[["left", "right", "top"]].set_visible(False)
@@ -1855,7 +1860,22 @@ def _render_info_panel(info: Axes, rows: Sequence[tuple[str, Any]], base_fs: flo
             groups: dict[tuple[int, int | None], list[DressedLevel]] = defaultdict(list)
             for lv in levels:
                 groups[(abs(lv.mF), lv.P)].append(lv)
+            # Groups that coincide to the printed precision (e.g. every mF' of a
+            # level at E = 0) share one stick and one label; separate labels
+            # would be drawn on top of each other.
+            merged: list[list[DressedLevel]] = []
             for group in sorted(groups.values(), key=lambda g: np.mean([lv.energy_MHz for lv in g])):
+                energy = float(np.mean([lv.energy_MHz for lv in group]))
+                if merged and abs(energy - np.mean([lv.energy_MHz for lv in merged[-1]])) < 0.05:
+                    merged[-1].extend(group)
+                else:
+                    merged.append(list(group))
+            # merged labels such as "0...±4" are wider: keep the outer ones clear of
+            # the m_F' row header and the axes edge
+            wide = any(len({lv.mF for lv in g}) > 2 for g in merged)
+            pad = (0.15 if wide else 0.06) * span
+            spectrum.set_xlim(min(offsets) - pad, max(offsets) + pad)
+            for group in merged:
                 energy = float(np.mean([lv.energy_MHz - reference for lv in group]))
                 bottom = 0.0
                 for parity in (-1, +1):
@@ -1866,11 +1886,7 @@ def _render_info_panel(info: Axes, rows: Sequence[tuple[str, Any]], base_fs: flo
                 rounded = f"{energy:.1f}" if abs(energy) >= 0.05 else "0.0"
                 spectrum.text(energy, 1.12, rounded, ha="center", va="bottom",
                               fontsize=fs * 0.72)
-                signs = sorted({lv.mF for lv in group})
-                if len(signs) == 2 and signs[0] == -signs[1]:
-                    label = rf"$\pm{signs[1]}$"
-                else:
-                    label = ",".join("0" if m == 0 else f"{m:+d}" for m in signs)
+                label = _inset_mF_label(sorted({lv.mF for lv in group}))
                 spectrum.text(energy, -0.12, label, ha="center", va="top",
                               transform=spectrum.get_xaxis_transform(), fontsize=fs * 0.72)
             spectrum.text(0.015, -0.12, r"$m_F'$", ha="right", va="top",
@@ -1878,6 +1894,28 @@ def _render_info_panel(info: Axes, rows: Sequence[tuple[str, Any]], base_fs: flo
             continue
 
         raise ValueError(f"unknown info-panel row kind: {kind!r}")
+
+
+def _inset_mF_label(mFs: Sequence[int]) -> str:
+    """Compact inset label for a set of mF' values sharing one stick.
+
+    ``[-1, 1]`` -> ``±1``; a symmetric run ``-4 ... 4`` -> ``0…±4``
+    (``±1…±4`` without 0); anything else is listed explicitly.
+    """
+    mFs = sorted(set(mFs))
+    if len(mFs) == 1:
+        return "0" if mFs[0] == 0 else f"{mFs[0]:+d}"
+    if mFs == [-mFs[-1], mFs[-1]]:
+        return rf"$\pm{mFs[-1]}$"
+    top = mFs[-1]
+    if top > 1 and mFs == list(range(-top, top + 1)):
+        return rf"$0\ldots\pm{top}$"
+    if top > 1 and mFs == [m for m in range(-top, top + 1) if m != 0]:
+        return rf"$\pm1\ldots\pm{top}$"
+    positive = [m for m in mFs if m > 0]
+    if mFs == sorted([-m for m in positive] + ([0] if 0 in mFs else []) + positive):
+        return ", ".join(["0"] * (0 in mFs) + [rf"$\pm{m}$" for m in positive])
+    return ",".join("0" if m == 0 else f"{m:+d}" for m in mFs)
 
 
 def _info_mF_groups(
@@ -1937,9 +1975,17 @@ def _build_info_rows(
     energy_groups: dict[tuple[int, int | None], list[DressedLevel]] = defaultdict(list)
     for lv in excited:
         energy_groups[(abs(lv.mF), lv.P)].append(lv)
-    for group in sorted(energy_groups.values(), key=lambda g: np.mean([lv.energy_MHz for lv in g])):
+    def _offset(lv: DressedLevel) -> str:
+        text = f"{lv.energy_MHz - reference:.1f}"
+        return "0.0" if text == "-0.0" else text
+
+    # Degenerate rows (equal to the printed 0.1 MHz, e.g. every mF' at E = 0)
+    # are listed in |mF'| order rather than by sub-precision energy noise.
+    for group in sorted(energy_groups.values(),
+                        key=lambda g: (round(float(np.mean([lv.energy_MHz for lv in g])) / 0.05),
+                                       abs(g[0].mF))):
         mF = abs(group[0].mF)
-        signed_offsets = {lv.mF: f"{lv.energy_MHz - reference:.1f}" for lv in group}
+        signed_offsets = {lv.mF: _offset(lv) for lv in group}
         if mF == 0:
             energy_table.append(("0", signed_offsets[0], None))
         else:

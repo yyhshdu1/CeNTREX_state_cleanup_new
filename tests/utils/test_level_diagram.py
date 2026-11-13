@@ -23,6 +23,7 @@ from centrex_tlf.transitions import (
 from centrex_tlf.utils.plotting import (
     _build_info_rows,
     _info_mF_groups,
+    _inset_mF_label,
     _level_segments,
     _n_tracking_steps,
     calculate_transition_level_structure,
@@ -397,3 +398,32 @@ def test_plot_into_supplied_axes_keeps_the_figure_suptitle(p2_structure):
         assert fig.get_suptitle() == "caller's own title"
     finally:
         plt.close(fig)
+
+
+def test_inset_mF_label_compacts_shared_sticks():
+    assert _inset_mF_label([0]) == "0"
+    assert _inset_mF_label([-2, 2]) == r"$\pm2$"
+    assert _inset_mF_label(list(range(-4, 5))) == r"$0\ldots\pm4$"
+    assert _inset_mF_label([-3, -2, -1, 1, 2, 3]) == r"$\pm1\ldots\pm3$"
+    assert _inset_mF_label([-3, 0, 3]) == r"0, $\pm3$"
+    assert _inset_mF_label([0, 1]) == "0,+1"
+
+
+def test_inset_labels_do_not_overlap_at_zero_field():
+    """At E = 0 every mF' of a level is degenerate: one stick and one label per level."""
+    structure = calculate_transition_level_structure(
+        E=0.0, J_ground=2, branch="R", F1_excited=3.5, F_excited=4, B=0.0
+    )
+    diagram = plot_transition_level_diagram(structure=structure)
+    try:
+        axes = [*diagram.fig.axes, *(c for ax in diagram.fig.axes for c in ax.child_axes)]
+        insets = [a for a in axes if a.get_xlabel() == "Energy offset (MHz)"]
+        assert len(insets) == 1
+        labels = [t for t in insets[0].texts if t.get_text() not in ("", r"$m_F'$")]
+        positions = [round(t.get_position()[0], 3) for t in labels]
+        # an energy label and an mF' label per stick, never two of either at one position
+        assert len(positions) == 2 * len(set(positions))
+        assert len(set(positions)) == len({(lv.F1, lv.F, lv.P) for lv in structure.excited})
+        assert r"$0\ldots\pm4$" in {t.get_text() for t in labels}
+    finally:
+        plt.close(diagram.fig)

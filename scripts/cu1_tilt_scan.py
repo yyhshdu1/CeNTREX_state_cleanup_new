@@ -9,7 +9,7 @@ Defaults: 80 mW, 3 cm (the present beam); the base cube is detuning_vx_y_cu1_spb
 use detuning_vx_y_cu1_spb_<H>cm_<P>mW_coarse from scripts/cu1_conditions_scan.py. The extension to 1 < |vx| <= 2 m/s
 costs 520 trajectories. Figure: docs/state_cleanup/figures/CU1_laser_tilt[_<H>cm_<P>mW].{pdf,png}.
 
-A tilt adds k v_z sin(theta) to the Doppler shift of every pass: v_z/lambda = 0.68 MHz per mrad at 184 m/s.
+A tilt adds k v_z sin(theta) to the Doppler shift of every pass: v_z/lambda = 0.57 MHz per mrad at 156 m/s.
 Two cases:
   antiparallel  retro-reflecting two-prism multipass, as modelled: the shift flips sign with the transverse one,
                 k.v = +-k (v_x + v_z tan theta), i.e. every molecule has an effective transverse velocity
@@ -34,7 +34,7 @@ from scripts.plot_cleanup_maps_current import acceptance_mean  # noqa: E402
 
 HDF = ROOT / "results" / "SPB_J1_cleanup_scans.h5"
 TMP = ROOT / "tmp" / "cu1_tilt"
-VZ, LAMBDA = 184.0, 271.7e-9
+VZ, LAMBDA = 156.0, 271.7e-9          # m/s, measured (TOF); 184 before 2026-11-09
 VX_EXT = np.round(np.concatenate([np.arange(-2.0, -1.01, 0.2), np.arange(1.2, 2.01, 0.2)]), 6)
 VX_ALL = np.round(np.arange(-2.0, 2.001, 0.2), 6)
 MHZ_PER_MRAD = VZ / LAMBDA * 1e-3 / 1e6

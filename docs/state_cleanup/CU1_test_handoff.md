@@ -234,7 +234,7 @@ CU1 model:
 3. J=1 transverse distribution at CU1 and at the probe for the chosen lens setting (beam simulation with the
    J=1, mJ=0 Stark curve).
 4. Simulated low-power CU1 depletion spectrum for the frequency/field calibration of step 1.
-5. Archive `tmp/detection/probe_yields.json` into `results/SPB_J1_cleanup_scans.h5` and list it in
+5. Archive `tmp/detection/vz184/probe_yields.json` (184 m/s) into `results/SPB_J1_cleanup_scans.h5` and list it in
    `results/scan_results.md`; add this test to the LaTeX report.
 6. The Q(1) closure-versus-field and Stark-turnover numbers above came from ad-hoc calculations that are not
    in the repo; re-derive them in a script if they are needed in the report.
@@ -246,7 +246,7 @@ CU1 model:
 | level diagrams of the two probe lines (slides) | `docs/state_cleanup/figures/slides/detection_level_diagram_R1_F3_0Vcm.{png,pdf}`, `..._Q1_F1_0Vcm.{png,pdf}` |
 | "what each line tells about CU1" (slides) | `docs/state_cleanup/figures/slides/detection_cu1_information.{png,pdf}` |
 | probe model, diagrams, schematic | `scripts/detection_level_diagrams.py` (`compute`, `plot`, `info`) |
-| probe photon yields (grid: 3 intensities x 3 vx x 2 y x 2 polarizations x 2 lines) | `tmp/detection/probe_yields.json` (not yet archived) |
+| probe photon yields (grid: 3 intensities x 3 vx x 2 y x 2 polarizations x 2 lines) | `tmp/detection/vz184/probe_yields.json` (184 m/s, not yet archived) |
 | CU1 per-level trajectories used for the residual | `results/SPB_J1_cleanup_scans.h5`, run `trajectories_cu1_vx0_19p0_20p2MHz_4p8cm` |
 | CU1 at 3 cm, SPB-related start | same file, runs `doppler_cu1_spb_3cm_det19MHz`, `detuning_vx_y_cu1_spb_3cm_coarse` |
 | index of all stored runs | `results/scan_results.md` |

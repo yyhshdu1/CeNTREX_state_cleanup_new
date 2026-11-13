@@ -20,6 +20,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from scripts import vz_paths  # noqa: E402
+sys.path.insert(0, str(ROOT))
 from scripts.cleanup_spb_doppler import CU1_SOLVER, build_cu1, describe  # noqa: E402
 from scripts.cu1_3cm_scan import DETUNINGS, SY_BEAM, VX_C, VX_F, Y_C, Y_F, key  # noqa: E402
 from scripts.cu2_laser_aom_scan import T_END, log  # noqa: E402
@@ -47,7 +49,7 @@ def setup(height_cm):
 
 def load(out, tag):
     done = {}
-    for f in sorted(out.glob(f"{tag}_*.npz")):
+    for f in vz_paths.glob(out, f"{tag}_*.npz"):
         z = np.load(f)
         done.update({key(p): r for p, r in zip(z["points"], z["remaining"])})
     return done

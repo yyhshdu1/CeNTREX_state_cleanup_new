@@ -1,7 +1,7 @@
 % =====================================================================
 %  CeNTREX rotational-state cleanup: CU1 (X, J=1) and CU2 (X, J=2)
 %  Thesis-chapter version (~20 pages): schemes, OBE model, CU1 simulation and
-%  test on the SPB setup, CU2 optimisation at 200 V/cm.
+%  test on the SPB setup, CU2 set point at the measured 217 V/cm and CU2 test.
 %  The full-length report with every scan, check and table is main_full.tex.
 %  Compile: latexmk -pdf main.tex
 % =====================================================================
@@ -71,7 +71,7 @@ Both stages pump the molecules optically through the $B\,{}^3\Pi_1$ state into o
 levels, in the electric field that is kept on to preserve the spin. This chapter describes the two
 schemes and their optical-Bloch-equation (OBE) model (Secs.~\ref{sec:pumping}
 and~\ref{sec:model}), the CU1 simulation and a first test of CU1 on the SPB setup
-(Sec.~\ref{sec:cu1}), and the optimisation of CU2 at its present operating field
+(Sec.~\ref{sec:cu1}), and the optimisation of CU2 and its first test on the same setup
 (Sec.~\ref{sec:cu2}).
 
 % =====================================================================
@@ -89,7 +89,7 @@ spins coupled as $\mathbf J+\mathbf I_1=\mathbf F_1$ and $\mathbf F_1+\mathbf I_
 primed quantum numbers refer to $B$, and R($J$) denotes $J\to J'=J+1$. The level $J=1$ has 12
 sublevels ($F_1=\tfrac12$: $F=0,1$; $F_1=\tfrac32$: $F=1,2$), $J=2$ has 20.
 
-The field, \SI{150}{V/cm} for CU1 and \SI{200}{V/cm} for CU2, defines the quantisation axis $z$;
+The field, \SI{150}{V/cm} for CU1 and \SI{217}{V/cm} for CU2, defines the quantisation axis $z$;
 $m_F$ remains a good quantum number, while $J$, $F_1$, $F$ and the parity of $B$ are mixed. The
 hyperfine structure of each ground rotational level spans only about \SI{2}{MHz}, but in $B$ the
 Stark interaction splits the $|m_F'|$ sublevels of one hyperfine level by 10--\SI{25}{MHz} each,
@@ -120,20 +120,21 @@ against this:
     \toprule
     & CU1 ($J=1$) & CU2 ($J=2$) \\
     \midrule
-    field & \SI{150}{V/cm} (test: \SI{156}{V/cm}) & \SI{200}{V/cm} \\
+    field & \SI{150}{V/cm} (test: \SI{156}{V/cm}) & \SI{217}{V/cm} \\
     transition & R(1) $F_1'=5/2$, $F'=2$ & R(2) $F_1'=7/2$, $F'=3$ (beam 0) and $F'=4$ (beam 1) \\
     main pair, $|m|$ & $|1,\tfrac32,2,1\rangle\to|2,\tfrac52,2,2,+\rangle$, 0.100 &
-      $|2,\tfrac52,3,2\rangle\to|3,\tfrac72,3,3,-\rangle$, 0.095; $|2,\tfrac52,3,0\rangle\to|3,\tfrac72,4,1,-\rangle$, 0.229 \\
+      $|2,\tfrac52,3,2\rangle\to|3,\tfrac72,3,3,-\rangle$, 0.095; $|2,\tfrac52,3,0\rangle\to|3,\tfrac72,4,1,-\rangle$, 0.224 \\
     decays back to $J$ & \SI{37}{\percent} & \SI{27}{\percent} \\
     OBE levels & 21: 12 ($J=1$), 5 ($F'=2$, $P'=+$), 4 compacted & 56: 20 ($J=2$), 32 ($F'=3,4$, both $P'$), 4 compacted \\
-    power & \SI{80}{mW} (test: \SI{50}{mW}) & \SI{80}{mW} ($F'=3$) + \SI{24}{mW} ($F'=4$) \\
-    beam height & \SI{4.8}{cm}; present \SI{3}{cm}; test \SI{2}{cm} & \SI{2.4}{cm}; present \SI{3}{cm} \\
+    power & \SI{80}{mW} (test: \SI{50}{mW}) & \SI{32}{mW} ($F'=3$) + \SI{43}{mW} ($F'=4$) (test: 20 + \SI{30}{mW}) \\
+    beam height & \SI{4.8}{cm}; present \SI{3}{cm}; test \SI{2}{cm} & \SI{3}{cm} \\
     phase modulation & none & \SI{17.5}{MHz}, $\beta=1.5$, both beams \\
-    AOM & -- & $\fAOM=200\pm\SI{15}{MHz}$ \\
+    AOM & -- & $\fAOM=200\pm\SI{15}{MHz}$ (set point \SI{209}{MHz}) \\
+    loss per pass & \SI{10}{\percent} (CU1 test: \SI{3.5}{\percent}) & \SI{5}{\percent} \\
     \midrule
-    multipass & \multicolumn{2}{l}{13 passes \SI{3.5}{mm} apart, \SI{3}{mm} wide, \SI{10}{\percent} loss per pass (CU1 test: about 17)} \\
+    multipass & \multicolumn{2}{l}{13 passes \SI{3.5}{mm} apart, \SI{3}{mm} wide (CU1 test: about 17)} \\
     polarization & \multicolumn{2}{l}{X/Z square-wave switching at \SI{0.5}{MHz} (CU2 beams in antiphase)} \\
-    molecule & \multicolumn{2}{l}{\SI{184}{m/s} through \SI{5}{cm} (CU1 test: \SI{145}{m/s})} \\
+    molecule & \multicolumn{2}{l}{\SI{184}{m/s} through \SI{5}{cm} (CU1 test: \SI{145}{m/s}; CU2 test: \SI{156}{m/s})} \\
     distribution & \multicolumn{2}{l}{lensed beam (\SI{25}{kV}): $\sigma_{v_x}=\SI{0.65}{m/s}$, $\sigma_y\approx\SI{11}{mm}$} \\
     acceptance & \multicolumn{2}{l}{$|v_x|\leq\SI{1}{m/s}$, $|y_0|\leq\SI{8.5}{mm}$ (detection laser)} \\
     \bottomrule
@@ -200,7 +201,7 @@ starting sublevel gives the result for any incoherent initial mixture.
 \paragraph{Numerics.} The master equation is integrated with the adaptive Dormand--Prince
 method~\cite{Dormand1980} of the Rust backend of \code{centrex-tlf} (versions 0.2.5 and 0.3.0, which
 agree to $10^{-6}$ for CU1), with relative and absolute tolerances $10^{-7}$ and $10^{-9}$ ($10^{-6}$
-and $10^{-8}$ for the CU2 scans, which changes the CU2 optimum by $3\times10^{-5}$). A CU1 trajectory
+and $10^{-8}$ for the CU2 scans, which changed the CU2 optimum at \SI{200}{V/cm} by $3\times10^{-5}$). A CU1 trajectory
 costs about \SI{0.5}{s} in a scan, a CU2 trajectory about \SI{40}{s}, because of the second beam's
 \SI{200}{MHz} phase factor and the \SI{17.5}{MHz} modulation. Scans are stored with their parameters
 in HDF5 files (\code{results/}); the scripts are in \code{scripts/}.
@@ -420,248 +421,333 @@ some sublevels that Q(1) sees are cleaned less well. This was not pursued furthe
 
 \subsection{Scheme}
 
-At the original field of \SI{250}{V/cm} the sublevels of $B$, $J'=3$, $F_1'=7/2$, $F'=3$, $P'=-$
-are split by about \SI{18}{MHz} per step in $|m_F'|$, and the 20 sublevels of $J=2$ span
-\SI{1.4}{MHz}. The design study~\cite{CleanupTheory2024} reached the scheme in three steps. One laser
-on $F'=3$ with a resonant EOM (about \SI{17}{MHz}, $\beta\approx1.5$, \SI{100}{mW}) cleans only about
-\SI{98}{\percent}: $|J=2,F_1=\tfrac32,F=1,m_F=0\rangle$ reaches $F'=3$ only through its admixture of
+The sublevels of $B$, $J'=3$, $F_1'=7/2$, $F'=3$ are Stark-split by tens of MHz at the CU2 field, while the
+20 sublevels of $J=2$ span about \SI{1.4}{MHz}. The design study~\cite{CleanupTheory2024} reached the scheme
+in three steps. One laser on $F'=3$ with a resonant EOM (about \SI{17}{MHz}, $\beta\approx1.5$) cleans only
+about \SI{98}{\percent}: $|J=2,F_1=\tfrac32,F=1,m_F=0\rangle$ reaches $F'=3$ only through its admixture of
 $F=3$, and only the $m_F'=\pm1$ components, through the sidebands, so it keeps about a fifth of its
-population. A second beam on $F'=4$, about \SI{200}{MHz} higher and made from the same laser by an
-AOM, removes this bottleneck with the same total power. Finally, one EOM placed before the AOM
-modulates both beams; this costs little (about \SI{99.6}{\percent} at 60 + \SI{18}{mW}, against
-\SI{99.95}{\percent} with an EOM on each beam) and is much simpler. In the adopted layout the
-undiffracted and first-order outputs of the AOM are recombined with orthogonal polarizations and pass
-a common polarization EOM, so the two beams switch between X and Z in antiphase.
+population. A second beam on $F'=4$, about \SI{210}{MHz} higher and made from the same laser by an AOM,
+removes this bottleneck with the same total power. Finally, one EOM placed before the AOM modulates both
+beams, which costs little and is much simpler than one EOM per beam. In the adopted layout the undiffracted
+and first-order outputs of the AOM are recombined with orthogonal polarizations and pass a common
+polarization EOM, so the two beams switch between X and Z in antiphase.
 
-The AOM couples the two detunings. With $\delta_k$ measured from the main resonance of beam $k$, the
-AOM frequency is the frequency difference of the beams,
+The AOM couples the two detunings. With $\delta_k$ measured from the main resonance of beam $k$, the AOM
+frequency is the frequency difference of the beams,
 \begin{equation}
   \fAOM=\Dmain(E)+\frac{\delta_1-\delta_0}{2\pi},
   \label{eq:aom}
 \end{equation}
-where $\Dmain$ is the separation of the two main resonances, \SI{211.83}{MHz} at \SI{200}{V/cm} and
-\SI{219.93}{MHz} at \SI{250}{V/cm}. The laser frequency sets $\delta_0$ and the AOM frequency
-$\delta_1-\delta_0$; the AOM range $200\pm\SI{15}{MHz}$ limits $(\delta_1-\delta_0)/2\pi$ to
-$-26.83\ldots+\SI{3.17}{MHz}$ at \SI{200}{V/cm}. The components driven by each beam spread over
-about \SI{87}{MHz} ($F'=3$: 0 to $+\SI{87}{MHz}$ from its main resonance; $F'=4$: $-31$ to
-$+\SI{56}{MHz}$), which is why both beams are phase-modulated.
+where $\Dmain$ is the separation of the two main resonances, \SI{214.59}{MHz} at the measured CU2 field of
+\SI{217}{V/cm}. The laser frequency sets $\delta_0$ and the AOM frequency $\delta_1-\delta_0$; the AOM
+range $200\pm\SI{15}{MHz}$ limits $(\delta_1-\delta_0)/2\pi$ to $-29.59\ldots+\SI{0.41}{MHz}$. The
+components driven by each beam spread over about \SI{90}{MHz}, which is why both beams are
+phase-modulated.
 
-\subsection{Optimisation at \SI{200}{V/cm}}
+\subsection{Set point at \SI{217}{V/cm}}
 \label{sec:cu2_opt}
 
-CU2 now operates at about \SI{200}{V/cm}. The detunings chosen at \SI{250}{V/cm},
-$(\delta_0,\delta_1)/2\pi=(+18.5,-\SI{6.5}{MHz})$, which gave \SI{99.99}{\percent} there, give only
-\SI{92.9}{\percent} at \SI{200}{V/cm}: $\Dmain$ has moved by \SI{8.1}{MHz}, and the component
-positions within each manifold have moved as well. A scan of the laser frequency at the AOM frequency
-that keeps the former detuning difference (\SI{186.83}{MHz}) reaches \SI{99.33}{\percent} at best;
-laser and AOM frequency must be optimised together. The two-dimensional scan uses the experimental
-coordinates $(\delta_0,\fAOM)$: a coarse \SI{2}{MHz} grid over $\delta_0/2\pi=+5\ldots+\SI{23}{MHz}$,
-about one EOM period, and the full AOM range (160 points, Fig.~\ref{fig:cu2_map}); \SI{0.5}{MHz} grids
-around its three best local maxima (219 points); and a check of the best points with the tighter
-tolerances. Only 15 of the 160 coarse points exceed \SI{99}{\percent}. The fine grids give the optima
-of Table~\ref{tab:cu2_opt}: R2 with \SI{99.85}{\percent} at $(+\SI{11.5}{MHz},\SI{191.0}{MHz})$ and,
-nearly equivalent, R1 with \SI{99.80}{\percent} at $(+\SI{11.5}{MHz},\SI{208.5}{MHz})$, both well
-inside the AOM range.
-
-Both optima are 0.5--\SI{1.5}{MHz} wide at the \SI{99.7}{\percent} level and 2--\SI{3}{MHz} wide at
-\SI{99}{\percent} (Table~\ref{tab:cu2_window}). They are elongated along lines of constant $\delta_1$ (Fig.~\ref{fig:cu2_fine}):
-$\delta_1$ must be held to
-about $\pm\SI{0.5}{MHz}$, whereas $\delta_0$ tolerates $\pm\SI{1.5}{MHz}$ if $\delta_1$ is kept fixed.
-A drift of the laser frequency, or of the field, shifts both detunings together and is therefore
-limited by the tighter $\delta_1$ tolerance; the field variation of about \SI{2}{V/cm}
-(\SI{2}{MHz}) across the cleanup region estimated in the design study is comparable to the
-\SI{99}{\percent} width.
+The set point was optimised for the measured field and power: \SI{217}{V/cm}, 32 + \SI{43}{mW} ($F'=3$ +
+$F'=4$, \SI{75}{mW} in total), \SI{5}{\percent} loss per pass, the \SI{3}{cm} beam, the EOM at
+\SI{17.5}{MHz} with $\beta=1.5$, and $v_z=\SI{184}{m/s}$ (\code{centrex-tlf} 0.3.0). Each grid point is
+scored with a six-trajectory proxy of the acceptance mean ($v_x=0,\pm\SI{0.6}{m/s}$; $y_0=0$,
+\SI{6}{mm}), for the SPB source levels and for a uniformly populated $J=2$ level. A coarse
+$(\delta_0,\fAOM)$ grid over $\delta_0/2\pi=3$--\SI{16}{MHz} and $\fAOM=190$--\SI{215}{MHz} has its best
+points near $\delta_0/2\pi=12.5$--\SI{16}{MHz}; the fine grid around them (Fig.~\ref{fig:cu2_grid})
+peaks at
+\begin{equation*}
+  \delta_0/2\pi=+\SI{14.5}{MHz},\qquad \fAOM=\SI{209}{MHz}\qquad(\delta_1/2\pi=+\SI{8.91}{MHz})
+\end{equation*}
+for both starts. The full 24-trajectory acceptance mean at this point is \SI{99.62}{\percent} for the SPB
+source levels and \SI{98.82}{\percent} for a uniform start (Table~\ref{tab:cu2_217}).
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{CU2_200V_laser_AOM_map.pdf}
-  \caption[CU2: cleanup versus laser and AOM frequency]{CU2 cleanup at \SI{200}{V/cm} versus the AOM
-  frequency (full range) and the $F'=3$ detuning $\delta_0$, i.e.\ the laser frequency, on axis,
-  \SI{2.4}{cm} beam. Colour: remaining $J=2$ population on a logarithmic scale, labelled in cleanup
-  efficiency. Large cells: coarse \SI{2}{MHz} grid; outlined boxes: \SI{0.5}{MHz} grids R1--R3 with
-  their best points (circles). Dashed: the AOM frequency of the first laser-frequency scan.}
-  \label{fig:cu2_map}
+  \includegraphics[width=\textwidth]{CU2_setpoint_grid_fine217_32_43_e217.pdf}
+  \caption[CU2: set-point grid at \SI{217}{V/cm}]{CU2 at \SI{217}{V/cm}, 32 + \SI{43}{mW}, \SI{5}{\percent}
+  loss per pass, \SI{3}{cm} beam: cleanup on the fine $(\delta_0,\fAOM)$ grid, six-trajectory proxy of the
+  acceptance mean, for the SPB source levels (left) and a uniformly populated $J=2$ level (right). Bold:
+  best point. The $F'=4$ detuning follows from Eq.~\eqref{eq:aom}.}
+  \label{fig:cu2_grid}
 \end{figure}
 
 \begin{table}[htbp]
   \centering
-  \caption[CU2: width of the optima]{CU2 at \SI{200}{V/cm}: ranges (on the \SI{0.5}{MHz} grid) within
-  which the cleanup exceeds the given level, through the best points of R1 and R2.}
-  \label{tab:cu2_window}
+  \caption[CU2 at \SI{217}{V/cm}]{CU2 at \SI{217}{V/cm}, 32 + \SI{43}{mW}, \SI{5}{\percent} loss per pass,
+  \SI{3}{cm} beam, $v_z=\SI{184}{m/s}$: cleanup on the axis and mean in the detection acceptance
+  (24 trajectories). The set point is in bold.}
+  \label{tab:cu2_217}
   \small
-  \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{llccc}
+  \begin{tabular}{lcccc}
     \toprule
-    optimum & direction & $>\SI{99.7}{\percent}$ & $>\SI{99.5}{\percent}$ & $>\SI{99}{\percent}$ \\
+    & \multicolumn{2}{c}{on axis} & \multicolumn{2}{c}{mean in acceptance} \\
+    $(\delta_0/2\pi,\fAOM)$ & SPB source levels & uniform & SPB source levels & uniform \\
     \midrule
-    R2 & $\delta_0/2\pi$ at $\fAOM=\SI{191.0}{MHz}$ & 11.0--\SI{12.0}{MHz} & 11.0--\SI{12.0}{MHz} & 10.5--\SI{12.5}{MHz} \\
-    R2 & $\fAOM$ at $\delta_0/2\pi=\SI{11.5}{MHz}$ & 190.5--\SI{191.5}{MHz} & 190.0--\SI{191.5}{MHz} & 189.5--\SI{192.0}{MHz} \\
-    R1 & $\delta_0/2\pi$ at $\fAOM=\SI{208.5}{MHz}$ & 11.5--\SI{12.0}{MHz} & 11.0--\SI{12.5}{MHz} & 10.5--\SI{13.0}{MHz} \\
-    R1 & $\fAOM$ at $\delta_0/2\pi=\SI{11.5}{MHz}$ & 208.0--\SI{209.5}{MHz} & 208.0--\SI{210.0}{MHz} & 207.5--\SI{210.5}{MHz} \\
+    \textbf{(14.5, 209) MHz} & \SI{99.95}{\percent} & \SI{99.44}{\percent} & \textbf{\SI{99.62}{\percent}} & \textbf{\SI{98.82}{\percent}} \\
+    (12.5, 211) MHz & -- & -- & \SI{99.64}{\percent} & \SI{98.62}{\percent} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
+\paragraph{Width of the optimum.} A scan of the laser frequency with the AOM fixed at \SI{209}{MHz}
+(Fig.~\ref{fig:cu2_scan}) shows on the axis a plateau above \SI{99}{\percent} for the SPB source levels
+from $\delta_0/2\pi=8$ to \SI{15}{MHz}, and further peaks at 25, 31 and \SI{49}{MHz}, where EOM sidebands
+take over the role of the carriers. A uniform start is more demanding: it exceeds \SI{99}{\percent} only
+for $\delta_0/2\pi=12$--\SI{14}{MHz} (\SI{99.94}{\percent} at \SI{13}{MHz}) and at 25 and \SI{31}{MHz}.
+Within the acceptance the set point sits on a narrow plateau in $\delta_0$ and is flat in $\fAOM$
+(Table~\ref{tab:cu2_sens}): $+\SI{1.5}{MHz}$ in $\delta_0$ costs \SI{0.6}{\percent} (SPB source levels)
+and \SI{1.1}{\percent} (uniform), while $\fAOM=207$--\SI{209}{MHz} is equivalent. The EOM can stay at
+\SI{17.5}{MHz}. Of the other inputs, the loss per pass and the forward velocity matter most, both through
+the $F_1=\tfrac32$ levels.
+
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{CU2_200V_fine_regions.pdf}
-  \caption[CU2: fine grids around the optima]{CU2 at \SI{200}{V/cm}: \SI{0.5}{MHz} grids around the
-  optima R1--R3, same colour scale as Fig.~\ref{fig:cu2_map}. White contours: 99, 99.5 and
-  \SI{99.7}{\percent}; circles: best points. The high-efficiency regions run along lines of constant
-  $\delta_1$ (slope $-1$).}
-  \label{fig:cu2_fine}
+  \includegraphics[width=\textwidth]{CU2_corr_scan_e217_f209.pdf}
+  \caption[CU2: laser scan at fixed AOM frequency]{CU2 at \SI{217}{V/cm}, 32 + \SI{43}{mW}: cleanup on the
+  axis versus the laser frequency ($\delta_0$, bottom axis; $\delta_1$, top axis) with $\fAOM$ fixed at
+  \SI{209}{MHz}, for the SPB source levels and a uniform start; (b) enlarges the region of the set point
+  (dashed). Stars: maxima.}
+  \label{fig:cu2_scan}
 \end{figure}
 
 \begin{table}[htbp]
   \centering
-  \caption[CU2 optima at \SI{200}{V/cm}]{CU2 optima at \SI{200}{V/cm} (on axis, \SI{2.4}{cm} beam,
-  uniform start), with the share of the remaining population in the stretched sublevels
-  $|F_1=\tfrac52,F=3,m_F=\pm3\rangle$. Efficiencies of R1 and R2 with tight tolerances.}
-  \label{tab:cu2_opt}
+  \caption[CU2: sensitivity of the set point]{CU2: change of the cleanup (six-trajectory proxy) when one input
+  is moved away from the set point (14.5, \SI{209}{MHz}), 32 + \SI{43}{mW} at \SI{217}{V/cm}. Rows marked *
+  are trends from the earlier studies at \SI{155}{V/cm} (field) and \SI{200}{V/cm} (others), not yet
+  repeated at \SI{217}{V/cm}.}
+  \label{tab:cu2_sens}
+  \small
+  \begin{tabularx}{\textwidth}{Lcc}
+    \toprule
+    change & SPB source levels & uniform \\
+    \midrule
+    $\delta_0/2\pi=13.5$ / \SI{16.0}{MHz} (set point 14.5) & $-0.24$ / $-0.61$\,\% & $-0.61$ / $-1.10$\,\% \\
+    $\fAOM=207$ / \SI{211}{MHz} (set point 209) & $-0.03$ / $-0.12$\,\% & $-0.18$ / $-0.95$\,\% \\
+    EOM 15 / 16 / \SI{18.5}{MHz} (set point 17.5) & $-0.02$ / $-0.07$ / $-0.25$\,\% & $-0.60$ / $-0.20$ / $-0.19$\,\% \\
+    field $-3$ / $+\SI{3}{V/cm}$, laser and AOM fixed* & $-0.01$ / $+0.01$\,\% & $-0.11$ / $+0.05$\,\% \\
+    loss per pass 3 / 8 / \SI{10}{\percent} (set point 5)* & $+0.12$ / $-0.25$ / $-0.48$\,\% & $+0.61$ / $-1.17$ / $-2.13$\,\% \\
+    $v_z=150$ / \SI{220}{m/s} (set point 184)* & $+0.18$ / $-0.26$\,\% & $+0.98$ / $-1.22$\,\% \\
+    X/Z switching 0.1--\SI{2}{MHz}, phase* & $\leq0.1$\,\% & $\leq0.4$\,\% \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Where the residual is}
+\label{sec:cu2_two}
+
+Started one at a time and averaged over the acceptance (Fig.~\ref{fig:cu2_perstate}), the four lens
+levels ($m_J\approx0$) keep 0.1--\SI{0.5}{\percent} and $F_1=\tfrac52$, $F=2$ keeps about
+\SI{0.2}{\percent}. Two groups dominate the rest. The eight $F_1=\tfrac32$ sublevels keep
+\SI{1.9}{\percent} on average, against \SI{6.4}{\percent} at the field assumed before the measurement,
+\SI{155}{V/cm}. The stretched $|F_1=\tfrac52,F=3,m_F=\pm3\rangle$ are a new bottleneck at \SI{217}{V/cm},
+with \SI{3.5}{\percent} each (\SI{0.14}{\percent} at \SI{155}{V/cm}); they are pumped almost only by
+the weaker $F'=4$ beam, through components far from the main lines. Hence the gap between the starts: the
+lens does not populate $m_F=\pm3$, so the SPB source levels are cleaned to \SI{99.6}{\percent} and a
+uniform start to \SI{98.8}{\percent}. For the molecules that actually arrive, the residual after CU2 is
+dominated by $F_1=\tfrac32$, into which CU2 itself pumps part of the lens molecules
+(Sec.~\ref{sec:cu2_test}).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{CU2_perstate_217_vs_155.pdf}
+  \caption[CU2: residual of each $J=2$ sublevel]{CU2: population left after CU2 when each $J=2$ sublevel is
+  started alone, mean in the detection acceptance (24 trajectories), 32 + \SI{43}{mW}, \SI{5}{\percent}
+  loss per pass, \SI{3}{cm} beam, at the measured field (\SI{217}{V/cm}, set point (14.5, \SI{209}{MHz}))
+  and at the field assumed earlier (\SI{155}{V/cm}, its own set point (12, \SI{212}{MHz})). $m_J\approx0$:
+  the four lens levels.}
+  \label{fig:cu2_perstate}
+\end{figure}
+
+\subsection{Transverse motion}
+\label{sec:cu2_vx}
+
+The two beams share the multipass, so the Doppler shift is common to both. Over the transverse velocity and
+position (Fig.~\ref{fig:cu2_vx}) the cleanup of the SPB source levels stays above \SI{99.9}{\percent} for
+$|v_x|\lesssim\SI{0.4}{m/s}$ and $|y_0|\lesssim\SI{6}{mm}$ and falls below \SI{97}{\percent} only near the
+edges of the acceptance; a uniform start is cleaned best not on the axis but at $|v_x|\approx\SI{0.4}{m/s}$,
+where the Doppler shift brings further components into reach. As for CU1, the position matters through the
+intensity of the \SI{3}{cm} beam. The lensed-beam distribution used here is right for the $J=2$ molecules
+that SPB leaves behind; molecules that CU1 pumps into $J=2$ have the wider $J=1$ distribution of
+Sec.~\ref{sec:cu1_test}. An earlier optimisation at \SI{200}{V/cm} with 80 + \SI{24}{mW} and
+\SI{10}{\percent} loss per pass, with two optima one EOM period apart, is documented in the full report.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{cleanup_map_vx_y_CU2_217Vcm.pdf}
+  \caption[CU2: cleanup versus transverse velocity and position]{CU2 at the set point, \SI{217}{V/cm},
+  32 + \SI{43}{mW}: cleanup versus transverse velocity and position from (a) all 20 $J=2$ sublevels and (b)
+  the four SPB source levels. Dashed: detection acceptance; dotted ellipse: $1\sigma$ of the beam
+  distribution at CU2.}
+  \label{fig:cu2_vx}
+\end{figure}
+
+\subsection{Test on the SPB setup}
+\label{sec:cu2_test}
+
+\paragraph{Setup.} CU2 was tested on the SPB setup on 2026-11-07 and 2026-11-08~\cite{CU2GroupMeeting2026},
+at \SI{217}{V/cm} with $\delta_0/2\pi=+\SI{13}{MHz}$, $\fAOM=\SI{209}{MHz}$ and 20 + \SI{30}{mW}; on the axis
+this point lies on the same plateau as the set point (SPB source levels above \SI{99}{\percent} for
+$\delta_0/2\pi=8$--\SI{15}{MHz}). The detection laser, \SI{24}{mW} in a $1.5\times\SI{1.5}{cm}$ beam,
+drives one of four R(2) lines (Table~\ref{tab:cu2_test_lines}). It can only be $\sigma^+$ circularly
+polarised. With its field plates off the detection region is field-free; the quantisation axis is the
+earth field, vertical and perpendicular to $\mathbf k$, so that the light is $\tfrac12\pi+\tfrac14\sigma^++
+\tfrac14\sigma^-$ about it. As for CU1, a shutter in the CU2 beam alternates on consecutive shots, in 50
+bursts of 20 shots per line, and the ratio $R_l=S^{\mathrm{on}}_l/S^{\mathrm{off}}_l$ of line $l$ is fitted
+as a template, the mean open-shutter trace being $R_l$ times the mean closed-shutter trace plus a linear
+baseline, with errors from a bootstrap over bursts (Fig.~\ref{fig:cu2_traces}). During the test the
+singlet ratio on line B fell from 0.37, with too little CU2 power and a misaligned multipass, to 0.10
+after the realignment and to 0.006 at the final laser frequency.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{experiment/cu2_test_onoff_traces.png}
+  \caption[CU2 test: on/off traces]{CU2 test at the final laser frequency (2026-11-08): mean detection
+  traces with the CU2 shutter closed (blue) and open (red) on the four lines, 500 shots each; green:
+  signal window. In each panel, $S(\mathrm{on})/S(\mathrm{off})$ is the template-fit ratio $R_l$; ``cleanup''
+  is $1-\langle R_l\rangle$ with a prior $R_l\geq0$, and its 90\,\% CL lower limit. Because every line sees
+  several $J=2$ groups, these are not the efficiencies of single levels (see text).}
+  \label{fig:cu2_traces}
+\end{figure}
+
+\paragraph{A line ratio is not a level efficiency.} At $E=0$ each line couples several of the four
+$J=2$ hyperfine groups $F\equiv(F_1,F)$ (Table~\ref{tab:cu2_test_lines}). Line A sees only
+$F_1=\tfrac52$, $F=3$ (the triplet); B sees the singlet $F_1=\tfrac52$, $F=2$ and, through a weaker
+component, the triplet; C sees the triplet and $F_1=\tfrac32$, $F=2$; D sees all four. CU2 cleans the groups
+differently and pumps part of the lens molecules into $F_1=\tfrac32$, so the weights change between the
+two shutter states. With CU2 off, the signal on C is \SI{99}{\percent} triplet crosstalk; with CU2 on,
+\SI{95}{\percent} of it comes from $F_1=\tfrac32$, $F=2$ molecules pumped in by CU2. The \SI{2.6}{\percent} on
+C is therefore not the efficiency of any one level.
+
+\begin{table}[htbp]
+  \centering
+  \caption[CU2 test: detection lines and probe yields]{CU2 test: the four detection lines, the probe
+  photons per molecule $\eta^{\mathrm{off}}_{lF}/\eta^{\mathrm{on}}_{lF}$ of each $J=2$ group
+  (Eqs.~\eqref{eq:eta} and~\eqref{eq:etaon}; \SI{24}{mW}, $E=0$), and the on/off ratio measured and predicted by the CU2 OBE
+  without any solving.}
+  \label{tab:cu2_test_lines}
+  \small
+  \setlength{\tabcolsep}{3.5pt}
+  \begin{tabular}{llccccrr}
+    \toprule
+    & & \multicolumn{4}{c}{$\eta^{\mathrm{off}}_{lF}/\eta^{\mathrm{on}}_{lF}$, group $(F_1,F)$} & \multicolumn{2}{c}{$R_l$ (\%)} \\
+    $l$ & line & $(\tfrac52,3)$ & $(\tfrac52,2)$ & $(\tfrac32,2)$ & $(\tfrac32,1)$ & measured & model \\
+    \midrule
+    A & R(2) $F_1'=7/2$, $F'=4$ & 1.98/1.91 & 0.01/0.02 & 0/0 & 0/0 & $0.19\pm0.59$ & 0.12 \\
+    B & R(2) $F_1'=7/2$, $F'=3$ & 0.73/0.69 & 1.88/1.75 & 0.21/0.09 & 0/0 & $0.57\pm0.37$ & 0.24 \\
+    C & R(2) $F_1'=5/2$, $F'=3$ & 1.17/0.93 & 0.01/0.00 & 2.50/2.31 & 0.04/0.04 & $2.6\pm1.4$ & 2.10 \\
+    D & R(2) $F_1'=5/2$, $F'=2$ & 0.17/0.06 & 0.96/0.57 & 1.24/0.86 & 2.17/2.12 & $1.3\pm1.9$ & 1.10 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Solving for the groups.} The signal of line $l$ is
+$S^x_l=\sum_F\eta^x_{lF}N^x_F$ ($x=\mathrm{off},\mathrm{on}$), with $N^x_F$ the number of molecules in
+group $F$ and $\eta^x_{lF}$ the photons per molecule. Before CU2 the lens passes only the lens sublevels
+$L_F$ ($F=3$, $m_F=0,\pm1$; $F=2$, $m_F=0$), and $F_1=\tfrac32$ is assumed empty, so the composition
+\begin{equation}
+  f_F\equiv\frac{N^{\mathrm{off}}_F}{N^{\mathrm{off}}_{J=2}}=(f_t,\,1-f_t,\,0,\,0),\qquad
+  r\equiv\frac{S^{\mathrm{off}}_B}{S^{\mathrm{off}}_A}=\frac{\sum_F\eta^{\mathrm{off}}_{BF}f_F}{\sum_F\eta^{\mathrm{off}}_{AF}f_F}
+  \label{eq:ft}
+\end{equation}
+has one free parameter, the triplet share $f_t$. The measured $r=1.56\pm0.17$ (two pairs of adjacent runs,
+4--7\,min apart) gives $f_t=0.441$; this is the only place where signals of different runs are compared.
+Each line's own on/off ratio then removes the beam flux and the light collection:
+\begin{equation}
+  R_l=\frac{S^{\mathrm{on}}_l}{S^{\mathrm{off}}_l}=\frac{\sum_F\eta^{\mathrm{on}}_{lF}\,n_F}{\sum_F\eta^{\mathrm{off}}_{lF}\,f_F},
+  \qquad n_F\equiv\frac{N^{\mathrm{on}}_F}{N^{\mathrm{off}}_{J=2}},
+  \label{eq:Rl}
+\end{equation}
+four equations for the four fractions $n_F$ left after CU2, in units of all $J=2$ before CU2. The yields
+are averages of the sublevel yields $\eta_l(F,m_F;v_x)$ of the probe OBE (\SI{24}{mW}, $\sigma^+$ about
+$\mathbf k$, $E=0$, $v_z=\SI{156}{m/s}$). With CU2 off they are averaged over the lens sublevels and the
+lens $v_x$ distribution $G(v_x)$,
+\begin{equation}
+  \eta^{\mathrm{off}}_{lF}=\frac{1}{\#L_F}\sum_{m_F\in L_F}\,\sum_{v_x}G(v_x)\,\eta_l(F,m_F;v_x),
+  \label{eq:eta}
+\end{equation}
+and with CU2 on they are weighted with the CU2 OBE residual of every start sublevel, i.e.\ with the
+residual's own $m_F$ and $v_x$:
+\begin{equation}
+  \eta^{\mathrm{on}}_{lF}=\frac{\sum_{i\in L}w_i\sum_{v_x,y_0}W(v_x,y_0)\sum_{m_F\in F}P_{i;F,m_F}(v_x,y_0)\,
+  \eta_l(F,m_F;v_x)}{\sum_{i\in L}w_i\sum_{v_x,y_0}W(v_x,y_0)\sum_{m_F\in F}P_{i;F,m_F}(v_x,y_0)}.
+  \label{eq:etaon}
+\end{equation}
+Here $\#L_F$ is the number of lens sublevels of $F$, $W=G\times{}$the $y_0$ weight (so
+$\sum_{y_0}W=G$), $L=L_{F=3}\cup L_{F=2}$ the four start sublevels with weights
+$w_i=f_{F(i)}/\#L_{F(i)}$, and $P_{i;F,m_F}$ the population in $(F,m_F)$ after CU2 of a molecule started in
+$i$, from the CU2 OBE at the test settings and $v_z=\SI{156}{m/s}$; in $\eta^{\mathrm{on}}$ the sum runs
+over all $2F+1$ sublevels, because CU2 redistributes $m_F$. $\eta^{\mathrm{off}}$ is $\eta^{\mathrm{on}}$
+with $P_{i;F,m_F}\to\delta_{i,(F,m_F)}$: with CU2 off every molecule stays in its start sublevel. The
+molecules left by CU2 sit at large $|v_x|$, off the
+probe resonance, so $\eta^{\mathrm{on}}<\eta^{\mathrm{off}}$ for the crosstalk terms
+(Table~\ref{tab:cu2_test_lines}); with the lens $v_x$ instead the total would come out \SI{0.2}{\percent}
+lower. The errors are from a Monte Carlo over $R_l$ and $r$. Since $\eta$ is nearly lower-triangular, each
+line fixes essentially one group (A the triplet, B the singlet, C and D the two $F_1=\tfrac32$ groups):
+adding a line changes the triplet residual by less than $4\times10^{-5}$ and the other groups by at most
+$3\times10^{-4}$ of $J=2$, far below their errors, so the line combinations are not independent
+cross-checks.
+
+\paragraph{Result.} The four lines give the residuals of Table~\ref{tab:cu2_test_res} and
+Fig.~\ref{fig:cu2_test_res}. In total \SI{1.07(61)}{\percent} of $J=2$ is left (below \SI{1.85}{\percent}
+at 90\,\% CL), i.e.
+\begin{equation*}
+  \etac=\SI{98.9(6)}{\percent},
+\end{equation*}
+against \SI{99.3}{\percent} from the CU2 OBE. Every group, and the line ratios predicted directly from the
+OBE (Table~\ref{tab:cu2_test_lines}), agree with the model within $1\sigma$. The lens levels themselves are
+cleaned to \SI{99.81(62)}{\percent} (triplet) and \SI{99.31(55)}{\percent} (singlet); half of what is left
+is in $F_1=\tfrac32$, $F=2$, pumped in by CU2, which in the model moves \SI{0.76}{\percent} of the singlet
+and \SI{0.27}{\percent} of the triplet into $F_1=\tfrac32$.
+
+\begin{table}[htbp]
+  \centering
+  \caption[CU2 test: residual per group]{CU2 test: $J=2$ population per group before CU2 ($f_F$) and left
+  after it ($n_F$), in \% of all $J=2$ before CU2, measured (four lines, $\pm1\sigma$) and from the CU2 OBE
+  ($v_z=\SI{156}{m/s}$); efficiency $1-n_F/f_F$ of the populated groups.}
+  \label{tab:cu2_test_res}
   \small
   \begin{tabular}{lccccc}
     \toprule
-    optimum & $\delta_0/2\pi$ & $\fAOM$ & $\delta_1/2\pi$ & $\etac$ & stretched share \\
+    group $(F_1,F)$ & before CU2 & left, measured & left, model & efficiency, measured & model \\
     \midrule
-    R1 & \SI{11.5}{MHz} & \SI{208.5}{MHz} & $+\SI{8.17}{MHz}$ & \SI{99.82}{\percent} & \SI{74}{\percent} \\
-    R2 & \SI{11.5}{MHz} & \SI{191.0}{MHz} & $-\SI{9.33}{MHz}$ & \textbf{\SI{99.85}{\percent}} & \SI{56}{\percent} \\
-    R3 & \SI{23.5}{MHz} & \SI{196.5}{MHz} & $+\SI{8.17}{MHz}$ & \SI{99.56}{\percent} & -- \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\subsection{Two optima and the bottleneck}
-\label{sec:cu2_two}
-
-R1 and R2 differ by \SI{17.5}{MHz} in $\fAOM$, exactly one EOM period, with beam 0 unchanged. The comb
-of beam 1, at $\delta_1/2\pi+n\times\SI{17.5}{MHz}$, therefore occupies the same frequencies in both
-settings, and only the order $n$ of each line differs by one (Fig.~\ref{fig:cu2_scheme}). At
-$\beta=1.5$ the carrier carries \SI{26}{\percent} of the power and each first-order sideband
-\SI{31}{\percent}. The two lines that matter most sit on the strongest $F'=4$ component, $m_F'=0$ at
-$+\SI{8.65}{MHz}$, and on $m_F'=\pm2$ at $-\SI{10.32}{MHz}$; these are \SI{19.0}{MHz} apart, close to
-the comb spacing, and receive nearly the same power in both settings (Table~\ref{tab:cu2_comb}). Beam 0 is the same in both: its
-first-order sideband sits on the $F'=3$, $m_F'=\pm1$ components and its carrier \SI{3}{MHz} below
-$m_F'=\pm2$. Within the AOM range only these two copies of the optimum exist.
-
-\begin{table}[htbp]
-  \centering
-  \caption[CU2: beam-1 comb lines at the two optima]{CU2 at \SI{200}{V/cm}: comb lines of beam 1 near
-  the $F'=4$ sublevels, on the $\delta_1$ axis, with their order $n$ and power fraction $J_n(1.5)^2$ at
-  R1 and R2.}
-  \label{tab:cu2_comb}
-  \small
-  \begin{tabular}{rlcc}
-    \toprule
-    line (MHz) & nearest $F'=4$ sublevel(s) (MHz) & R1: $n$, power & R2: $n$, power \\
+    $\tfrac52,3$ (triplet) & 44 & $0.08\pm0.27$ & 0.05 & \SI{99.81(62)}{\percent} & \SI{99.88}{\percent} \\
+    $\tfrac52,2$ (singlet) & 56 & $0.39\pm0.31$ & 0.15 & \SI{99.31(55)}{\percent} & \SI{99.74}{\percent} \\
+    $\tfrac32,2$ (pumped in) & 0 & $0.55\pm0.35$ & 0.45 & -- & -- \\
+    $\tfrac32,1$ (pumped in) & 0 & $0.04\pm0.57$ & 0.09 & -- & -- \\
     \midrule
-    $+8.17$ & $m_F'=0$, $P'=-$, at $+8.65$ (strongest) & $0$, \SI{26}{\percent} & $+1$, \SI{31}{\percent} \\
-    $-9.33$ & $m_F'=\pm2$, $P'=-$, at $-10.32$ & $-1$, \SI{31}{\percent} & $0$, \SI{26}{\percent} \\
-    $+25.67$ & $m_F'=\pm1$, $P'=+$, at $+22.50$ & $+1$, \SI{31}{\percent} & $+2$, \SI{5}{\percent} \\
-    $-26.83$ & $m_F'=\pm3$ at $-20.83$, $\pm4$ at $-31.41$, $P'=-$ & $-2$, \SI{5}{\percent} & $-1$, \SI{31}{\percent} \\
-    $+43.17$ & $m_F'=\pm3$, $P'=+$, at $+44.43$ & $+2$, \SI{5}{\percent} & $+3$, \SI{0.4}{\percent} \\
+    $J=2$ & 100 & $1.07\pm0.61$ & 0.74 & \SI{98.9(6)}{\percent} & \SI{99.3}{\percent} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.9\textwidth]{CU2_200V_level_diagram_R1_R2.pdf}
-  \caption[CU2: excited sublevels and the laser combs of R1 and R2]{CU2 at \SI{200}{V/cm}: excited
-  sublevels of $B$, $J'=3$, $F_1'=7/2$ addressed from $X$, $J=2$, and the laser combs at (a) R1 and
-  (b) R2. Frequency above the $F'=3$ main resonance, axis broken between $F'=3$ (bottom) and $F'=4$
-  (top). Bold: sublevels driven by the light. Coloured lines: carrier and sidebands of beam 0 (blue)
-  and beam 1 (orange), line width proportional to the power fraction. The beam-1 lines lie at the same
-  frequencies in both settings; only their orders differ by one.}
-  \label{fig:cu2_scheme}
+  \includegraphics[width=0.75\textwidth]{experiment/cu2_test_residual_per_group.pdf}
+  \caption[CU2 test: residual per group against the model]{CU2 test: $J=2$ population left after CU2 in each
+  group and in total, in \% of all $J=2$ before CU2, solved from the four lines (circles, $\pm1\sigma$)
+  and from the CU2 OBE at the test settings, $v_z=\SI{156}{m/s}$ (diamonds).}
+  \label{fig:cu2_test_res}
 \end{figure}
 
-At the optima the first pass removes about \SI{75}{\percent} of the $J=2$ population, and each later
-pass multiplies what is left by 0.5--0.8, following the alternating pass powers
-(Fig.~\ref{fig:cu2_pop}). The removed molecules
-go to $J=3$ (53--\SI{54}{\percent}), $J=4$ (44--\SI{45}{\percent}) and $J=5$ (\SI{1.7}{\percent}),
-with $3\times10^{-5}$ in $J=1$, after 1.5 photons per molecule. The residual is dominated by the
-stretched sublevels $|F_1=\tfrac52,F=3,m_F=\pm3\rangle$ (Fig.~\ref{fig:cu2_sub},
-Table~\ref{tab:cu2_opt}). They are pumped almost only by the weaker $F'=4$ beam, through
-$m_F'=\pm3$ and $\pm4$ at about $-20$ and $-\SI{31}{MHz}$, far from the two main lines. R2 has a first-order
-sideband \SI{4.6}{MHz} from $m_F'=\pm4$, R1 only a second-order one, so R2 pumps the stretched
-sublevels \SI{15}{\percent} faster and ends with less population left; R1 in turn pumps the
-$F_1=\tfrac32$, $F=2$ sublevels faster.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{CU2_200V_optimum_populations.pdf}
-  \caption[CU2: rotational-level populations at the two optima]{CU2 at \SI{200}{V/cm}: populations of
-  the rotational levels along the interaction region at R1 and R2, logarithmic scale. Grey lines: pass
-  centres. The excited-state population follows the \SI{0.5}{MHz} polarization switching and the
-  \SI{17.5}{MHz} modulation.}
-  \label{fig:cu2_pop}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{CU2_200V_optimum_J2_sublevels.pdf}
-  \caption[CU2: $J=2$ sublevel populations at the two optima]{CU2 at \SI{200}{V/cm}: populations of
-  the 20 $J=2$ sublevels along the interaction region at R1 and R2, coloured by hyperfine level
-  $(F_1,F)$; the three sublevels with the most population left are labelled.}
-  \label{fig:cu2_sub}
-\end{figure}
-
-\subsection{Transverse motion at the present beam height}
-\label{sec:cu2_vx}
-
-In the experiment the CU2 beams are now about \SI{3}{cm} high at the same 80 + \SI{24}{mW}, 0.8 times
-the peak intensity of the \SI{2.4}{cm} beam used for the optimisation. The two beams share the
-multipass, so the Doppler shift is common to both. Table~\ref{tab:cu2_vx} and Fig.~\ref{fig:cu2_vx}
-give R1 and R2 over the transverse velocity and position, for all 20 sublevels and for the four
-SPB source levels ($J=2$, $m_J=0$, weighted 2/3 for the singlet and 1/9 for each triplet level).
-\begin{itemize}
-  \item \textbf{The transverse position dominates.} The intensity falls to 73, 49 and
-        \SI{28}{\percent} of its axial value at $y_0=6$, 9 and \SI{12}{mm}, and from the uniform
-        start the cleanup falls from \SI{99.5}{\percent} on the axis to \SI{96.0}{\percent} at
-        \SI{9}{mm}.
-  \item \textbf{The velocity matters much less than for CU1}: \SI{97.8}{}--\SI{98.4}{\percent} at
-        $|v_x|=\SI{0.4}{m/s}$ and \SI{94.7}{}--\SI{95.5}{\percent} at \SI{1}{m/s} on the axis. Each
-        beam carries a comb of five significant lines on 32 sublevels, so a shift of a few MHz moves
-        some lines off their components while others come closer.
-  \item \textbf{R1 is the more robust setting} for both starts and is recommended: within the
-        acceptance it removes \SI{96.7}{\percent} of a uniformly populated $J=2$ level and
-        \SI{99.6}{\percent} of the SPB source levels.
-\end{itemize}
-For the $J=2$ molecules that SPB leaves behind, which the lens has focused, the lensed-beam
-distribution is the right input; molecules that CU1 pumps into $J=2$ have the wider $J=1$
-distribution of Sec.~\ref{sec:cu1_test}. The CU2 results were computed with \code{centrex-tlf}~0.2.5.
-Version 0.2.8 restored the Stark mixing with lower $J$ in the $X$ Hamiltonian, which moves $J=2$ line
-positions by up to about \SI{1}{MHz}, so the optimum must be re-run, together with a re-optimisation
-for the \SI{3}{cm} beam, before it is relied on at the sub-MHz level.
-
-\begin{table}[htbp]
-  \centering
-  \caption[CU2 over the transverse distribution]{CU2 at \SI{200}{V/cm} with the \SI{3}{cm} beam:
-  cleanup on the axis, averaged over $v_x$ at $y_0=0$, and mean in the detection acceptance (coarse
-  grid, lensed-beam weights). The recommended setting is in bold.}
-  \label{tab:cu2_vx}
-  \small
-  \begin{tabular}{llccc}
-    \toprule
-    setting & initial state & on axis & $v_x$-averaged, $y_0=0$ & mean in acceptance \\
-    \midrule
-    R2, \SI{191.0}{MHz} & all 20 sublevels & \SI{99.59}{\percent} & \SI{97.72}{\percent} & \SI{96.10}{\percent} \\
-    \textbf{R1}, \SI{208.5}{MHz} & all 20 sublevels & \SI{99.52}{\percent} & \SI{98.16}{\percent} & \textbf{\SI{96.66}{\percent}} \\
-    R2, \SI{191.0}{MHz} & SPB source levels & \SI{99.975}{\percent} & \SI{99.67}{\percent} & \SI{99.35}{\percent} \\
-    \textbf{R1}, \SI{208.5}{MHz} & SPB source levels & \SI{99.974}{\percent} & \SI{99.81}{\percent} & \textbf{\SI{99.57}{\percent}} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\textwidth]{cleanup_map_vx_y_CU2_current.pdf}
-  \caption[CU2: cleanup versus transverse velocity and position]{CU2 at R1 ($\fAOM=\SI{208.5}{MHz}$,
-  $\delta_0/2\pi=+\SI{11.5}{MHz}$), \SI{3}{cm} beam, 80 + \SI{24}{mW}: cleanup versus transverse
-  velocity and position from (a) all 20 $J=2$ sublevels and (b) the four SPB source levels. Dashed:
-  detection acceptance; dotted ellipse: $1\sigma$ of the beam distribution at CU2.}
-  \label{fig:cu2_vx}
-\end{figure}
+\paragraph{Assumptions.} The result depends little on the start composition. Varying $f_t$ from 0.30 to
+0.60 changes the total by less than \SI{0.01}{\percent} and leaves the triplet efficiency at
+\SI{99.81}{\percent}; only the split between the singlet and $F_1=\tfrac32$, $F=2$ moves. With 0--\SI{5}{\percent}
+of the $J=2$ population already in $F_1=\tfrac32$ before CU2 the total grows by at most
+\SI{0.04}{\percent}; these four lines cannot distinguish such molecules from those pumped in. Drifts of
+the molecular flux cancel in each $R_l$, since the shutter alternates on every shot, and enter only through
+$r$: a \SI{20}{\percent} drift between the A and B runs moves $f_t$ to 0.38--0.52, inside the range above.
+The probe power (15 instead of \SI{24}{mW}) and the $m_F$ distribution of the residual change the result by
+less than its statistical error. One discrepancy remains: with CU2 off, the signals of C and D relative to A
+are $0.36\pm0.06$ and $0.42\pm0.07$, while the model gives 0.59 and 0.70. These runs are 8--\SI{33}{min}
+apart, so flux drift may contribute, but the weak crosstalk components are also a candidate: the main
+components saturate at 1--\SI{2}{mW}, the weak ones not yet at \SI{24}{mW}, and the probe OBE at an
+effective \SI{7.5}{mW} gives 0.34 and 0.43. If the weak yields are overestimated, $\eta^{\mathrm{on}}_{C,F=3}$
+is too large and the $F_1=\tfrac32$, $F=2$ residual is underestimated. A direct test is detection on P(2)
+$F_1'=1/2$, $F'=1$, which sees only $F_1=\tfrac32$ (0.6--0.8 photons per molecule, at most 0.03 for
+$F_1=\tfrac52$): it measures the $F_1=\tfrac32$ residual without crosstalk and checks that $F_1=\tfrac32$
+is empty before CU2. At the model residual its CU2-on signal is about $0.7\sigma$ per 500-shot run, so about
+17 runs are needed for $3\sigma$.
 
 % =====================================================================
 \section{Conclusions and outlook}
@@ -680,9 +766,12 @@ for the \SI{3}{cm} beam, before it is relied on at the sub-MHz level.
     CU1 test, power exponent $a$; $\sigma_{v_x}$ of the detected $J=1$ molecules & $0.45\pm0.03$; \SI{1.28(3)}{m/s} \\
     CU1, remaining at \SI{50}{mW}: model with the measured $\sigma_{v_x}$ / data & 0.031 / 0.032 \\
     CU1, predicted for the final experiment ($|v_x|\leq\SI{0.22}{m/s}$) & $>\SI{99.9}{\percent}$ \\
-    CU2 optima R2 / R1 at \SI{200}{V/cm} (on axis, \SI{2.4}{cm}) & \SI{99.85}{\percent} / \SI{99.80}{\percent} \\
-    CU2, width at \SI{99}{\percent} along laser / AOM frequency & 2 / \SI{2.5}{MHz} \\
-    CU2, R1 with the \SI{3}{cm} beam, mean in acceptance: all sublevels / SPB source levels & \SI{96.7}{\percent} / \SI{99.6}{\percent} \\
+    CU2 set point $(\delta_0/2\pi,\fAOM)$ at \SI{217}{V/cm}, 32 + \SI{43}{mW}, \SI{3}{cm} & (14.5, \SI{209}{MHz}) \\
+    CU2, on axis: SPB source levels / all sublevels & \SI{99.95}{\percent} / \SI{99.44}{\percent} \\
+    CU2, mean in acceptance: SPB source levels / all sublevels & \SI{99.62}{\percent} / \SI{98.82}{\percent} \\
+    CU2, cost of $+\SI{1.5}{MHz}$ in $\delta_0$: SPB source levels / all sublevels & \SI{0.6}{\percent} / \SI{1.1}{\percent} \\
+    CU2 test, $J=2$ cleanup from four detection lines / model ($v_z=\SI{156}{m/s}$) & \SI{98.9(6)}{\percent} / \SI{99.3}{\percent} \\
+    CU2 test, $J=2$ left in $F_1=\tfrac32$, $F=2$ (pumped in by CU2) / model & \SI{0.55(35)}{\percent} / \SI{0.45}{\percent} \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -698,21 +787,25 @@ model reproduces the data, and it predicts more than \SI{99.9}{\percent} for the
 experiment.
 
 CU2 uses two beams from one laser, on $F'=3$ and $F'=4$ of R(2) $F_1'=7/2$, coupled by an AOM and
-phase-modulated by one EOM. At \SI{200}{V/cm} laser and AOM frequency had to be optimised together; the
-optima, \SI{99.85}{\percent} at $\fAOM=\SI{191.0}{MHz}$ and \SI{99.80}{\percent} at \SI{208.5}{MHz},
-lie one EOM period apart and are 2--\SI{3}{MHz} wide at \SI{99}{\percent}. With the present \SI{3}{cm}
-beam R1 ($\fAOM=\SI{208.5}{MHz}$) is the more robust setting: \SI{96.7}{\percent} of a uniformly
-populated $J=2$ level and \SI{99.6}{\percent} of the SPB source levels within the acceptance, limited by
-the beam edges and by the stretched sublevels.
+phase-modulated by one EOM. At the measured field of \SI{217}{V/cm}, with 32 + \SI{43}{mW} and
+\SI{5}{\percent} loss per pass, laser and AOM frequency were optimised together; the set point
+$\delta_0/2\pi=+\SI{14.5}{MHz}$, $\fAOM=\SI{209}{MHz}$ removes \SI{99.6}{\percent} of the SPB source
+levels and \SI{98.8}{\percent} of a uniformly populated $J=2$ level within the acceptance. It is flat in
+$\fAOM$ but narrow in $\delta_0$, and the residual is in the $F_1=\tfrac32$ levels and in the stretched
+$F=3$, $m_F=\pm3$ sublevels, which the lens does not populate. In the first test on the SPB setup
+CU2 removed \SI{98.9(6)}{\percent} of the $J=2$ population, solved group by group from four detection lines,
+in agreement with the model (\SI{99.3}{\percent}); about half of the residual is $F_1=\tfrac32$, $F=2$,
+pumped in by CU2 itself.
 
 Next steps:
 \begin{enumerate}[itemsep=1pt]
   \item CU1: test the velocity interpretation with a narrower detection acceptance; find the origin of
         the 4--\SI{6}{MHz} offset of the measured optimum; recompute the set point with the measured
         inputs ($\sigma_{v_x}=\SI{1.28}{m/s}$, 145--\SI{155}{m/s}, 17 passes).
-  \item CU2: re-run with \code{centrex-tlf} 0.2.8 or later, re-optimise laser and AOM frequency and the
-        power split for the \SI{3}{cm} beam, check the field uniformity at \SI{200}{V/cm}, and test CU2 on
-        the setup.
+  \item CU2: detect on P(2) $F_1'=1/2$, $F'=1$, which sees only $F_1=\tfrac32$, to measure the residual
+        pumped in by CU2 directly and to check that $F_1=\tfrac32$ is empty before CU2; resolve the
+        over-predicted CU2-off signals of the weak detection lines; re-optimise the set point for the
+        measured $v_z=\SI{156}{m/s}$.
   \item Both: take the transverse distribution of the molecules that reach the detection laser from
         the beam simulation, separately for the $J=1$ molecules, which the lens does not focus.
 \end{enumerate}
@@ -737,6 +830,9 @@ Y.~Yang, ``State Cleanup Theory,'' CeNTREX internal presentation (June 2024, upd
 
 \bibitem{CU1GroupMeeting2026}
 Y.~Yang, ``CU1 state cleanup of $J=1$ on the SPB setup,'' CeNTREX group meeting (2026-10-20).
+
+\bibitem{CU2GroupMeeting2026}
+Y.~Yang, ``CU2: state cleanup of $J=2$,'' CeNTREX group meeting (2026-11-04, updated 2026-11-11).
 
 \bibitem{Grasdijk2025AP}
 O.~Grasdijk \emph{et al.}, ``Adiabatic passage of $^{205}$TlF with microwaves in a cryogenic beam,''

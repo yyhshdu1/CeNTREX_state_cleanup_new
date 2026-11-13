@@ -1,6 +1,9 @@
 """CU1 and CU2 cleanup efficiency versus transverse velocity vx and position y0 at the present set points.
 
     python scripts/plot_cleanup_maps_current.py   # docs/state_cleanup/figures/cleanup_maps_vx_y_current.{pdf,png}
+    python scripts/plot_cleanup_maps_current.py cu2_155   # CU2 at 155 V/cm, (12.5, 200) MHz, 32 + 43 mW, 5 % loss
+                                                          # -> cleanup_map_vx_y_CU2_155Vcm.{pdf,png}
+    python scripts/plot_cleanup_maps_current.py cu2_217   # CU2 at 217 V/cm (measured), (14.5, 209) MHz, 32 + 43 mW
 
 Data (vx -1...1 m/s, y0 >= 0, mirrored to y0 < 0):
     CU1  no EOM, 3 cm beam, SPB-related start, 0.1 m/s x 1.5 mm   runs doppler_cu1_spb_3cm_det*MHz (cu1_3cm_scan.py)
@@ -17,6 +20,9 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys  # noqa: E402
+sys.path.insert(0, str(ROOT))
+from scripts import vz_paths  # noqa: E402
 sys.path.insert(0, str(ROOT))
 from scripts import cu1_eom_doppler_scan as e1  # noqa: E402
 from scripts import cu2_doppler_scan as c2  # noqa: E402
@@ -155,5 +161,39 @@ def main():
            g, "cleanup_map_vx_y_CU2_current", (5.4, 5.4), note("CU2", "lens + 1.0 m", r"0.2 m/s $\times$ 3 mm"), 0.66)
 
 
+DELTA_MAIN_MHZ = {155: 204.520, 217: 214.585}       # F'=4 minus F'=3 main line at the CU2 field (V/cm)
+
+
+def main_cu2_155(pt=(12.5, 200.0), p0=32, p1=43, field=155):
+    """CU2 at another field, 75 mW, from the `map` stage of scripts/cu2_power_check.py (tmp/cu2_power/map_*_grid.npz)."""
+    name = f"d{pt[0]:g}_f{pt[1]:g}".replace(".", "p")
+    g = {}
+    for init in ("uniform", "spb"):
+        z = np.load(vz_paths.find(ROOT / "tmp" / "cu2_power" / f"map_loss5_{name}_{p0}_{p1}_e{field}_{init}_grid.npz"))
+        g[f"cu2_{init}"] = (z["vx"], z["y0"], z["remaining"])
+    d1 = pt[0] + pt[1] - DELTA_MAIN_MHZ[field]
+    common_cu2 = [rf"R(2) $F_1'=7/2$, $F'=3$ + $F'=4$; {field} V/cm",
+                  rf"$f_\mathrm{{AOM}}={pt[1]:.1f}$ MHz,",
+                  rf"$\delta_0/2\pi=+{pt[0]:.1f}$, $\delta_1/2\pi={d1:+.2f}$ MHz",
+                  rf"{p0} + {p1} mW; EOM 17.5 MHz, $\beta=1.5$",
+                  r"beam 3 cm high ($\sigma_y=7.5$ mm)"]
+    note = [r"Dashed orange: detection acceptance $|y_0|\leq8.5$ mm (detection laser 1.7 cm high); the grid "
+            r"spans the accepted $|v_x|\leq1$ m/s. Dotted orange: $1\sigma$ of the beam distribution at CU2 "
+            rf"(lens + 1.0 m, lens at 25 kV): $\sigma_{{v_x}}=0.65$ m/s, $\sigma_y={SY['CU2'] * 1e3:.2f}$ mm; it "
+            r"weights the mean in acceptance. White lines: contours of $\eta_\mathrm{c}$. On axis: $v_x=0$, $y_0=0$.",
+            r"13 passes, 5 % loss per pass, X/Z polarization switching at 0.5 MHz, Doppler shift $\pm k v_x$ "
+            r"alternating pass by pass; single trajectories at $v_z=184$ m/s; grid 0.2 m/s $\times$ 3 mm, computed "
+            r"for $y_0\geq0$ and mirrored."]
+    figure([("cu2_uniform", "CU2", "(a) CU2, all $J=2$ sublevels", common_cu2 + ["start: all 20 $J=2$ sublevels"]),
+            ("cu2_spb", "CU2", "(b) CU2, SPB source levels",
+             common_cu2 + ["start: 4 $J=2$, $m_J=0$ levels", "(lens weights 2/3, 1/9, 1/9, 1/9)"])],
+           g, f"cleanup_map_vx_y_CU2_{field}Vcm", (5.4, 5.4), note, 0.66)
+
+
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["cu2_155"]:
+        main_cu2_155()
+    elif sys.argv[1:] == ["cu2_217"]:
+        main_cu2_155((14.5, 209.0), field=217)
+    else:
+        main()

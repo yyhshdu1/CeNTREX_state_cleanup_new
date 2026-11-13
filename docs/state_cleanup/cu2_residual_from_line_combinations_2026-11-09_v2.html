@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>CU2 之后 J=2 各超精细能级剩下多少（v2）</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif; font-size: 10.2pt; line-height: 1.55;
+         color: #1f1f1f; }
+  h1 { font-size: 16pt; margin: 0 0 2pt 0; }
+  h2 { font-size: 12.5pt; border-bottom: 1px solid #ccc; padding-bottom: 2pt; margin-top: 16pt; page-break-after: avoid; }
+  h3 { font-size: 10.8pt; margin: 10pt 0 3pt 0; page-break-after: avoid; }
+  .sub { color: #666; font-size: 9pt; margin-bottom: 8pt; }
+  .box { background: #eef3fa; border-left: 4px solid #3b6fb6; padding: 6pt 10pt; margin: 8pt 0; }
+  .warn { background: #fdf0ee; border-left: 4px solid #c0392b; padding: 6pt 10pt; margin: 8pt 0; }
+  .eq { background: #f5f5f5; padding: 7pt 10pt; margin: 6pt 0; text-align: center; font-family: "Cambria Math", "Times New Roman", serif;
+        font-size: 11pt; }
+  table { border-collapse: collapse; margin: 6pt 0; font-size: 9.2pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #ccc; padding: 3pt 6pt; text-align: center; }
+  th { background: #f0f2f5; }
+  td.l, th.l { text-align: left; }
+  tr.hl td { background: #eaf5ea; font-weight: bold; }
+  img { display: block; margin: 6pt auto 2pt auto; max-width: 100%; }
+  .cap { font-size: 8.8pt; color: #444; margin-bottom: 8pt; }
+  ul { margin: 3pt 0 3pt 0; padding-left: 18pt; }
+  li { margin: 2pt 0; }
+  code { font-family: Consolas, monospace; font-size: 9pt; background: #f3f3f3; padding: 0 2pt; }
+  .new { color: #1f5fa8; }
+  .page { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>CU2 之后 J=2 各超精细能级剩下多少：用四条探测线的组合求解（v2）</h1>
+<div class="sub">CU2 测试 2026-11-08，CU2 NLTL2 2068，RC 在 P(2) F'=1，DET 板不加电压。2026-11-09 分析。
+<br><b>v2（2026-11-09）</b>：η<sup>on</sup> 改用 CU2 测试实际设定下新版 CU2 OBE 的逐起始态、逐 v<sub>x</sub>、逐 y<sub>0</sub>、逐能级残留（v<sub>z</sub> = 156 m/s），原第 7 节的残留 v<sub>x</sub> 修正并入主结果；模型对比全部换成这个 OBE；第 8 节加入 P(2) 探测线。</div>
+
+<div class="box"><b>结论</b>
+<ul>
+<li>每条探测线看到的基态能级不同，所以把几条线的 CU2 on/off 比组合起来，可以把 CU2 之后每个超精细能级剩下多少分子分开求出来。只用每条线自己 run 内的 on/off 比，CU2 快门每发 shot 交替开关，所以不受束流漂移影响。</li>
+<li>四条线一起解，以 CU2 前 J=2 总数为 100 %：F1=5/2 F=3（三重态）<b>0.08 ± 0.27 %</b>；F1=5/2 F=2（单态那一组）<b>0.39 ± 0.31 %</b>；F1=3/2 F=2 <b>0.55 ± 0.35 %</b>；F1=3/2 F=1 <b>0.04 ± 0.57 %</b>；总共 <b>1.07 ± 0.61 %</b>（90 % CL &lt; 1.85 %），即 <b>J=2 清除效率 98.9 ± 0.6 %</b>。各行都是 CU2 前 J=2 总数的百分比，相加就是总残留。</li>
+<li>CU2 OBE（CU2 测试实际设定：δ<sub>0</sub> = 13 MHz，f<sub>AOM</sub> = 209 MHz，20 + 30 mW，217 V/cm，v<sub>z</sub> = 156 m/s）预测 0.05 / 0.15 / 0.45 / 0.09 %，总共 0.74 %。四组和总和都在 1σ 以内；反过来用模型残留预测四条线的 on/off 比，也都在 1σ 以内（图 3）。</li>
+<li><b>残留的 v<sub>x</sub> 分布已经算进去</b>（第 7 节）：CU2 留下的分子集中在大 |v<sub>x</sub>|，在探测线上发的光子更少，弱耦合的串扰项尤其明显。不考虑这一点，总残留会少算约 0.2 个百分点（0.85 % → 1.07 %）。旧版用旧设定 r(v<sub>x</sub>) 的近似（1.03–1.06 %）得到确认。</li>
+<li>F1=3/2 的残留是 CU2 从透镜态泵进去的（CU2 前为空）：模型里每个单态分子有 0.76 % 被泵进 F1=3/2，每个三重态分子 0.27 %。最有信息量的组合是 <b>A+C</b>：R(2) F1'=5/2 F'=3 线 CU2 开时那 2.6 % 的信号，按模型约 95 % 来自泵进 F1=3/2 F=2 的分子，不是三重态没清干净。测量 0.55 ± 0.35 %，模型 0.45 %，只有 1.6σ。</li>
+<li><b>对 CU2 前布居假设不敏感</b>（第 6 节）：f<sub>t</sub> 在 0.30–0.60 之间变化，或者 CU2 前 F1=3/2 放 0–5 % 的布居，三重态清除效率（99.81 %）、F1=5/2 F=2 清除效率（99.24–99.34 %）和 J=2 总残留（1.06–1.10 %）都基本不变。</li>
+<li>D 线（R(2) F1'=5/2 F'=2）的统计误差太大（±1.9 %），对 F1=3/2 F=1 几乎没有约束。</li>
+</ul></div>
+
+<h2>1. 数据</h2>
+<p>四次 1000-shot 的 CU2 on/off run，CU2 都在 NLTL2 2068。每个 burst 20 shot，CU2 快门每发交替，用 PXIe ch5 上的光电二极管判断开关。R = S<sup>on</sup>/S<sup>off</sup> 用 template fit 得到：S̄<sup>on</sup>(t) = R S̄<sup>off</sup>(t) + a + b t（开、关快门的平均波形，a + b t 为线性基线），拟合 3–41.8 ms；误差是 burst bootstrap。S<sup>off</sup> 是关快门的 fl（14–36 ms 积分），误差是 burst SEM。</p>
+<table>
+<tr><th>线</th><th>跃迁</th><th>时间</th><th>R = S<sup>on</sup>/S<sup>off</sup></th><th>S<sup>off</sup>（mV·ms/shot）</th></tr>
+<tr><td>A</td><td>R(2) F1'=7/2 F'=4</td><td>16:12</td><td>0.0019 ± 0.0059</td><td>7.09 ± 0.64</td></tr>
+<tr><td>B</td><td>R(2) F1'=7/2 F'=3</td><td>16:08</td><td>0.0057 ± 0.0037</td><td>12.05 ± 1.42</td></tr>
+<tr><td>C</td><td>R(2) F1'=5/2 F'=3</td><td>16:45</td><td>0.026 ± 0.014</td><td>2.52 ± 0.36</td></tr>
+<tr><td>D</td><td>R(2) F1'=5/2 F'=2</td><td>16:20</td><td>0.013 ± 0.019</td><td>2.99 ± 0.37</td></tr>
+</table>
+<p>CU2 模式下没有 abs。不同 run 之间的 S<sup>off</sup> 受打靶点和束流变化影响：每个 burst 的信号可以差 ±60–100 %，run 和 run 之间还可能有约 20 % 的慢变化。所以下面只在一个地方用到 S<sup>off</sup> 的比值，就是定 CU2 前三重态占多少（第 2 节第 3 条）。</p>
+
+<h2>2. 模型和计算方法</h2>
+<p>把 J=2 分成四组 F（即 (F1, F) 能级，下标 F 指整组）：F1=5/2 F=3、F1=5/2 F=2、F1=3/2 F=2、F1=3/2 F=1。每条线 l 的信号是各组分子数乘以每个分子发的光子数：</p>
+<div class="eq">S<sub>l</sub><sup>off</sup> = Σ<sub>F</sub> η<sub>lF</sub><sup>off</sup> N<sub>F</sub><sup>off</sup>,&nbsp;&nbsp;&nbsp;&nbsp; S<sub>l</sub><sup>on</sup> = Σ<sub>F</sub> η<sub>lF</sub><sup>on</sup> N<sub>F</sub><sup>on</sup></div>
+<p>用每条线自己的 on/off 比，未知的绝对标定（束流、收集效率）就消掉了：</p>
+<div class="eq">Σ<sub>F</sub> η<sub>lF</sub><sup>on</sup> n<sub>F</sub> = R<sub>l</sub> Σ<sub>F</sub> η<sub>lF</sub><sup>off</sup> f<sub>F</sub>,&nbsp;&nbsp;&nbsp; R<sub>l</sub> = S<sub>l</sub><sup>on</sup>/S<sub>l</sub><sup>off</sup>,&nbsp;&nbsp;&nbsp; n<sub>F</sub> = N<sub>F</sub><sup>on</sup>/N<sub>J=2</sub><sup>off</sup>,&nbsp;&nbsp;&nbsp; f<sub>F</sub> = N<sub>F</sub><sup>off</sup>/N<sub>J=2</sub><sup>off</sup></div>
+<p>f<sub>F</sub> 是 CU2 关时第 F 组占 J=2 的比例（CU2 前的布居，已知），n<sub>F</sub> 是 CU2 之后第 F 组剩下的比例（未知），两者都以 CU2 前 J=2 总数为 1。这里 f = (f<sub>t</sub>, 1 − f<sub>t</sub>, 0, 0)，四条线给出四个方程，正好解出四个 n<sub>F</sub>。</p>
+<h3>假设和输入</h3>
+<ul>
+<li><b>CU2 前的布居（透镜态）</b>：F1=5/2 F=3 在 m<sub>F</sub> = 0, ±1，F1=5/2 F=2 只在 m<sub>F</sub> = 0（单态），F1=3/2 两组为 0。记 L<sub>F</sub> 为 F 组的透镜子能级（L<sub>F=3</sub>：m<sub>F</sub> = 0, ±1；L<sub>F=2</sub>：m<sub>F</sub> = 0），#L<sub>F</sub> 为其个数；L = L<sub>F=3</sub> ∪ L<sub>F=2</sub> 是全部四个起始子能级。</li>
+<li><b>光子产额 η</b>：用 <code>cu2_detection_test.py</code> 的探测 OBE，24 mW，σ<sup>+</sup> 沿 k，E = 0，1.5 × 1.5 cm 平顶光，v<sub>z</sub> 156 m/s。量子化轴沿 k 计算，再用 |d<sup>F</sup>(π/2)|<sup>2</sup> 转到竖直轴上的布居。</li>
+<li><b>v<sub>x</sub> 和接受度</b>：透镜态（m<sub>J</sub> ≈ 0）用已测的 σ<sub>vx</sub> = 0.65 m/s，|v<sub>x</sub>| ≤ 1 m/s；y<sub>0</sub> 按 σ<sub>y</sub> = 10.35 mm、|y<sub>0</sub>| ≤ 8.5 mm 加权。η<sup>off</sup> 用透镜子能级和这个 v<sub>x</sub> 分布 G(v<sub>x</sub>)：
+<div class="eq">η<sub>lF</sub><sup>off</sup> = (1/#L<sub>F</sub>) Σ<sub>m<sub>F</sub>∈L<sub>F</sub></sub> Σ<sub>v<sub>x</sub></sub> G(v<sub>x</sub>) η<sub>l</sub>(F, m<sub>F</sub>; v<sub>x</sub>)</div>
+η<sub>l</sub>(F, m<sub>F</sub>; v<sub>x</sub>) 是处在 (F, m<sub>F</sub>)、速度 v<sub>x</sub> 的一个分子在线 l 上发的光子数。F1=3/2 两组 CU2 前为空（f<sub>F</sub> = 0），它们的 η<sup>off</sup> 不进入方程；为完整起见对全部 m<sub>F</sub> 取平均。</li>
+<li class="new"><b>η<sup>on</sup> 用 CU2 OBE 残留自身的 m<sub>F</sub> 和 v<sub>x</sub> 分布</b>（v2 的改动）：
+<div class="eq">η<sub>lF</sub><sup>on</sup> = Σ<sub>i∈L</sub> w<sub>i</sub> Σ<sub>v<sub>x</sub>, y<sub>0</sub></sub> W(v<sub>x</sub>, y<sub>0</sub>) Σ<sub>m<sub>F</sub>∈F</sub> P<sub>i; F,m<sub>F</sub></sub>(v<sub>x</sub>, y<sub>0</sub>) η<sub>l</sub>(F, m<sub>F</sub>; v<sub>x</sub>) &nbsp;/&nbsp; Σ<sub>i∈L</sub> w<sub>i</sub> Σ<sub>v<sub>x</sub>, y<sub>0</sub></sub> W Σ<sub>m<sub>F</sub>∈F</sub> P<sub>i; F,m<sub>F</sub></sub></div>
+P<sub>i; F,m<sub>F</sub></sub>(v<sub>x</sub>, y<sub>0</sub>) 是从起始子能级 i ∈ L 出发、CU2 之后在能级 (F, m<sub>F</sub>) 的布居。这里 m<sub>F</sub> 取 F 组全部 2F+1 个子能级，而不只是 L<sub>F</sub>：CU2 会把布居重新分配到别的 m<sub>F</sub>，也会泵进 F1=3/2。起始子能级权重 w<sub>i</sub>：f<sub>t</sub> 平分给 F=3 的 m<sub>F</sub> = 0, ±1，1 − f<sub>t</sub> 给 F=2 m<sub>F</sub> = 0。CU2 泵进 F1=3/2 的分子本来就是透镜态分子，一次光子反冲只改变 v<sub>x</sub> 约 7 mm/s，所以它们沿用透镜态的 v<sub>x</sub> 分布（再乘上 CU2 对 v<sub>x</sub> 的选择），不需要单独的 σ<sub>vx</sub>。</li>
+<li><b>CU2 OBE</b>：<code>cu2_power_check.py transfer 13,209 20 30 e217 acc</code>，即 NLTL2 2068 = δ<sub>0</sub> 13 MHz（B1 扫描标定），f<sub>AOM</sub> 209 MHz，20 + 30 mW，217 V/cm，每程损耗 5 %，v<sub>z</sub> 156 m/s；网格 v<sub>x</sub> = ±0.2, ±0.6, ±1.0 m/s，y<sub>0</sub> = 0, 3, 6, 9 mm。</li>
+<li><b>f<sub>t</sub></b>：由 CU2 关时 S<sub>B</sub>/S<sub>A</sub> = 1.56 ± 0.17 得到。这是两对相邻 run 的平均：15:41/15:48 和 16:08/16:12，各相隔 4–7 min。解出 f<sub>t</sub> = 0.441，即 N<sub>s</sub>/N<sub>t</sub> ≈ 1.27。这是整个计算里唯一用到不同 run 之间信号比的地方。</li>
+<li><b>误差</b>：对 R<sub>l</sub>（独立高斯）和 S<sub>B</sub>/S<sub>A</sub> 做 Monte Carlo，各 20000 次，每次重新解方程。</li>
+</ul>
+<img src="figures/cu2_residual_lines/fig1_eta.png" style="width: 100%">
+<div class="cap">图 1：每个分子在每条线上的光子数 η<sub>lF</sub>（l：线，F：组）。左：CU2 关时，透镜态的 m<sub>F</sub> 和 v<sub>x</sub>；右：CU2 开后，按 OBE 残留的 m<sub>F</sub> 和 v<sub>x</sub>。A 线只看 F1=5/2 F=3；B 线看 F1=5/2 F=2，外加 F=3 的串扰；C 线看 F1=5/2 F=3 和 F1=3/2 F=2，看不到单态；D 线主要看 F1=3/2 F=1，也看到 F1=5/2 F=2 和 F1=3/2 F=2。残留偏向大 |v<sub>x</sub>|，所以右边的串扰项明显变小（例如 D 线上的 F=3：0.17 → 0.06，B 线上的 F1=3/2 F=2：0.21 → 0.09）。</div>
+
+<h2>3. 不同组合能得到什么</h2>
+<p>η 矩阵接近下三角，所以可以按“每加一条线就多解出一组”的顺序来理解。下面都是 24 mW、残留 m<sub>F</sub> 和 v<sub>x</sub> 按 OBE 的结果，以 CU2 前 J=2 总数的百分比给出。</p>
+<h3>3.1 只用 A：三重态 F1=5/2 F=3</h3>
+<div class="eq">n<sub>F=3</sub> = R<sub>A</sub> f<sub>t</sub> η<sub>A,F=3</sub><sup>off</sup> / η<sub>A,F=3</sub><sup>on</sup> &nbsp;≈&nbsp; R<sub>A</sub> f<sub>t</sub></div>
+<p>R(2) F'=4 上每个 m<sub>F</sub> 的光子数几乎一样（2.0–2.1，闭合循环），所以结果和 m<sub>F</sub> 分布基本无关。结果 <b>0.08 ± 0.27 %</b> of J=2，也就是三重态本身剩下 0.19 ± 0.62 %（清除 99.81 %）。模型 0.05 %。</p>
+<h3>3.2 A + C：F1=3/2 F=2（CU2 泵进去的分子）</h3>
+<p>C 线看三重态（约 1.0–1.3 个光子）和 F1=3/2 F=2（约 2.4 个光子），看不到单态（0.01）。CU2 关时 F1=3/2 为空，C 线的信号 99 % 来自三重态的串扰。CU2 开后三重态几乎被清空（由 A 线定），C 线上剩下的信号就来自 F1=3/2 F=2：</p>
+<div class="eq">n<sub>F1=3/2, F=2</sub> ≈ (R<sub>C</sub> − κ R<sub>A</sub>) f<sub>t</sub> η<sub>C,F=3</sub><sup>off</sup> / η<sub>C,F1=3/2 F=2</sub><sup>on</sup>,&nbsp;&nbsp;&nbsp; κ = η<sub>C,F=3</sub><sup>on</sup> / η<sub>C,F=3</sub><sup>off</sup> ≈ 0.8</div>
+<p>结果 <b>0.55 ± 0.35 %</b>，模型 0.45 %。κ 小于 1，是因为残留的三重态分子集中在大 |v<sub>x</sub>|，在 C 线上发的光子更少。所以 C 线那个看起来像“97 % 清除效率”的数（R<sub>C</sub> = 2.6 %），并不是某一个能级的清除效率：分母是三重态，分子主要是 F1=3/2 F=2（模型里 CU2 开时 C 线信号 95 % 来自它）。</p>
+<h3>3.3 A + B：F1=5/2 F=2（单态那一组）</h3>
+<p>B 线 CU2 关时的信号 77 % 来自单态、23 % 来自三重态的串扰。三重态清得更干净，所以 B 线的 R 把单态的残留稀释了。扣掉三重态（A 线）和 F1=3/2 F=2（C 线，B 上只有 0.09 个光子，占 B 线 CU2 开信号的约 12 %）之后：<b>0.39 ± 0.31 %</b> of J=2，也就是单态那一组剩下 0.69 ± 0.56 %，清除约 99.3 %。模型 0.15 %。注意 B 线分不出 m<sub>F</sub>，CU2 后这一组是 F=2 所有 m<sub>F</sub> 之和。</p>
+<h3>3.4 再加 D：F1=3/2 F=1</h3>
+<p>D 线主要看 F1=3/2 F=1（2.1 个光子），但 F1=5/2 F=2（0.6）和 F1=3/2 F=2（0.9）也占了它 CU2 开信号的大部分。按模型，D 线 CU2 开信号里只有 29 % 来自 F1=3/2 F=1。扣掉这些之后，<b>0.04 ± 0.57 %</b>，模型 0.09 %。约束很弱，D 线需要多得多的统计量。</p>
+<img src="figures/cu2_residual_lines/fig2_combinations.png" style="width: 100%">
+<div class="cap">图 2：每组的残留，横轴是用了哪几条线；红虚线是 CU2 OBE（实际设定，v<sub>z</sub> 156 m/s）的预测。前面已解出的组在后续组合里保持不变，因为 η 矩阵接近下三角；误差随组合变大，是因为要扣掉的项变多了。最右是已解出各组之和。</div>
+
+<h2>4. 反过来检查：用模型预测每条线的 on/off 比</h2>
+<p>不解方程，直接把 CU2 OBE 的残留（含 m<sub>F</sub> 和 v<sub>x</sub> 分布）代入探测模型，预测四条线的 R：A 0.12 %、B 0.24 %、C 2.10 %、D 1.10 %。实测是 0.19 ± 0.59 %、0.57 ± 0.37 %、2.6 ± 1.4 %、1.3 ± 1.9 %，四条都在 1σ 以内（B 线 0.9σ）。这个比较不需要假设 F1=3/2 的残留，也没有求逆放大误差。</p>
+<img src="figures/cu2_residual_lines/fig3_onoff.png" style="width: 100%">
+<div class="cap">图 3 左：每条线实测和模型预测的 on/off 比。右：每条线的信号来自哪些组（模型），浅色是 CU2 关，深色是 CU2 开。C 线和 D 线 CU2 开时的信号主要来自 F1=3/2，CU2 关时则来自透镜态，所以它们的 R 不等于任何一个能级的清除效率。</div>
+
+<h2>5. 系统误差</h2>
+<table>
+<tr><th>探测功率</th><th>CU2 后 v<sub>x</sub></th><th>CU2 后 m<sub>F</sub></th><th>F1=5/2 F=3</th><th>F1=5/2 F=2</th><th>F1=3/2 F=2</th><th>F1=3/2 F=1</th><th>总和</th><th>f<sub>t</sub></th></tr>
+<tr><td>15 mW</td><td>CU2 OBE</td><td>CU2 OBE</td><td>0.09 ± 0.27</td><td>0.42 ± 0.32</td><td>0.47 ± 0.29</td><td>0.07 ± 0.46</td><td>1.04 ± 0.54</td><td>0.438</td></tr>
+<tr><td>15 mW</td><td>CU2 OBE</td><td>同 CU2 前</td><td>0.09 ± 0.30</td><td>0.43 ± 0.31</td><td>0.46 ± 0.28</td><td>0.04 ± 0.47</td><td>1.02 ± 0.56</td><td>0.438</td></tr>
+<tr><td>15 mW</td><td>透镜态</td><td>CU2 OBE</td><td>0.08 ± 0.25</td><td>0.34 ± 0.28</td><td>0.41 ± 0.28</td><td>−0.04 ± 0.47</td><td>0.79 ± 0.48</td><td>0.438</td></tr>
+<tr><td>15 mW</td><td>透镜态</td><td>同 CU2 前</td><td>0.08 ± 0.26</td><td>0.35 ± 0.28</td><td>0.41 ± 0.27</td><td>−0.06 ± 0.47</td><td>0.78 ± 0.49</td><td>0.438</td></tr>
+<tr class="hl"><td>24 mW</td><td>CU2 OBE</td><td>CU2 OBE</td><td>0.08 ± 0.27</td><td>0.39 ± 0.31</td><td>0.55 ± 0.35</td><td>0.04 ± 0.57</td><td>1.07 ± 0.61</td><td>0.441</td></tr>
+<tr><td>24 mW</td><td>CU2 OBE</td><td>同 CU2 前</td><td>0.09 ± 0.29</td><td>0.40 ± 0.30</td><td>0.55 ± 0.33</td><td>0.01 ± 0.58</td><td>1.05 ± 0.62</td><td>0.441</td></tr>
+<tr><td>24 mW</td><td>透镜态</td><td>CU2 OBE</td><td>0.08 ± 0.25</td><td>0.32 ± 0.29</td><td>0.50 ± 0.35</td><td>−0.05 ± 0.58</td><td>0.85 ± 0.57</td><td>0.441</td></tr>
+<tr><td>24 mW</td><td>透镜态</td><td>同 CU2 前</td><td>0.08 ± 0.26</td><td>0.33 ± 0.29</td><td>0.50 ± 0.33</td><td>−0.07 ± 0.58</td><td>0.84 ± 0.57</td><td>0.441</td></tr>
+</table>
+<div class="cap">单位：CU2 前 J=2 总数的百分比。加粗行是主结果。“透镜态”一行是旧版的主结果做法（不含残留 v<sub>x</sub>）；“同 CU2 前”：每组的 m<sub>F</sub> 取 CU2 前的分布（F1=3/2 均匀），v<sub>x</sub> 不变。误差只含四条线 R<sub>l</sub> 和 S<sub>B</sub>/S<sub>A</sub> 的统计误差（这张表每行 5000 次）。</div>
+<ul>
+<li>影响最大的是残留的 v<sub>x</sub> 分布：J=2 总和 0.85 → 1.07 %，主要落在 F1=5/2 F=2 和 F1=3/2 F=2（串扰项在大 |v<sub>x</sub>| 时光子变少，扣掉的串扰变少）。这一项已经由 CU2 OBE 定下来，不再作为系统误差。</li>
+<li>探测功率（15 / 24 mW）和 CU2 后的 m<sub>F</sub> 分布的影响都小于统计误差。旧版里“F1=3/2 σ<sub>vx</sub> 取 1.4 m/s”那一项去掉了：CU2 后的 F1=3/2 分子是泵进去的透镜态分子，v<sub>x</sub> 由 OBE 给出。</li>
+<li>f<sub>t</sub>（来自不同 run 之间的 S<sub>B</sub>/S<sub>A</sub>）的误差已经包含在 Monte Carlo 里。它对结果的影响很小，因为每个 n<sub>F</sub> 都正比于 R<sub>l</sub>，而 R<sub>l</sub> 很小。</li>
+<li>没有考虑的：探测锁频点和线心的偏差（弱耦合分量对它敏感），以及 CU2 前非透镜态（F1=3/2、F1=5/2 |m<sub>J</sub>| ≥ 1）可能更宽的 v<sub>x</sub> 分布（它们在这里布居为 0，见第 6 节）。</li>
+</ul>
+<div class="warn"><b>一个没解决的矛盾</b>：用同一个 η 矩阵和 f<sub>t</sub> 预测 CU2 关时 C、D 线和 A 线的信号比，模型给 0.59 和 0.70，实测是 0.36 ± 0.06 和 0.42 ± 0.07。这一项用的是不同 run 之间的绝对信号，C、D 两次 run 比 A 晚 8–33 min，所以可能是束流慢漂移；也可能是模型高估了弱耦合的串扰。用四条线 CU2 关信号做的非负最小二乘也指向后者：弱耦合的光子数乘 0.6 时四条线才同时对上。如果是这样，η<sub>C,F=3</sub> 偏大，A+C 推出的 F1=3/2 F=2 会偏小。上面的 on/off 结果本身不受漂移影响。</div>
+
+<h2>6. 对 CU2 前布居假设的敏感度</h2>
+<h3>6.1 初态 f 是怎么定的</h3>
+<ul>
+<li>F1=3/2 两组 CU2 前为 0 是<b>假设</b>：透镜只把 F1=5/2 的 m<sub>J</sub> ≈ 0 态送到 CU2。数据本身没有测出这一点。</li>
+<li>三重态和单态之比只能由 A、B 两条线 CU2 关时的信号比 S<sub>B</sub>/S<sub>A</sub> 定。A 只看三重态，B 主要看单态、另有约 23 % 来自三重态的串扰：
+<div class="eq">S<sub>B</sub>/S<sub>A</sub> = [η<sub>B,t</sub><sup>off</sup> f<sub>t</sub> + η<sub>B,s</sub><sup>off</sup> (1 − f<sub>t</sub>)] / [η<sub>A,t</sub><sup>off</sup> f<sub>t</sub> + η<sub>A,s</sub><sup>off</sup> (1 − f<sub>t</sub>)] &nbsp;⟹&nbsp; f<sub>t</sub> = (η<sub>B,s</sub><sup>off</sup> − r η<sub>A,s</sub><sup>off</sup>) / [r (η<sub>A,t</sub><sup>off</sup> − η<sub>A,s</sub><sup>off</sup>) − (η<sub>B,t</sub><sup>off</sup> − η<sub>B,s</sub><sup>off</sup>)],&nbsp; r = S<sub>B</sub>/S<sub>A</sub></div></li>
+<li>另一个会话的 <code>cu2_test_start_fit.py</code>：四条线 CU2 关的信号做不加权 NNLS，得到 41 : 59 : 0 : 0。F1=3/2 两组在 N ≥ 0 的边界上被压成 0，所以实际上由 16:08/16:12 那一对 run 的 r = 1.70 决定。</li>
+<li>本文用两对相邻 run 的平均 r = 1.56 ± 0.17，得到 f<sub>t</sub> = 0.441。r 的 1σ 范围对应 f<sub>t</sub> 约 0.40–0.48。</li>
+</ul>
+<h3>6.2 结果</h3>
+<p>主设置：24 mW，残留 m<sub>F</sub> 和 v<sub>x</sub> 按 CU2 OBE。清除效率定义为 1 − n<sub>F</sub>/f<sub>F</sub>，只对 CU2 前有布居的组有意义；残留 n<sub>F</sub> 以 CU2 前 J=2 总数为 100 %。误差只含四条线 R<sub>l</sub> 的统计误差。</p>
+<table>
+<tr><th colspan="6">(a) 改变三重态/单态比，F1=3/2 为空：f = (f<sub>t</sub>, 1 − f<sub>t</sub>, 0, 0)</th></tr>
+<tr><th>f<sub>t</sub></th><th>F=3 清除效率</th><th>F1=5/2 F=2 清除效率</th><th>F1=3/2 F=2 残留</th><th>F1=3/2 F=1 残留</th><th>J=2 总残留</th></tr>
+<tr><td>0.30</td><td>99.81 ± 0.62 %</td><td>99.34 ± 0.47 %</td><td>0.38 %</td><td>+0.17 %</td><td>1.06 %</td></tr>
+<tr><td>0.35</td><td>99.81 ± 0.61 %</td><td>99.33 ± 0.50 %</td><td>0.44 %</td><td>+0.12 %</td><td>1.06 %</td></tr>
+<tr><td>0.41（41 : 59）</td><td>99.81 ± 0.61 %</td><td>99.32 ± 0.53 %</td><td>0.52 %</td><td>+0.07 %</td><td>1.07 %</td></tr>
+<tr class="hl"><td>0.441（本文）</td><td>99.81 ± 0.61 %</td><td>99.31 ± 0.55 %</td><td>0.55 %</td><td>+0.04 %</td><td>1.07 %</td></tr>
+<tr><td>0.50</td><td>99.81 ± 0.61 %</td><td>99.29 ± 0.60 %</td><td>0.63 %</td><td>−0.01 %</td><td>1.07 %</td></tr>
+<tr><td>0.60</td><td>99.81 ± 0.60 %</td><td>99.24 ± 0.72 %</td><td>0.75 %</td><td>−0.10 %</td><td>1.07 %</td></tr>
+</table>
+<table>
+<tr><th colspan="6">(b) CU2 前 F1=3/2 不为空：其余按 41 : 59 分（这些分子用 OBE 里从 F1=3/2 起始的残留）</th></tr>
+<tr><th>CU2 前布居</th><th>F=3 清除效率</th><th>F1=5/2 F=2 清除效率</th><th>F1=3/2 F=2 残留（清除效率）</th><th>F1=3/2 F=1 残留（清除效率）</th><th>J=2 总残留</th></tr>
+<tr><td>F1=3/2 全为 0</td><td>99.81 %</td><td>99.32 %</td><td>0.52 %（—）</td><td>0.07 %（—）</td><td>1.07 %</td></tr>
+<tr><td>F1=3/2 F=2：0.5 %</td><td>99.81 %</td><td>99.32 %</td><td>0.53 %（−5 ± 64 %）</td><td>0.07 %</td><td>1.07 %</td></tr>
+<tr><td>F1=3/2 F=2：1 %</td><td>99.81 %</td><td>99.32 %</td><td>0.54 %（46 ± 33 %）</td><td>0.06 %</td><td>1.07 %</td></tr>
+<tr><td>F1=3/2 F=2：2 %</td><td>99.81 %</td><td>99.32 %</td><td>0.56 %（72 ± 17 %）</td><td>0.05 %</td><td>1.08 %</td></tr>
+<tr><td>F1=3/2 F=2：5 %</td><td>99.81 %</td><td>99.32 %</td><td>0.62 %（88 ± 7 %）</td><td>0.03 %</td><td>1.10 %</td></tr>
+<tr><td>F1=3/2 F=1：1 %</td><td>99.81 %</td><td>99.32 %</td><td>0.51 %</td><td>0.08 %（92 ± 60 %）</td><td>1.07 %</td></tr>
+<tr><td>F1=3/2 F=1：5 %</td><td>99.81 %</td><td>99.32 %</td><td>0.49 %</td><td>0.13 %（97 ± 13 %）</td><td>1.08 %</td></tr>
+</table>
+<h3>6.3 解释</h3>
+<ul>
+<li><b>三重态清除效率完全不依赖初态。</b>A 线只看三重态，1 − ε<sub>F=3</sub> = n<sub>F=3</sub>/f<sub>t</sub> = R<sub>A</sub> η<sub>A,F=3</sub><sup>off</sup>/η<sub>A,F=3</sub><sup>on</sup>，式中没有 f<sub>t</sub>。</li>
+<li><b>F1=5/2 F=2 的清除效率几乎不变</b>（99.24–99.34 %）。B 线 CU2 关时的三重态份额随 f<sub>t</sub> 变，但 CU2 开时三重态的贡献 η<sub>B,t</sub><sup>on</sup> n<sub>t</sub> ∝ f<sub>t</sub> 也按同样比例变，两者基本抵消。</li>
+<li><b>F1=3/2 两组的残留随 f<sub>t</sub> 成正比变化。</b>它们是由 C、D 线 CU2 开时的信号推出来的，而这两条线 CU2 关时的信号（即 R<sub>l</sub> 的分母）主要来自三重态，所以 n<sub>F1=3/2</sub> ∝ R<sub>l</sub> η<sub>l,t</sub><sup>off</sup> f<sub>t</sub>。在 f<sub>t</sub> 的 1σ 范围内，F1=3/2 F=2 是 0.51–0.61 %，比统计误差 ±0.35 % 小。</li>
+<li><b>J=2 总残留（1.07 %）基本不随 f<sub>t</sub> 变。</b>f<sub>t</sub> 增大时 F1=3/2 的残留变多、F1=5/2 F=2 的残留变少，两者互相补偿。</li>
+<li><b>CU2 前 F1=3/2 有少量布居，影响也很小。</b>即使 F1=3/2 F=2 初始占 5 %，其他组也几乎不变，它自己的残留只从 0.52 % 增加到 0.62 %。它自己的“清除效率”只在初始布居 ≳ 2 % 时才有意义；初始布居更小时，这个比值的误差太大。这里这些分子用的是透镜态的 v<sub>x</sub> 分布；非透镜态的 v<sub>x</sub> 分布可能更宽，CU2 对它们会清得更差，这一点还没有算。</li>
+</ul>
+<div class="box">结论：选 41 : 59 还是 44 : 56，对三重态和 F1=5/2 F=2 的清除效率以及 J=2 总残留都没有影响。F1=3/2 的残留会变化约 ±0.05 个百分点，远小于统计误差。真正决定结果的是每条线自己的 on/off 比 R<sub>l</sub>，以及光子数矩阵里的串扰项（第 5 节）。</div>
+
+<h2>7. CU2 残留的 v<sub>x</sub> 分布（v2：已用新版 CU2 OBE 算出，并入主结果）</h2>
+<h3>7.1 问题</h3>
+<p>旧版的 η 都假设 CU2 前后的 v<sub>x</sub> 分布相同（σ<sub>vx</sub> = 0.65 m/s）。但 CU2 对 Doppler 频移有选择性：|v<sub>x</sub>| 大的分子离 CU2 共振远，更容易留下来。这些分子在探测光上也离共振远，发的光子更少，线宽窄的弱耦合分量尤其明显。所以 CU2 开时每个残留分子的有效 η<sup>on</sup> 应该更小；用透镜态的 v<sub>x</sub> 分布会把 η<sup>on</sup> 算大，推出的残留 n<sub>F</sub> 因此偏小。</p>
+<h3>7.2 旧版的近似和 v2 的做法</h3>
+<ul>
+<li><b>旧版近似</b>：CU2 开时的 v<sub>x</sub> 权重取 G(v<sub>x</sub>) r(v<sub>x</sub>)，r(v<sub>x</sub>) 是旧设定（200 V/cm，80 + 24 mW，3 cm 光束，R1/R2 工作点）下 J=2 总量的残留随 v<sub>x</sub> 的变化，四组用同一个 r(v<sub>x</sub>)。</li>
+<li><b>v2</b>：按旧版 7.4 的步骤，用 CU2 测试实际设定下的 CU2 OBE（第 2 节）逐起始态、逐 v<sub>x</sub>、逐 y<sub>0</sub>、逐能级的残留直接构造 η<sup>on</sup>。NLTL2 2068 对应 δ<sub>0</sub> = 13.1 MHz：由 B1 扫描的线性标定（斜率 −0.9767 MHz IR / MHz NLTL2），2068 对应 −0.36 MHz IR，x<sub>IR</sub> = (δ<sub>0</sub> − 14.5 MHz)/4。</li>
+</ul>
+<h3>7.3 结果（24 mW）</h3>
+<table>
+<tr><th colspan="10">η<sup>on</sup>（含残留 v<sub>x</sub>）/ η<sup>on</sup>（透镜态 v<sub>x</sub> 分布）</th></tr>
+<tr><th></th><th>A, F=3</th><th>B, F=2</th><th>C, F1=3/2 F=2</th><th>D, F1=3/2 F=1</th><th>B, F=3</th><th>C, F=3</th><th>D, F1=5/2 F=2</th><th>D, F1=3/2 F=2</th><th>B, F1=3/2 F=2</th></tr>
+<tr><td class="l">v2（CU2 OBE，逐能级）</td><td>0.94</td><td>0.93</td><td>0.94</td><td>0.98</td><td>0.77</td><td>0.63</td><td>0.56</td><td>0.77</td><td>0.40</td></tr>
+<tr><td class="l">旧版近似（旧 r(v<sub>x</sub>)）</td><td>0.94</td><td>0.93</td><td>0.94</td><td>0.97</td><td>0.79</td><td>0.62</td><td>0.63</td><td>0.79</td><td>—</td></tr>
+</table>
+<table>
+<tr><th>能级</th><th>不含残留 v<sub>x</sub></th><th>旧版近似，R1 形状</th><th>v2：CU2 OBE（主结果）</th><th>CU2 OBE 模型</th></tr>
+<tr><td>F1=5/2 F=3</td><td>0.08 ± 0.26 %</td><td>0.084 ± 0.27 %</td><td><b>0.08 ± 0.27 %</b></td><td>0.05 %</td></tr>
+<tr><td>F1=5/2 F=2</td><td>0.32 ± 0.29 %</td><td>0.38 ± 0.31 %</td><td><b>0.39 ± 0.31 %</b></td><td>0.15 %</td></tr>
+<tr><td>F1=3/2 F=2</td><td>0.50 ± 0.35 %</td><td>0.54 ± 0.33 %</td><td><b>0.55 ± 0.35 %</b></td><td>0.45 %</td></tr>
+<tr><td>F1=3/2 F=1</td><td>−0.05 ± 0.58 %</td><td>+0.03 ± 0.57 %</td><td><b>+0.04 ± 0.57 %</b></td><td>0.09 %</td></tr>
+<tr class="hl"><td>J=2 合计</td><td>0.85 ± 0.57 %</td><td>1.03 ± 0.61 %</td><td>1.07 ± 0.61 %</td><td>0.74 %</td></tr>
+<tr><td>清除效率：F=3 / F1=5/2 F=2 / J=2</td><td>99.82 / 99.43 / 99.15 %</td><td>99.81 / 99.32 / 98.97 %</td><td><b>99.81 / 99.31 / 98.93 %</b></td><td>—</td></tr>
+</table>
+<div class="cap">单位：CU2 前 J=2 总数的百分比。“不含残留 v<sub>x</sub>”一列在这个网格上算（v<sub>x</sub> = ±0.2, ±0.6, ±1.0 m/s），和旧版主结果（0.83 %）差 0.02 个百分点。“旧版近似”一列抄自旧版第 7.3 节。</div>
+<ul>
+<li>对角项（每条线本来要测的能级）两种做法几乎一样；串扰项也接近，B 线上的 F1=3/2 F=2（0.40）是旧版没有列出的一项。</li>
+<li>每组残留都增加，方向一致，都在 1σ 以内；J=2 合计 0.85 → 1.07 %。旧版的近似（四组用同一个旧设定的 r(v<sub>x</sub>)）只差 0.04 个百分点。</li>
+<li>F1=5/2 F=2 增加最多：B 线上三重态和 F1=3/2 F=2 的串扰分别降到 0.77 和 0.40，扣掉的串扰变少，多出来的信号就归到 F=2。</li>
+</ul>
+
+<h2>8. 怎么改进</h2>
+<ul>
+<li><b>C 线（R(2) F1'=5/2 F'=3）和 D 线多测</b>：现在 C 线是 1.6σ，要到 5σ 需要约 10 倍的 shot 数，即约 10000 shot、约 11 min。D 线要约束 F1=3/2 F=1，需要更多。</li>
+<li><b>实测串扰</b>：RC 改打 P(2) F'=2，它会把原本进入单态的分子也泵进三重态，F1=5/2 F=2 就接近空了。这时 CU2 关的 S<sub>C</sub>/S<sub>A</sub> 和 S<sub>B</sub>/S<sub>A</sub> 直接等于 η<sub>C,F=3</sub>/η<sub>A,F=3</sub> 和 η<sub>B,F=3</sub>/η<sub>A,F=3</sub>，可以用来检验第 5 节的矛盾。最好在 ABS 模式下用 fl/abs 测，或者 A–X–A 夹测。</li>
+<li><b>f<sub>t</sub> 用 ABS 模式测</b>：CU2 关时测的布居不需要 CU2 光，可以用 fl/abs 直接得到，不受打靶点涨落影响。</li>
+<li class="new"><b>加 P(2) 探测线</b>（同样 24 mW、板不加电压的探测 OBE）：
+<ul>
+<li><b>P(2) F1'=3/2 F'=2</b>：对四组的光子数相近（1.05 / 0.64 / 0.92 / 0.65），它的 on/off 比基本就是 J=2 总残留（模型 0.81 %，真实总残留 0.74 %，可以用模型修正）。CU2 关信号约 6.6 mV·ms，500 shot 时 R 的误差约 ±0.67 %。一条线直接给出总清除效率，和四条 R 线的组合互相检验。</li>
+<li><b>P(2) F1'=1/2 F'=1</b>：只看 F1=3/2（0.7 / 0.7 个光子），看不到透镜态，所以 CU2 关时几乎没有信号、CU2 开时的信号就是 CU2 泵进去的分子，不需要扣串扰。信号小，约为 500 shot 噪声底的 0.7 倍，要把 F1=3/2 合计测到 3σ 约需 8000 shot；归一化要借相邻 run 的 A、B 线。</li>
+<li>四条 P 线都加进联立求解（每条 500 shot）：J=2 总和的误差 0.56 → 0.35 %，F1=3/2 F=1 的误差 0.56 → 0.42 %。P(2) F1'=1/2 F'=0 的信号太弱（0.3 个光子，只看 F1=3/2 F=1），没有用。</li>
+</ul></li>
+<li><b>非透镜态的 v<sub>x</sub></b>：透镜态 σ<sub>vx</sub> = 0.65 m/s，其他态的分布应该更宽。目前 CU2 前非透镜态的布居设为 0；如果要给它们一点布居（第 6.2(b) 节），应改用更宽的 σ<sub>vx</sub>（例如 J=1 实测的 1.28 m/s），看清除效率的敏感度。</li>
+</ul>
+<p class="cap">脚本（repo <code>scripts/</code>）：<code>cu2_test_line_combinations.py</code>（本文所有数字和图 1–3，<code>docs/state_cleanup/figures/cu2_residual_lines/numbers.json</code>），<code>cu2_test_residual_vx.py</code>（第 7 节），<code>cu2_test_start_fit.py</code>（CU2 关信号的 NNLS），<code>cu2_test_p_lines.py</code>（第 8 节 P(2) 线），<code>cu2_detection_test.py</code>（探测 OBE 的光子产额），<code>cu2_power_check.py</code>（CU2 OBE）。</p>
+</body>
+</html>

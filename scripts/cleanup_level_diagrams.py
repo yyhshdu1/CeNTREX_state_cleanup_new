@@ -20,6 +20,9 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys  # noqa: E402
+sys.path.insert(0, str(ROOT))
+from scripts import vz_paths  # noqa: E402
 sys.path.insert(0, str(ROOT))
 from scripts.cleanup_spb_doppler import (CU1_DETUNING, CU1_E, CU1_SOLVER, CU2_POINTS, build_cu1,  # noqa: E402
                                          describe, solve_states)
@@ -113,7 +116,7 @@ def plot():
     from centrex_tlf import transitions
     from centrex_tlf.utils import plotting as lp
 
-    data = json.loads(CACHE.read_text())
+    data = json.loads(vz_paths.find(CACHE).read_text())
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     YELLOW, INK = "#f6e3a1", "#111111"
     BLUE, RED = "#1537a6", "#d0021b"          # laser colours: F'=3 beam and CU1 blue, F'=4 beam red
@@ -309,7 +312,7 @@ def plot():
                      lines=[(0, 1.0, cu1["detuning_MHz"])]))
     # CU1 at the set point chosen for the transverse distribution (no EOM, +19.0 MHz), residuals per
     # starting level from the on-axis trajectories of scripts/cu1_trajectories.py
-    traj = ROOT / "tmp" / "cu1_trajectories" / "cu1_trajectories.npz"
+    traj = vz_paths.find(ROOT / "tmp" / "cu1_trajectories" / "cu1_trajectories.npz")
     if traj.exists():
         z = np.load(traj)
         k = list(z["detunings"]).index(19.0)

@@ -56,7 +56,7 @@ TEST_CHUNK = 40
 # ---- experimental settings (baseline of docs/state_cleanup/main.tex) --------
 E_FIELD = np.array([0.0, 0.0, 200.0])   # V/cm
 B_FIELD = np.array([0.0, 0.0, 1e-3])    # G
-VZ, VX = 184.0, 0.0                     # m/s; transverse velocity not considered
+VZ, VX = 156.0, 0.0                     # m/s, measured (TOF); 184 before 2026-11-09 (tmp/*/vz184/)
 LASER_FREQUENCY = 1.103e15              # Hz
 P0, P1 = 80e-3, 24e-3                   # W, F'=3 and F'=4 beams
 EOM_FREQUENCY, BETA = 17.5 * 2 * np.pi * 1e6, 1.5

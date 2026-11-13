@@ -8,7 +8,7 @@
 Lines: R(1) F1'=5/2 F'=3 (the AP-paper detection line, sees F=2 only) and Q(1) F1'=1/2 F'=1 (sees all of J=1).
 Probe model: the present detection laser, 2.5 cm along the molecular beam x 1.7 cm high, taken as a Gaussian with
 these 1/e^2 diameters; single frequency on resonance (detuning = Doppler shift k*vx), fixed linear polarization,
-no phase modulation; zero field; molecule at 184 m/s. Output is the number of photons scattered by a molecule
+no phase modulation; zero field; molecule at 156 m/s (184 m/s before 2026-11-09). Output is the number of photons scattered by a molecule
 that starts in each J=1 sublevel, on a grid of peak intensity, vx and height y.
 
 Polarization "par" is pi light along the quantization axis (the axis the molecules keep from the last electric
@@ -29,12 +29,15 @@ from pathlib import Path
 
 import numpy as np
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts import vz_paths  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = ROOT / "tmp" / "detection" / "probe_yields.json"
 FIG_DIR = ROOT / "docs" / "state_cleanup" / "figures" / "slides"
 HDF_J1 = ROOT / "results" / "SPB_J1_cleanup_scans.h5"
 
-VZ = 184.0                                   # m/s
+VZ = 156.0                                   # m/s, measured (TOF); 184 before 2026-11-09 (tmp/*/vz184/)
 SIGMA_Z, SIGMA_Y = 6.25e-3, 4.25e-3          # probe sigma along the beam and in height (1/e^2 diameters / 4)
 T_PROBE = 6 * SIGMA_Z / VZ                   # +-3 sigma
 K_VX = 2 * np.pi * 3.68e6                    # k*vx per m/s at 271.7 nm, rad/s
@@ -160,7 +163,7 @@ def plot(numbers=True):
     import matplotlib.pyplot as plt
     from matplotlib.patches import FancyArrowPatch, Rectangle
 
-    data = json.loads(CACHE.read_text())
+    data = json.loads(vz_paths.find(CACHE).read_text())
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     YELLOW, GREY, INK, BLUE = "#f3d36b", "#b9b9b9", "#111111", "#1537a6"
     TALK = "#bfd0f4"                                                     # highlight: couples to the probe
@@ -360,7 +363,7 @@ def plot_info():
                          "mathtext.fontset": "cm", "hatch.color": "#b0b0b0", "hatch.linewidth": 0.8})
     INK, GRAY, BLUE, ORANGE, GREEN, RED = "#111111", "#555555", "#1537a6", "#d4652f", "#2e8b57", "#b8312f"
     YELLOW, RESID = "#f3d36b", "#7a7a7a"
-    data = json.loads(CACHE.read_text())
+    data = json.loads(vz_paths.find(CACHE).read_text())
     yR, yP, yX = (yields_at(data, r) for r in ("R1F3_par", "Q1F1_par", "Q1F1_perp"))
     fin = cu1_residual_by_level()
     total = sum(fin.values())

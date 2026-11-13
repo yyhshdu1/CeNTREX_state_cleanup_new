@@ -14,6 +14,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from scripts import vz_paths  # noqa: E402
+sys.path.insert(0, str(ROOT))
 from scripts.cu2_laser_aom_scan import (CHECKPOINT_DIR, CONFIRM_SOLVER, FIRST_PASS, N_PASS,  # noqa: E402
                                         PASS_SPACING, T_END, VZ, build)
 
@@ -79,7 +81,7 @@ def plot():
         "xtick.color": MUTED, "ytick.color": MUTED, "xtick.labelcolor": INK, "ytick.labelcolor": INK,
         "axes.labelcolor": INK, "text.color": INK, "savefig.facecolor": SURFACE, "legend.frameon": False,
     })
-    z = np.load(CACHE)
+    z = np.load(vz_paths.find(CACHE))
     names, pts, d1 = z["names"], z["points"], z["detuning1"]
     s_mm = z["t"] * VZ * 1e3
     pops, photons, gidx, exc = z["pops"], z["photons"], z["ground_idx"], z["excited"]

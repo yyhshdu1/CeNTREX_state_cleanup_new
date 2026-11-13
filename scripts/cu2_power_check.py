@@ -18,10 +18,19 @@
     python scripts/cu2_power_check.py vz 150        # forward velocity 150 m/s instead of 184 m/s at NEW, proxy
     python scripts/cu2_power_check.py loss 10       # another loss per pass (%) at NEW, 35 + 25 mW, proxy
     python scripts/cu2_power_check.py power         # more total power at NEW (same 7:5 ratio, and 80 + 24), proxy
+    python scripts/cu2_power_check.py eomfreq 14.5,209 32 43 e217   # EOM frequency at one set point, proxy
     python scripts/cu2_power_check.py polfreq       # X/Z switching frequency at NEW, 35 + 25 mW, proxy
     python scripts/cu2_power_check.py polphase      # ... and its phase at the molecule's arrival (random in the lab)
+    python scripts/cu2_power_check.py opt155 35 25 e155   # grid stages in a model built at another field (V/cm)
+    python scripts/cu2_power_check.py opt217 32 43 e217 spb   # coarse grid at the measured CU2 field
+    python scripts/cu2_power_check.py acc24 35 25 e155 12.5,208 6,200   # candidates on the reduced acceptance grid
+    python scripts/cu2_power_check.py setpoints 44 31 e155 12.5,208 6,200   # the same set points, proxy only
+    python scripts/cu2_power_check.py setpoints 32 43 e152 from155 12.5,200  # set points of 155 V/cm, field at 152
+    python scripts/cu2_power_check.py perstate 12.5,208 35 25 e155      # each J=2 level alone, reduced grid
     python scripts/cu2_power_check.py summary
 
+Forward velocity: base.VZ = 156 m/s (measured). Append e.g. "vz184" to any stage to run at another vz; those
+results go to tmp/cu2_power/vz184/ under the same names (everything before 2026-11-09 is there).
 Same model as scripts/cu2_doppler_scan.py (3 cm beam, 200 V/cm, 13 passes, set points R1/R2 found for 80 + 24 mW
 with a 2.4 cm beam), except the loss per pass: the windows lose less than assumed, so LOSS = 0.05 instead of 0.10.
 The powers are runtime parameters (power0 = F'=3 beam, power1 = F'=4 beam), so one prepared problem serves every
@@ -42,24 +51,31 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts import cu2_doppler_scan as c2  # noqa: E402
 from scripts import cu2_laser_aom_scan as base  # noqa: E402
+from scripts import vz_paths  # noqa: E402
 from scripts.cu2_laser_aom_scan import CONFIRM_SOLVER, SCAN_SOLVER, T_END, log  # noqa: E402
 
 LOSS = 0.05
 base.LOSS = LOSS                                            # read by base.build() when the model is prepared
 OUT = ROOT / "tmp" / "cu2_power"
-SLOTS = ["detuning0", "detuning1", "vx", "y0", "power0", "power1", "beta0", "beta1", "pol_frequency", "pol_phase"]
+SLOTS = ["detuning0", "detuning1", "vx", "y0", "power0", "power1", "beta0", "beta1", "pol_frequency", "pol_phase",
+         "eom0", "eom1"]
 TOTAL = 60
 SPLITS = [(TOTAL - p1, p1) for p1 in (10, 15, 20, 25, 30, 35, 40)]   # mW, (F'=3, F'=4)
 SPLITS2 = [(15, 45), (10, 50)]                                     # extension: uniform start still rising
 REFERENCE = [(80, 24)]
 VX = np.round(np.arange(-1.0, 1.0 + 1e-9, 0.2), 6)
 Y0 = np.array([0.0, 3e-3, 6e-3, 9e-3])
+VX24 = VX[::2]                                                     # reduced grid: <= 0.08 % from the 44-point mean
 THREADS = 16
 GRIDS = {                                                          # (delta0/2pi, f_AOM) in MHz
     "opt": ([5.0, 8.0, 11.5, 15.0, 18.5], [186.0, 191.0, 197.0, 203.0, 208.5, 214.0]),   # AOM range 200 +- 15 MHz
     "fine": ([10.0, 11.0, 11.5, 12.0, 13.0], [206.0, 207.5, 208.5, 209.5, 211.0]),      # around R1
     "fine2": ([12.5, 13.0, 13.5, 14.0, 15.0], [203.0, 204.5, 206.0, 207.5]),            # fine optimum at its edge
     "near": ([11.5, 12.0, 12.5, 13.0], [206.0, 207.5, 208.5]),                          # near NEW, other beams
+    "opt155": ([3.0, 6.0, 9.0, 12.5, 16.0], [192.0, 196.0, 200.0, 204.0, 208.0, 212.0]),  # coarse, at 155 V/cm
+    "fine155": ([11.5, 12.5, 13.5], [198.0, 200.0, 202.0, 208.0, 210.0, 212.0]),            # both good f_AOM regions
+    "opt217": ([3.0, 6.0, 9.0, 12.5, 16.0], [190.0, 195.0, 200.0, 205.0, 210.0, 215.0]),  # coarse, at 217 V/cm
+    "fine217": ([11.5, 12.5, 13.5, 14.5, 16.0, 17.0], [205.0, 207.0, 209.0, 210.0, 211.0, 213.0]),  # around both optima
 }
 BETA_POINTS = [(12.5, 207.5), (13.0, 206.0)]                       # best proxy points of Steps 4-5
 BETAS = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5]                           # one EOM for both beams: beta0 = beta1
@@ -67,11 +83,50 @@ NEW = (12.5, 207.5)                                                # best full-g
 PROXY_SPLITS = [(25, 35), (30, 30), (35, 25), (40, 20), (45, 15)]
 CONFIRM_POINTS = [(NEW, 0.0), (NEW, 0.6), ((13.0, 206.0), 0.0), ((13.0, 206.0), 0.6)]   # (set point, vx), y0 = 0
 MORE_POWER = [(47, 33), (58, 42), (80, 24)]                        # 80, 100 mW at 35:25, and the old 80 + 24 mW
+EOM_FREQS = [13.0, 14.0, 15.0, 15.5, 16.0, 17.0, 17.5, 18.5]       # MHz, stage eomfreq (proxy)
 POL_FREQS = [0.1, 0.25, 0.5, 1.0, 2.0]                             # MHz, X/Z square-wave switching
 POL_PHASE_FREQS, POL_PHASES = [0.25, 0.5, 1.0], [0.5, 1.0, 1.5]    # MHz, units of pi (phase 0 is stage polfreq)
 PROXY_VX, PROXY_Y0 = [-0.6, 0.0, 0.6], [0.0, 6e-3]
 CHUNK = 16
 info = None
+
+
+def slot_values(row):
+    """(region or (delta0, f_AOM), P0 mW, P1 mW, vx, y0[, beta[, pol MHz[, phase/pi[, EOM MHz]]]]) -> SLOTS."""
+    reg, p0, p1, vx, y0, *rest = row
+    d0, faom = c2.REGIONS[reg] if isinstance(reg, str) else reg
+    d1 = d0 + faom - info["delta_main_MHz"]
+    beta = rest[0] if rest else base.BETA
+    pol = 2 * np.pi * 1e6 * rest[1] if len(rest) > 1 else base.POL_FREQUENCY
+    phase = np.pi * rest[2] if len(rest) > 2 else 0.0
+    eom = 2 * np.pi * 1e6 * rest[3] if len(rest) > 3 else base.EOM_FREQUENCY      # one EOM for both beams
+    return [2 * np.pi * 1e6 * d0, 2 * np.pi * 1e6 * d1, vx, y0, p0 * 1e-3, p1 * 1e-3, beta, beta, pol, phase, eom, eom]
+
+
+def run_states(name, jobs, prepared, gidx, full=False):
+    """jobs: (level index, row) -> remaining J=2 population starting from that one level (full: final population of
+    every level instead); one checkpoint per call."""
+    from centrex_tlf import lindblad
+    f = OUT / f"{name}.npz"
+    if f.exists():
+        return np.load(f, allow_pickle=True)["populations" if full else "remaining"]
+    dim = len(c2.OBE.QN)
+    rho_batch = []
+    for i, _ in jobs:
+        rho = np.zeros((dim, dim), dtype=np.complex128)
+        rho[i, i] = 1.0
+        rho_batch.append(prepared.layout.pack(rho))
+    t0 = time.perf_counter()
+    res = lindblad.solve_lindblad_batch(prepared, np.asarray(rho_batch), (0.0, T_END), parameter_slots=SLOTS,
+                                        parameter_batch=np.asarray([slot_values(r) for _, r in jobs],
+                                                                   dtype=np.complex128),
+                                        threads=THREADS, **{**SCAN_SOLVER, "maxiters": 1_000_000})
+    pops = np.asarray(res.values).real
+    rem = pops[:, gidx].sum(axis=1)
+    np.savez(f, levels=np.array([i for i, _ in jobs]), rows=np.array([repr(r) for _, r in jobs]), remaining=rem,
+             wall=time.perf_counter() - t0, loss=LOSS, **({"populations": pops} if full else {}))
+    log(f"{name}: {len(jobs)} trajectories in {time.perf_counter() - t0:.0f} s")
+    return pops if full else rem
 
 
 def run(name, rows, prepared, gidx, rho0, solver=SCAN_SOLVER):
@@ -82,15 +137,7 @@ def run(name, rows, prepared, gidx, rho0, solver=SCAN_SOLVER):
     f = OUT / f"{name}.npz"
     if f.exists():
         return np.load(f, allow_pickle=True)["remaining"]
-    batch = []
-    for reg, p0, p1, vx, y0, *rest in rows:
-        d0, faom = c2.REGIONS[reg] if isinstance(reg, str) else reg
-        d1 = d0 + faom - info["delta_main_MHz"]
-        beta = rest[0] if rest else base.BETA
-        pol = 2 * np.pi * 1e6 * rest[1] if len(rest) > 1 else base.POL_FREQUENCY
-        phase = np.pi * rest[2] if len(rest) > 2 else 0.0
-        batch.append([2 * np.pi * 1e6 * d0, 2 * np.pi * 1e6 * d1, vx, y0, p0 * 1e-3, p1 * 1e-3, beta, beta, pol,
-                      phase])
+    batch = [slot_values(r) for r in rows]
     t0 = time.perf_counter()
     res = lindblad.parameter_scan(prepared, rho0, (0.0, T_END), parameter_slots=SLOTS,
                                   parameter_batch=np.asarray(batch, dtype=np.complex128), threads=THREADS,
@@ -158,6 +205,58 @@ def proxy(rem):
     return np.einsum("v,svy->s", w, rem.reshape(-1, len(PROXY_VX), len(PROXY_Y0))) / len(PROXY_Y0)
 
 
+def pt_name(pt):
+    return f"d{pt[0]:g}_f{pt[1]:g}".replace(".", "p")
+
+
+def parse_pt(s):
+    return tuple(float(x) for x in s.split(","))
+
+
+def perstate(stem, pt, p0, p1, prepared, gidx):
+    """Remaining J=2 from each J=2 level alone at one set point, on the reduced acceptance grid (VX24 x Y0).
+    The OBEs are linear in rho0, so any incoherent distribution over these levels is a weighted sum of the results.
+    Levels with mF < 0 are taken from their mF > 0 partner (reflection through a plane containing z maps mF -> -mF
+    and leaves the X/Z light and k*vx unchanged; only the 1 mG field breaks it); checked at vx = -0.6, 0.6, y0 = 0."""
+    from scripts.cleanup_spb_doppler import describe
+    from scripts.plot_cleanup_maps_current import SY, acceptance_mean
+    desc = {int(i): describe(c2.OBE.QN[i]) for i in gidx}
+    lab = {i: (float(d["F1"]), float(d["F"]), int(round(d["mF"]))) for i, d in desc.items()}
+    assert len(set(lab.values())) == len(lab), "J=2 labels are not unique"
+    pos = [i for i in lab if lab[i][2] >= 0]
+    partner = {i: next(j for j in pos if lab[j] == (lab[i][0], lab[i][1], -lab[i][2])) for i in lab if lab[i][2] < 0}
+    check_vx = (-0.6, 0.6)
+    r_check = run_states(f"{stem}_symcheck", [(i, (pt, p0, p1, v, 0.0)) for i in partner for v in check_vx],
+                         prepared, gidx)
+    jobs = [(i, (pt, p0, p1, v, y)) for i in pos for v in VX24 for y in Y0]
+    r = np.concatenate([run_states(f"{stem}_{k:03d}", jobs[k:k + CHUNK], prepared, gidx)
+                        for k in range(0, len(jobs), CHUNK)])
+    n = len(VX24) * len(Y0)
+    g = {i: r[k * n:(k + 1) * n].reshape(len(VX24), len(Y0)) for k, i in enumerate(pos)}
+    for k, (i, v) in enumerate((i, v) for i in partner for v in check_vx):
+        ref = g[partner[i]][int(np.argmin(abs(VX24 - v))), 0]
+        log(f"symmetry {lab[i]} vs {lab[partner[i]]}, vx {v:+.1f}: remaining {r_check[k]:.4e} vs {ref:.4e} "
+            f"({100 * (r_check[k] - ref):+.4f} % of J=2)")
+    for i, j in partner.items():
+        g[i] = g[j]
+    levels = sorted(lab, key=lambda i: lab[i])
+    acc = {i: acceptance_mean(g[i], VX24, Y0, SY["CU2"]) for i in levels}
+    for i in levels:
+        log(f"   F1={lab[i][0]:.1f} F={lab[i][1]:.0f} mF={lab[i][2]:+d}  P(mJ=0) {desc[i]['p_mj'].get(0, 0):.2f}: "
+            f"on axis {100 * (1 - g[i][len(VX24) // 2, 0]):.2f} % (vx 0.2), acceptance {100 * (1 - acc[i]):.2f} %")
+    w_spb = {i: (2 / 3 if desc[i]["spin"]["singlet"] > 0.5 else 1 / 9) for i in levels
+             if desc[i]["p_mj"].get(0, 0) > 0.5}
+    log(f"{stem}: SPB start {100 * (1 - sum(w * acc[i] for i, w in w_spb.items())):.2f} %, "
+        f"uniform start {100 * (1 - np.mean([acc[i] for i in levels])):.2f} % (weighted sums, reduced grid)")
+    np.savez(OUT / f"{stem}_result.npz", level=np.array(levels), F1=np.array([lab[i][0] for i in levels]),
+             F=np.array([lab[i][1] for i in levels]), mF=np.array([lab[i][2] for i in levels]),
+             p_mJ0=np.array([desc[i]["p_mj"].get(0, 0) for i in levels]),
+             singlet=np.array([desc[i]["spin"]["singlet"] for i in levels]),
+             from_partner=np.array([i in partner for i in levels]), vx=VX24, y0=Y0,
+             remaining=np.array([g[i] for i in levels]), acceptance_remaining=np.array([acc[i] for i in levels]),
+             set_point_MHz=np.array(pt), powers_mW=np.array([p0, p1]), E_V_cm=float(base.E_FIELD[2]), loss=LOSS)
+
+
 def chunked(stem, rows, prepared, gidx, rho0):
     return np.concatenate([run(f"{stem}_{k:03d}", rows[k:k + CHUNK], prepared, gidx, rho0)
                            for k in range(0, len(rows), CHUNK)])
@@ -180,17 +279,30 @@ def main(argv):
     stage = argv[0]
     if stage == "efield":
         base.E_FIELD = np.array([0.0, 0.0, float(argv[1])])                  # read by base.build()
-    global LOSS, T_END
+    global LOSS, T_END, OUT
     if stage == "loss":
         LOSS = base.LOSS = float(argv[1]) / 100                              # read by base.build()
     if stage == "vz":
         base.VZ = float(argv[1])                                             # read by build() and doppler_sign()
+        T_END = base.T_END = 0.05 / base.VZ
+    vzt = next((float(a[2:]) for a in argv[1:] if a.startswith("vz") and a[2:].replace(".", "").isdigit()), None)
+    argv = [argv[0]] + [a for a in argv[1:] if not (a.startswith("vz") and a[2:].replace(".", "").isdigit())]
+    if vzt is not None:            # any stage: forward velocity (m/s); results go to tmp/cu2_power/vz<vz>/
+        base.VZ = vzt
         T_END = base.T_END = 0.05 / base.VZ
     sy = next((float(a[2:]) for a in argv if a.startswith("sy")), None)      # beam sigma_y in mm
     argv = [a for a in argv if not a.startswith("sy")]
     if sy is not None:
         c2.SIGMA_Y_CU2 = sy * 1e-3                                           # read by c2.setup()
     tag = "" if sy is None else f"_sy{sy:g}".replace(".", "p")
+    ef = next((float(a[1:]) for a in argv[1:] if a[0] == "e" and a[1:].replace(".", "").isdigit()), None)
+    argv = [argv[0]] + [a for a in argv[1:] if not (a[0] == "e" and a[1:].replace(".", "").isdigit())]
+    if ef is not None:                                                       # model at another field, V/cm
+        base.E_FIELD = np.array([0.0, 0.0, ef])                              # read by base.build()
+        tag += f"_e{ef:g}".replace(".", "p")
+    if vzt is not None:
+        OUT = vz_paths.vz_dir(OUT, vzt)                                      # same names, own folder
+        OUT.mkdir(parents=True, exist_ok=True)
     inits = [a for a in argv[1:] if a in c2.INITS] or list(c2.INITS)
     argv = [a for a in argv if a not in c2.INITS]
     lp = next((float(a[4:]) for a in argv[1:] if a.startswith("loss")), None)   # e.g. "loss10" for the grid stages
@@ -229,6 +341,69 @@ def main(argv):
         for init in inits:
             run(f"power_loss5_{init}", [(NEW, a, b, v, y) for a, b in MORE_POWER for v in PROXY_VX for y in PROXY_Y0],
                 prepared, gidx, rhos[init])
+    elif stage == "corrdet":        # measured-scan analogue: AOM fixed, laser scanned, triplet start, F=3 left (R(2) F'=4)
+        # corrdet 209 20 30 -90 150 4 e217 vx0   (vx0: on axis; vxpm: vx = -0.6, +0.6 m/s; proxy: the 6 proxy points)
+        from scripts.cleanup_spb_doppler import describe
+        from centrex_tlf import lindblad
+        f_aom, p0, p1 = float(argv[1]), int(argv[2]), int(argv[3])
+        lo, hi, step = (float(a) for a in argv[4:7])
+        vxs = [0.0] if "vx0" in argv else (list(PROXY_VX) if "proxy" in argv else [-0.6, 0.6])
+        ys = list(PROXY_Y0) if "proxy" in argv else [0.0]
+        # "sing": start in the singlet F1=5/2 F=2 mF=0 instead (R(2) F1'=7/2 F'=3); new runs also keep every J=2 level
+        d0 = np.round(np.arange(lo, hi + step / 2, step), 6)
+        desc = {int(i): describe(c2.OBE.QN[i]) for i in gidx}
+        lab = {i: (float(desc[i]["F1"]), float(desc[i]["F"]), int(round(desc[i]["mF"]))) for i in gidx}
+        levels = sorted(gidx, key=lambda i: lab[i])
+        start_tag = "sing" if "sing" in argv else "trip"
+        Fstart = 2 if start_tag == "sing" else 3
+        trip = [i for i in gidx if desc[i]["p_mj"].get(0, 0) > 0.5 and int(desc[i]["F"]) == Fstart]
+        f3 = [i for i in gidx if int(desc[i]["F"]) == 3 and float(desc[i]["F1"]) == 2.5]
+        assert len(trip) == (3 if start_tag == "trip" else 1) and len(f3) == 7
+        dim = len(c2.OBE.QN)
+        rho0 = np.zeros((dim, dim), dtype=np.complex128)
+        for i in trip:
+            rho0[i, i] = 1 / len(trip)
+        solver = {**SCAN_SOLVER, "maxiters": 1_000_000}
+        vtag = "vx0" if vxs == [0.0] else ("proxy" if "proxy" in argv else "vxpm")
+        stem = (f"corrdet_loss{100 * LOSS:g}_f{f_aom:g}_{p0}_{p1}{tag}_{start_tag}_{vtag}_d{lo:g}_{hi:g}_{step:g}"
+                .replace(".", "p"))
+        beta = next((float(a[4:]) for a in argv[1:] if a.startswith("beta")), None)    # e.g. beta0: no EOM
+        if beta is not None:
+            stem += f"_beta{beta:g}".replace(".", "p")
+        rows = [((d, f_aom), p0, p1, v, y) + (() if beta is None else (beta,)) for v in vxs for y in ys for d in d0]
+        out = {"F3": [], "J2": [], "L": []}
+        for k in range(0, len(rows), CHUNK):
+            f = OUT / f"{stem}_{k:03d}.npz"
+            if not f.exists():
+                t0 = time.perf_counter()
+                res = lindblad.parameter_scan(prepared, rho0, (0.0, T_END), parameter_slots=SLOTS,
+                                              parameter_batch=np.asarray([slot_values(r) for r in rows[k:k + CHUNK]],
+                                                                         dtype=np.complex128),
+                                              threads=THREADS, **solver)
+                pops = np.asarray(res.values).real
+                np.savez(f, rows=np.array([repr(r) for r in rows[k:k + CHUNK]]), F3=pops[:, f3].sum(1),
+                         J2=pops[:, gidx].sum(1), L=pops[:, levels], wall=time.perf_counter() - t0)
+                log(f"{f.stem}: {len(rows[k:k + CHUNK])} trajectories in {time.perf_counter() - t0:.0f} s")
+            z = np.load(f)
+            out["F3"] += list(z["F3"]); out["J2"] += list(z["J2"])
+            out["L"] = out["L"] + list(z["L"]) if ("L" in z.files and out["L"] is not None) else None
+        extra = {} if out["L"] is None else {
+            "levels": np.array(out["L"]).reshape(len(vxs), len(ys), len(d0), len(levels)).mean(1),
+            "F1": [lab[i][0] for i in levels], "F": [lab[i][1] for i in levels], "mF": [lab[i][2] for i in levels]}
+        np.savez(OUT / f"{stem}_result.npz", delta0_MHz=d0, vx=np.array(vxs), y0=np.array(ys), start=start_tag,
+                 F3=np.array(out["F3"]).reshape(len(vxs), len(ys), len(d0)).mean(1),
+                 J2=np.array(out["J2"]).reshape(len(vxs), len(ys), len(d0)).mean(1), **extra,
+                 f_AOM_MHz=f_aom, powers_mW=(p0, p1), E_V_cm=float(base.E_FIELD[2]), loss=LOSS,
+                 delta_main_MHz=info["delta_main_MHz"])
+        log(f"{stem}: done, {len(rows)} trajectories")
+    elif stage == "eomfreq":       # EOM frequency at one set point, proxy: eomfreq 14.5,209 32 43 e217
+        pt, p0, p1 = parse_pt(argv[1]), int(argv[2]), int(argv[3])
+        for init in inits:
+            rem = chunked(f"eomfreq_loss{100 * LOSS:g}_{pt_name(pt)}_{p0}_{p1}{tag}_{init}",
+                          [(pt, p0, p1, v, y, base.BETA, base.POL_FREQUENCY / (2 * np.pi * 1e6), 0.0, f)
+                           for f in EOM_FREQS for v in PROXY_VX for y in PROXY_Y0], prepared, gidx, rhos[init])
+            log(f"eomfreq {init} at {pt}: proxy " + ", ".join(f"{f:g} MHz {100 * (1 - x):.2f} %"
+                                                           for f, x in zip(EOM_FREQS, proxy(rem))))
     elif stage == "polfreq":
         for init in inits:
             chunked(f"polfreq_loss5_35_25_{init}", [(NEW, 35, 25, v, y, base.BETA, f) for f in POL_FREQS
@@ -256,6 +431,112 @@ def main(argv):
     elif stage == "beta":
         for init in inits:
             chunked(f"beta_loss5_35_25_{init}", beta_rows(), prepared, gidx, rhos[init])
+    elif stage == "acc24":                                                  # candidates, both starts
+        p0, p1 = int(argv[1]), int(argv[2])
+        pts = [parse_pt(a) for a in argv[3:]]
+        for init in inits:
+            chunked(f"acc24_loss{100 * LOSS:g}_{p0}_{p1}{tag}_{init}_" + "+".join(pt_name(p) for p in pts),
+                    [(pt, p0, p1, v, y) for pt in pts for v in VX24 for y in Y0], prepared, gidx, rhos[init])
+    elif stage == "setpoints":
+        p0, p1 = int(argv[1]), int(argv[2])
+        e0 = next((float(a[4:]) for a in argv[3:] if a.startswith("from")), None)
+        pts = [parse_pt(a) for a in argv[3:] if not a.startswith("from")]
+        if e0 is not None:          # laser and AOM fixed while the field drifts from e0: delta0 -> delta0 - shift
+            shift = main_line_shift_MHz(float(base.E_FIELD[2])) - main_line_shift_MHz(e0)
+            log(f"field {base.E_FIELD[2]:g} V/cm, set points of {e0:g} V/cm: F'=3 main line moved {shift:+.3f} MHz")
+            tag += f"_from{e0:g}".replace(".", "p")
+            rows_pts = [(d0 - shift, fa) for d0, fa in pts]
+        else:
+            rows_pts = pts
+        for init in inits:
+            chunked(f"setpoints_loss{100 * LOSS:g}_{p0}_{p1}{tag}_{init}_" + "+".join(pt_name(p) for p in pts),
+                    [(pt, p0, p1, v, y) for pt in rows_pts for v in PROXY_VX for y in PROXY_Y0], prepared, gidx, rhos[init])
+    elif stage == "perstate":
+        pt, p0, p1 = parse_pt(argv[1]), int(argv[2]), int(argv[3])
+        perstate(f"perstate_loss{100 * LOSS:g}_{pt_name(pt)}_{p0}_{p1}{tag}", pt, p0, p1, prepared, gidx)
+    elif stage == "map":            # vx x y0 map (0.2 m/s x 3 mm, y0 0...15 mm) at one set point, reusing acc24 points
+        pt, p0, p1 = parse_pt(argv[1]), int(argv[2]), int(argv[3])
+        ym = np.round(np.linspace(0.0, 15e-3, 6), 9)
+        solver = {**SCAN_SOLVER, "maxiters": 1_000_000}
+        for init in inits:
+            known = {}
+            for f in sorted(OUT.glob(f"acc24_loss{100 * LOSS:g}_{p0}_{p1}{tag}_{init}_*.npz")):
+                z = np.load(f, allow_pickle=True)
+                for row, r in zip(z["rows"], z["remaining"]):
+                    q = eval(str(row), {"np": np})
+                    if tuple(float(x) for x in q[0]) == pt:
+                        known[(round(float(q[3]), 6), round(float(q[4]), 9))] = float(r)
+            todo = [(pt, p0, p1, float(v), float(y)) for v in VX for y in ym
+                    if (round(float(v), 6), round(float(y), 9)) not in known]
+            stem = f"map_loss{100 * LOSS:g}_{pt_name(pt)}_{p0}_{p1}{tag}_{init}"
+            log(f"{stem}: {len(known)} grid points from acc24, {len(todo)} to run")
+            rem = np.concatenate([run(f"{stem}_{k:03d}", todo[k:k + CHUNK], prepared, gidx, rhos[init], solver)
+                                  for k in range(0, len(todo), CHUNK)]) if todo else []
+            known.update({(round(r[3], 6), round(r[4], 9)): float(x) for r, x in zip(todo, rem)})
+            grid = np.array([[known[(round(float(v), 6), round(float(y), 9))] for y in ym] for v in VX])
+            np.savez(OUT / f"{stem}_grid.npz", vx=VX, y0=ym, remaining=grid, set_point_MHz=pt, powers_mW=(p0, p1),
+                     E_V_cm=float(base.E_FIELD[2]), loss=LOSS, init=init)
+            log(f"{stem}: on axis {100 * (1 - grid[len(VX) // 2, 0]):.3f} %")
+    elif stage == "cu2final":       # final population of every J=2 level, from each lens (m_J ~ 0) level alone
+        from scripts.cleanup_spb_doppler import describe
+        pt, p0, p1 = parse_pt(argv[1]), int(argv[2]), int(argv[3])
+        desc = {int(i): describe(c2.OBE.QN[i]) for i in gidx}
+        lab = {i: (float(d["F1"]), float(d["F"]), int(round(d["mF"]))) for i, d in desc.items()}
+        starts = [i for i in gidx if desc[i]["p_mj"].get(0, 0) > 0.5 and lab[i][2] >= 0]   # mF < 0 by reflection
+        jobs = [(i, (pt, p0, p1, v, y)) for i in starts for v in VX24 for y in Y0]
+        stem = f"cu2final_loss{100 * LOSS:g}_{pt_name(pt)}_{p0}_{p1}{tag}"
+        pops = np.concatenate([run_states(f"{stem}_{k:03d}", jobs[k:k + CHUNK], prepared, gidx, full=True)
+                               for k in range(0, len(jobs), CHUNK)])
+        levels = sorted(gidx, key=lambda i: lab[i])
+        fin = pops[:, levels].reshape(len(starts), len(VX24), len(Y0), len(levels))
+        np.savez(OUT / f"{stem}_result.npz", start_F1=[lab[i][0] for i in starts], start_F=[lab[i][1] for i in starts],
+                 start_mF=[lab[i][2] for i in starts], F1=[lab[i][0] for i in levels], F=[lab[i][1] for i in levels],
+                 mF=[lab[i][2] for i in levels], p_mJ0=[desc[i]["p_mj"].get(0, 0) for i in levels],
+                 vx=VX24, y0=Y0, final=fin, set_point_MHz=pt, powers_mW=(p0, p1), E_V_cm=float(base.E_FIELD[2]),
+                 loss=LOSS)
+        f3 = [k for k, i in enumerate(levels) if lab[i][1] == 3]
+        for s, i in enumerate(starts):
+            log(f"{stem}: start {lab[i]}: on axis (vx 0.2) J=2 left {100 * fin[s, len(VX24) // 2, 0].sum():.3f} %, "
+                f"F=3 left {100 * fin[s, len(VX24) // 2, 0, f3].sum():.3f} %")
+    elif stage == "transfer":       # every J=2 level (mF >= 0) alone at one set point, proxy points, all final levels
+        # transfer 13,209 20 30 e217 [acc]  -> final[start, vx, y0, level]; mF < 0 starts follow by reflection
+        from scripts.cleanup_spb_doppler import describe
+        pt, p0, p1 = parse_pt(argv[1]), int(argv[2]), int(argv[3])
+        desc = {int(i): describe(c2.OBE.QN[i]) for i in gidx}
+        lab = {i: (float(d["F1"]), float(d["F"]), int(round(d["mF"]))) for i, d in desc.items()}
+        levels = sorted(gidx, key=lambda i: lab[i])
+        acc = "acc" in argv          # acc: 24-point acceptance grid, only the starts the on/off comparison uses
+        tvx, ty0 = (VX24, Y0) if acc else (np.array(PROXY_VX), np.array(PROXY_Y0))
+        starts = [i for i in levels if lab[i][2] >= 0 and (not acc or lab[i][0] == 1.5
+                  or (lab[i][1] == 3 and lab[i][2] <= 1) or (lab[i][1] == 2 and lab[i][2] == 0))]
+        jobs = [(i, (pt, p0, p1, v, y)) for i in starts for v in tvx for y in ty0]
+        stem = f"transfer_loss{100 * LOSS:g}_{pt_name(pt)}_{p0}_{p1}{tag}" + ("_acc" if acc else "")
+        pops = np.concatenate([run_states(f"{stem}_{k:03d}", jobs[k:k + CHUNK], prepared, gidx, full=True)
+                               for k in range(0, len(jobs), CHUNK)])
+        fin = pops[:, levels].reshape(len(starts), len(tvx), len(ty0), len(levels))
+        np.savez(OUT / f"{stem}_result.npz", start_F1=[lab[i][0] for i in starts], start_F=[lab[i][1] for i in starts],
+                 start_mF=[lab[i][2] for i in starts], F1=[lab[i][0] for i in levels], F=[lab[i][1] for i in levels],
+                 mF=[lab[i][2] for i in levels], p_mJ0=[desc[i]["p_mj"].get(0, 0) for i in levels],
+                 vx=tvx, y0=ty0, final=fin, set_point_MHz=pt, powers_mW=(p0, p1),
+                 E_V_cm=float(base.E_FIELD[2]), loss=LOSS)
+        for s, i in enumerate(starts):
+            log(f"{stem}: start {lab[i]}: vx {tvx[len(tvx) // 2]:g}, y0 0: J=2 left {100 * fin[s, len(tvx) // 2, 0].sum():.3f} %")
+    elif stage == "corr":           # AOM fixed, laser scanned: delta0 and delta1 move together, on axis
+        f_aom, p0, p1 = float(argv[1]), int(argv[2]), int(argv[3])
+        lo, hi, step = (float(a) for a in argv[4:7])
+        d0 = np.round(np.arange(lo, hi + step / 2, step), 6)
+        log(f"correlated scan, f_AOM {f_aom:g} MHz: delta1 = delta0 {f_aom - info['delta_main_MHz']:+.3f} MHz")
+        solver = {**SCAN_SOLVER, "maxiters": 1_000_000}
+        for init in inits:
+            stem = f"corr_loss{100 * LOSS:g}_f{f_aom:g}_{p0}_{p1}{tag}_{init}_d{lo:g}_{hi:g}_{step:g}".replace(".", "p")
+            rows = [((d, f_aom), p0, p1, 0.0, 0.0) for d in d0]
+            rem = np.concatenate([run(f"{stem}_{k:03d}", rows[k:k + CHUNK], prepared, gidx, rhos[init], solver)
+                                  for k in range(0, len(rows), CHUNK)])
+            np.savez(OUT / f"{stem}_result.npz", delta0_MHz=d0, delta1_MHz=d0 + f_aom - info["delta_main_MHz"],
+                     remaining=rem, f_AOM_MHz=f_aom, powers_mW=(p0, p1), E_V_cm=float(base.E_FIELD[2]), loss=LOSS,
+                     init=init)
+            k = int(np.argmin(rem))
+            log(f"{stem}: best {100 * (1 - rem[k]):.3f} % at delta0 {d0[k]:g} MHz")
     elif stage in GRIDS:
         p0, p1 = int(argv[1]), int(argv[2])
         for init in inits:
@@ -281,6 +562,22 @@ def summary():
         g = rem.reshape(len(VX), len(Y0))
         log(f"{stem}: on axis {100 * (1 - g[len(VX) // 2, 0]):.2f} %, "
             f"mean in acceptance {100 * (1 - acceptance_mean(g, VX, Y0, SY['CU2'])):.2f} %")
+    for f in sorted(OUT.glob("acc24_*_000.npz")):
+        stem = f.stem[:-4]
+        rem = np.concatenate([np.load(p, allow_pickle=True)["remaining"] for p in sorted(OUT.glob(f"{stem}_[0-9]*.npz"))])
+        names = stem.split("_spb_" if "_spb_" in stem else "_uniform_")[1].split("+")
+        n = len(VX24) * len(Y0)
+        for k, name in enumerate(names):
+            if rem.size >= (k + 1) * n:
+                g = rem[k * n:(k + 1) * n].reshape(len(VX24), len(Y0))
+                log(f"{stem.split('_d')[0]} {name}: mean in acceptance (reduced grid) "
+                    f"{100 * (1 - acceptance_mean(g, VX24, Y0, SY['CU2'])):.2f} %")
+    for f in sorted(OUT.glob("setpoints_*_000.npz")):
+        stem = f.stem[:-4]
+        rem = np.concatenate([np.load(p, allow_pickle=True)["remaining"] for p in sorted(OUT.glob(f"{stem}_[0-9]*.npz"))])
+        names = stem.split("_spb_" if "_spb_" in stem else "_uniform_")[1].split("+")
+        pr = 100 * (1 - proxy(rem[:rem.size // 6 * 6]))
+        log(f"{stem.split('_d')[0]}: proxy " + ", ".join(f"{nm} {x:.2f} %" for nm, x in zip(names, pr)))
     for f in sorted(f for g in GRIDS for f in OUT.glob(f"{g}_loss*_000.npz")):
         stem = f.stem[:-4]
         d0s, aoms = GRIDS[stem.split("_")[0]]

@@ -22,6 +22,9 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys  # noqa: E402
+sys.path.insert(0, str(ROOT))
+from scripts import vz_paths  # noqa: E402
 sys.path.insert(0, str(ROOT))
 from scripts.cleanup_spb_doppler import CU1_SOLVER, build_cu1, describe  # noqa: E402
 from scripts.cu1_3cm_scan import SY_BEAM, VX_F, Y_F  # noqa: E402
@@ -106,7 +109,7 @@ def save_hdf(start, ct, power_mw, height_cm, pops, labs):
 
 def load(ct):
     out = ROOT / "tmp" / "cu1_ap1" / ct
-    d = {s: np.load(out / f"{s}.npz") for s in STARTS}
+    d = {s: np.load(vz_paths.find(out / f"{s}.npz", out.parent)) for s in STARTS}
     labs = [tuple(x) for x in d["triplet"]["labels"].tolist()]
     labs = [(float(a), int(b), int(c)) for a, b, c in labs]
     return {s: d[s]["pops"] for s in STARTS}, labs
@@ -114,7 +117,7 @@ def load(ct):
 
 def probe_yields():
     """Saturated photons per molecule (50 mW/cm2, centre, vx = 0) from scripts/detection_level_diagrams.py."""
-    data = json.loads((ROOT / "tmp" / "detection" / "probe_yields.json").read_text())
+    data = json.loads(vz_paths.find(ROOT / "tmp" / "detection" / "probe_yields.json").read_text())
 
     def at(run):
         r = data["runs"][run]

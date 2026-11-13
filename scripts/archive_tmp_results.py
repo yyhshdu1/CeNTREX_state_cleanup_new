@@ -25,6 +25,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from scripts import vz_paths  # noqa: E402
+sys.path.insert(0, str(ROOT))
 from scripts import cu1_3cm_scan as c3  # noqa: E402
 from scripts import cu1_eom_doppler_scan as e1  # noqa: E402
 from scripts.cleanup_spb_doppler import CU1_SOLVER, build_cu1  # noqa: E402
@@ -122,7 +124,7 @@ def cu1_3cm_detuning():
 
 
 def cu1_trajectories(labels):
-    z = np.load(TMP / "cu1_trajectories" / "cu1_trajectories.npz")
+    z = np.load(vz_paths.find(TMP / "cu1_trajectories" / "cu1_trajectories.npz"))
     gidx = z["ground_idx"]
     save(J1, "trajectories_cu1_vx0_19p0_20p2MHz_4p8cm", z["pops"],
          axes={"laser_detuning_MHz": (z["detunings"], "MHz"), "start_level_index": (gidx, "index"),
@@ -141,7 +143,7 @@ def cu1_trajectories(labels):
 
 
 def cu1_per_level():
-    r = json.loads((TMP / "level_diagrams" / "residuals.json").read_text())["cu1"]
+    r = json.loads(vz_paths.find(TMP / "level_diagrams" / "residuals.json").read_text())["cu1"]
     lv = r["levels"]
     save(J1, "per_level_cu1_20p2MHz_4p8cm", np.array([x["residual"] for x in lv]),
          axes={"start_level_index": (np.array([x["idx"] for x in lv]), "index")},
@@ -156,7 +158,7 @@ def cu1_per_level():
 
 
 def cu1_per_state():
-    lv = json.loads((TMP / "spb_states_doppler" / "spb_states.json").read_text())["cu1"]
+    lv = json.loads(vz_paths.find(TMP / "spb_states_doppler" / "spb_states.json").read_text())["cu1"]
     cols = ["remaining", "J0", "J2", "J3", "J4"]
     save(J1, "per_state_cu1_spb_20p2MHz_4p8cm", np.array([[x[c] for c in cols] for x in lv]),
          axes={"state_index": (np.arange(len(lv)), "index"), "quantity_index": (np.arange(len(cols)), "index")},
@@ -171,7 +173,7 @@ def cu1_per_state():
 
 
 def cu2_trajectories(labels):
-    z = np.load(TMP / "cu2_laser_aom_scan" / "optimum_trajectories.npz", allow_pickle=True)
+    z = np.load(vz_paths.find(TMP / "cu2_laser_aom_scan" / "optimum_trajectories.npz"), allow_pickle=True)
     names = [str(n) for n in z["names"]]
     save(J2, "trajectories_cu2_R1_R2_2p4cm", z["pops"],
          axes={"f_AOM_MHz": (z["points"][:, 1], "MHz"), "time_us": (z["t"] * 1e6, "us"),
@@ -188,7 +190,7 @@ def cu2_trajectories(labels):
 
 
 def cu2_per_level():
-    r = json.loads((TMP / "level_diagrams" / "residuals.json").read_text())["cu2"]
+    r = json.loads(vz_paths.find(TMP / "level_diagrams" / "residuals.json").read_text())["cu2"]
     lv, regs = r["levels"], ["R1", "R2"]
     g = np.array([[[x["residual"][reg], x["to_J1"][reg]] for x in lv] for reg in regs])
     save(J2, "per_level_cu2_R1_R2_2p4cm", g,
@@ -207,7 +209,7 @@ def cu2_per_level():
 
 
 def cu2_per_state():
-    lv = json.loads((TMP / "spb_states_doppler" / "spb_states.json").read_text())["cu2"]
+    lv = json.loads(vz_paths.find(TMP / "spb_states_doppler" / "spb_states.json").read_text())["cu2"]
     regs = ["R1", "R2"]; cols = ["remaining", "J1", "J3", "J4", "J5"]
     states = [x for x in lv if x["region"] == "R1"]
     g = np.array([[[x[c] for c in cols] for x in lv if x["region"] == reg] for reg in regs])
@@ -223,8 +225,8 @@ def cu2_per_state():
 
 
 def cu2_level_scheme():
-    z = np.load(TMP / "cu2_laser_aom_scan" / "level_scheme.npz")
-    info = json.loads((TMP / "cu2_laser_aom_scan" / "info.json").read_text())
+    z = np.load(vz_paths.find(TMP / "cu2_laser_aom_scan" / "level_scheme.npz"))
+    info = json.loads(vz_paths.find(TMP / "cu2_laser_aom_scan" / "info.json").read_text())
     common = {**CU2_COMMON, "Delta_main_MHz": float(z["delta_main"]), "main_couplings": info["main_couplings"],
               "frame": "positions on each beam's own detuning axis, beam 1 shifted by -Delta_main"}
     mdl = {"script": "scripts/cu2_level_scheme.py (stage compute)", "levels": 56,

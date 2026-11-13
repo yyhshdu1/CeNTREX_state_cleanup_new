@@ -22,7 +22,7 @@ detection acceptance (|vx| ≤ 1 m/s with σvx = 0.65 m/s, |y0| ≤ 8.5 mm).
 "Proxy" values (6 points: vx = −0.6, 0, 0.6 m/s × y0 = 0, 6 mm) read 0.1–0.7 % higher than the full acceptance mean
 but rank settings correctly; compare proxy with proxy only.
 
-Started 2026-10-30. Script: `scripts/cu2_power_check.py`, checkpoints in `tmp/cu2_power/`.
+Started 2026-10-30. Script: `scripts/cu2_power_check.py`, checkpoints in `tmp/cu2_power/` (all of these runs used v_z = 184 m/s; since 2026-11-09 the models default to the measured 156 m/s and the 184 m/s checkpoints are in `tmp/cu2_power/vz184/`).
 
 ## Why
 
@@ -506,3 +506,433 @@ before the first pass), which is random in the lab.
   ≤ 0.4 % (uniform) and 0.5 MHz is already the best value for the uniform start. Keep 0.5 MHz.
 
 Study stopped here on 2026-11-01 (user request). Summary: `docs/state_cleanup/cu2_power_summary.md`.
+
+Resumed 2026-11-02 for the question "what changes if the CU2 field is 155 V/cm instead of 200 V/cm?". On
+2026-11-02 the user also measured that the total UV power can reach **75 mW** (more green input), so from Step 19
+on 75 mW is the operating power.
+
+## Step 16 — 155 V/cm: line shifts and the old set point (2026-11-02)
+
+Model rebuilt at 155 V/cm (`e155` option of `scripts/cu2_power_check.py`; every file name carries `_e155`).
+Δ_main = 204.520 MHz (211.829 MHz at 200 V/cm). Shifts of the R(2) lines from 200 to 155 V/cm (`tmp/cu2_stark155.py`):
+
+| Line | Shift |
+|---|---|
+| F'=3 main (X F=3 mF=2 → F'=3 mF'=3) | +9.80 MHz |
+| F'=4 stretched (X F=3 mF=3 → F'=4 mF'=4) | +9.51 MHz |
+| SPB level X F1=5/2 F=2 mF=0 → F'=3 | +3.45 MHz |
+| SPB level X F1=3/2 F=1 mF=0 → F'=3 | +3.35 MHz |
+| F'=4 main (X F=3 mF=0 → F'=4 mF'=1) | +2.49 MHz |
+
+The SPB-level lines move 6.4 MHz less than the F'=3 main line, so the set point cannot simply be translated. At
+155 V/cm the four SPB levels are 0.80–0.86 m_J = 0 (0.87–0.92 at 200 V/cm).
+
+(12.5, 207.5) MHz, 35 + 25 mW, proxy (%):
+
+| Case | SPB | uniform |
+|---|---|---|
+| 200 V/cm (reference) | 99.64 | 97.87 |
+| 155 V/cm, laser and AOM unchanged | 99.06 | 89.55 |
+| 155 V/cm, laser on the moved F'=3 main line, AOM keeps δ1 (f_AOM 200.2 MHz) | 99.42 | 93.21 |
+
+## Step 17 — 155 V/cm: set point at 60 mW (2026-11-02)
+
+35 + 25 mW, proxy (%). Rows δ0/2π, columns f_AOM (MHz). δ0 is relative to the 155 V/cm F'=3 main line.
+
+Coarse grid `opt155`:
+
+| SPB | 192 | 196 | 200 | 204 | 208 | 212 |
+|---|---|---|---|---|---|---|
+| 3 | 99.19 | 99.05 | 99.35 | 99.45 | 99.23 | 99.26 |
+| 6 | 99.10 | 99.23 | 99.46 | 99.21 | 99.32 | 99.12 |
+| 9 | 98.65 | 99.19 | 98.85 | 99.03 | 98.70 | 99.14 |
+| 12.5 | 99.49 | 99.31 | 99.40 | 99.12 | 99.51 | 99.49 |
+| 16 | 98.91 | 99.01 | 98.64 | 98.95 | 99.16 | 98.58 |
+
+| uniform | 192 | 196 | 200 | 204 | 208 | 212 |
+|---|---|---|---|---|---|---|
+| 3 | 91.34 | 88.08 | 91.61 | 93.95 | 91.68 | 92.44 |
+| 6 | 89.37 | 88.92 | 93.55 | 90.28 | 93.21 | 87.49 |
+| 9 | 84.75 | 93.24 | 89.41 | 93.42 | 87.43 | 92.80 |
+| 12.5 | 94.24 | 92.87 | 94.73 | 90.98 | 94.24 | 94.63 |
+| 16 | 90.88 | 92.19 | 89.10 | 90.08 | 93.06 | 87.02 |
+
+Fine grid `fine155`:
+
+| SPB | 198 | 200 | 202 | 208 | 210 | 212 |
+|---|---|---|---|---|---|---|
+| 11.5 | 99.24 | 99.40 | 99.37 | 99.28 | 99.49 | 99.46 |
+| 12.5 | 99.26 | 99.40 | 99.24 | 99.51 | 99.45 | 99.49 |
+| 13.5 | 99.32 | 99.26 | 99.06 | 99.37 | 99.39 | 99.22 |
+
+| uniform | 198 | 200 | 202 | 208 | 210 | 212 |
+|---|---|---|---|---|---|---|
+| 11.5 | 91.94 | 94.09 | 94.52 | 91.65 | 94.29 | 94.30 |
+| 12.5 | 92.27 | 94.73 | 93.02 | 94.24 | 93.51 | 94.63 |
+| 13.5 | 93.79 | 94.32 | 92.24 | 94.09 | 94.34 | 91.75 |
+
+- δ0 ≈ 12.5 MHz is best for both starts, as at 200 V/cm. Best uniform start 94.73 % (12.5, 200), ~3 % below
+  200 V/cm; the SPB start loses only ~0.1 %.
+- At 60 mW the landscape is rough along f_AOM: 2 MHz steps change the uniform start by 1.5–2.5 % without a trend,
+  unlike the smooth fine grids at 200 V/cm (Steps 4–5). The repeated point (12.5, 200) is identical in both grids,
+  so it is not numerical noise. A guess (not checked): two-photon resonances between the F'=3 and F'=4 beams and
+  their EOM sidebands, which are Doppler-free for co-propagating beams and so not averaged by the vx spread.
+
+## Step 18 — reduced acceptance grid (2026-11-02, offline)
+
+Tested on the 28 full acceptance grids (11 vx × 4 y0) already stored: keeping every second vx (−1, −0.6, −0.2,
+0.2, 0.6, 1 m/s) and all four y0 (24 points, `VX24`) reproduces the 44-point mean to ≤ 0.08 % (rms 0.03 %).
+Dropping any y0 row costs 0.13–0.7 % (the y0 interpolation is logarithmic and the 6 mm row matters). Stages
+`acc24` (both starts) and `perstate` use this grid.
+
+## Step 19 — 155 V/cm, 75 mW: power split (2026-11-02)
+
+Proxy (%), 155 V/cm.
+
+| F'=3 + F'=4 (mW) | SPB (12.5, 212) | SPB (12.5, 200) | uniform (12.5, 212) | uniform (12.5, 200) |
+|---|---|---|---|---|
+| 35 + 25 (60 mW) | 99.49 | 99.40 | 94.63 | 94.73 |
+| 44 + 31 | 99.67 | 99.61 | 96.49 | 96.54 |
+| 38 + 37 | 99.70 | 99.64 | 97.17 | 97.18 |
+| **32 + 43** | **99.70** | **99.64** | 97.61 | 97.59 |
+| 26 + 49 | 99.66 | 99.60 | 97.85 | 97.79 |
+| 20 + 55 | 99.56 | 99.50 | 97.87 | 97.76 |
+
+- 75 mW gains ~0.2 % (SPB) and ~3 % (uniform) over 60 mW at 155 V/cm.
+- **32 + 43 mW** keeps the SPB start at its maximum; 26 + 49 is better only if more than ~14 % of the population
+  behaves like the uniform start (the same crossover as at 200 V/cm).
+
+## Step 20 — 155 V/cm, 75 mW: set point cuts (2026-11-02)
+
+32 + 43 mW, proxy (%). Along f_AOM at δ0 = 12.5 MHz:
+
+| f_AOM | 197 | 198 | 199 | **200** | 201 | 202 | 203 |
+|---|---|---|---|---|---|---|---|
+| SPB | 99.46 | 99.50 | 99.62 | **99.64** | 99.60 | 99.49 | 99.40 |
+| uniform | 95.18 | 95.78 | 96.99 | **97.59** | 97.04 | 96.14 | 95.70 |
+
+| f_AOM | 207 | 208 | 209 | 210 | 211 | **212** | 213 | 214 |
+|---|---|---|---|---|---|---|---|---|
+| SPB | 99.47 | 99.68 | 99.69 | 99.60 | 99.65 | **99.70** | 99.59 | 99.42 |
+| uniform | 94.89 | 97.26 | 97.44 | 96.35 | 97.36 | **97.61** | 95.73 | 93.91 |
+
+Along δ0 (laser scan, AOM fixed):
+
+| δ0 | 11.5 | 12 | 12.5 | 13 | 13.5 |
+|---|---|---|---|---|---|
+| f_AOM 200, SPB | 99.58 | 99.67 | 99.64 | 99.55 | 99.49 |
+| f_AOM 200, uniform | 96.88 | 97.47 | 97.59 | 97.27 | 96.88 |
+| f_AOM 212, SPB | 99.63 | 99.71 | 99.70 | 99.59 | 99.44 |
+| f_AOM 212, uniform | 97.30 | 97.89 | 97.61 | 96.51 | 95.13 |
+
+- At 75 mW the f_AOM structure is much smoother than at 60 mW (more power broadening).
+- Region A (f_AOM ≈ 200 MHz): one clean peak, −0.6 % (uniform) for ±1 MHz in f_AOM, −0.3…−0.6 % for ±1 MHz in
+  δ0. Its F'=4 detuning δ1 = 7.98 MHz equals that of the 200 V/cm set point (8.17 MHz): it is the same
+  configuration relative to the two main lines.
+- Region B (f_AOM ≈ 208–212 MHz): slightly higher peak but a dip at 210 MHz and a steep edge at 213 MHz
+  (−1.9 %); δ0 +1 MHz costs 1.4 % (uniform). 212 MHz is also near the top of the AOM range (~215 MHz).
+
+## Step 21 — 155 V/cm, 75 mW: candidates on the reduced grid, and 200 V/cm at 75 mW (2026-11-03)
+
+Acceptance mean on the 24-point grid (Step 18), 32 + 43 mW, 155 V/cm:
+
+| Set point (δ0, f_AOM) | SPB | uniform |
+|---|---|---|
+| B (12, 212) | **99.66** | **97.30** |
+| A (12, 200) | 99.58 | 96.91 |
+| A (12.5, 200) | 99.57 | 97.01 |
+
+200 V/cm, 32 + 43 mW, proxy (%):
+
+| Set point | SPB | uniform |
+|---|---|---|
+| (12.5, 207.5) | 99.73 | 99.23 |
+| (12, 207.5) | 99.65 | 99.07 |
+| (12.5, 206) | 99.72 | 99.25 |
+| (13, 206) | 99.66 | 99.31 |
+
+- At 200 V/cm, 75 mW raises the uniform start from 97.87 % to 99.23 % (proxy) at the 60 mW set point, with no
+  re-tuning.
+- At 155 V/cm the best proxy point (12, 212) gives 99.71 / 97.89 %: the SPB start is the same as at 200 V/cm,
+  the uniform start ~1.3 % lower. If the field can be chosen, 200 V/cm is better for any m_J ≠ 0 population.
+
+## Step 22 — 155 V/cm, 75 mW: field drift with laser and AOM fixed (2026-11-03)
+
+Laser and AOM held at the 155 V/cm set point while the field moves by ±3 V/cm, so δ0 → δ0 − (line shift) and
+δ0 + f_AOM keeps its relation to the laser (shift −0.651 MHz at 158 V/cm, +0.651 MHz at 152 V/cm). Proxy, 32 + 43 mW
+(SPB / uniform, %):
+
+| Set point | 152 V/cm | 155 V/cm | 158 V/cm |
+|---|---|---|---|
+| A (12.5, 200) | 99.63 / 97.48 | 99.64 / 97.59 | 99.65 / 97.64 |
+| B (12, 212) | 99.71 / 97.60 | 99.71 / 97.89 | 99.72 / 97.96 |
+
+- Both set points tolerate ±3 V/cm: ≤ 0.01 % (SPB) and ≤ 0.3 % (uniform). B is better than A at all three fields.
+
+## Step 23 — 155 V/cm: 60 mW reference at the 75 mW set point (2026-11-03)
+
+Reduced-grid acceptance mean at B (12, 212), 155 V/cm (%):
+
+| Power | SPB | uniform |
+|---|---|---|
+| 35 + 25 mW (60 mW) | 99.45 | 94.22 |
+| 32 + 43 mW (75 mW) | 99.66 | 97.30 |
+
+- The extra 15 mW, put into the F'=4 beam, gains +0.21 % (SPB) and +3.1 % (uniform). At 155 V/cm the uniform start
+  needs the power much more than at 200 V/cm (the 60 mW optimum there was 97.26 % on the full grid).
+- (12, 212) is not the 60 mW optimum at 155 V/cm (Step 17: SPB 99.51 % at (12.5, 208), proxy), so this compares
+  powers at fixed tuning, not optimum against optimum.
+
+## Step 24 — 155 V/cm, 75 mW: efficiency of each J=2 level (2026-11-03)
+
+Each of the 20 J=2 levels alone as the initial state, at B (12, 212), 32 + 43 mW, 155 V/cm, on the reduced
+acceptance grid (288 trajectories for the 12 levels with m_F ≥ 0). The OBEs are linear in ρ0, so the efficiency of
+any incoherent J=2 distribution p_i is Σ p_i ε_i. Levels with m_F < 0 are copied from their m_F > 0 partner; a
+direct check of all 8 partners at vx = ±0.6 m/s, y0 = 0 agrees to ≤ 1.2 × 10⁻⁵ of J=2. Table with the full vx × y0
+grid: `docs/state_cleanup/data/cu2_perstate_155Vcm_75mW_d12_f212.csv`.
+
+Levels labelled by their zero-field parent; P(m_J=0) at 155 V/cm (%):
+
+| Level (F1, F, \|m_F\|) | P(m_J=0) | on axis (vx 0.2, y0 0) | acceptance mean |
+|---|---|---|---|
+| 3/2, 1, 0 | 0.20 | 97.28 | 92.02 |
+| 3/2, 1, 1 | 0.00 | 99.59 | 93.58 |
+| 3/2, 2, 0 | 0.14 | 99.62 | 96.62 |
+| 3/2, 2, 1 | 0.19 | 98.13 | 93.79 |
+| 3/2, 2, 2 | 0.00 | 97.03 | 92.61 |
+| 5/2, 2, 0 (SPB, weight 2/3) | 0.86 | 99.96 | 99.66 |
+| 5/2, 2, 1 | 0.00 | 99.97 | 99.75 |
+| 5/2, 2, 2 | 0.00 | 99.98 | 99.84 |
+| 5/2, 3, 0 (SPB, 1/9) | 0.80 | 99.85 | 99.54 |
+| 5/2, 3, 1 (SPB, 1/9 each) | 0.80 | 99.95 | 99.71 |
+| 5/2, 3, 2 | 0.00 | 99.96 | 99.81 |
+| 5/2, 3, 3 | 0.00 | 99.95 | 99.86 |
+
+- Weighted sums: SPB 99.65 %, uniform 97.29 %, against 99.66 / 97.30 % from the direct runs (Step 21).
+- All 12 F1 = 5/2 levels are ≥ 99.5 %. The whole uniform-start residual comes from the 8 F1 = 3/2 levels
+  (mean 93.6 %): they are cleaned well on axis but fall to 52–80 % at |vx| = 1 m/s, y0 = 9 mm, i.e. their lines are
+  narrow (weakly coupled, little power broadening). A start with fraction q in F1 = 3/2 has efficiency
+  ≈ 99.77 − 6.2 q % (q = 0.4 for the uniform start).
+- The stretched F1 = 5/2, F = 3, |m_F| = 3 levels, which limited the uniform start at 200 V/cm / 60 mW, are at
+  99.86 % here.
+- Coherences between levels (e.g. within a ±m_F pair) are not covered by the weighted sum.
+
+## Step 25 — 200 V/cm, 75 mW: candidates on the reduced grid (2026-11-03)
+
+Reduced-grid acceptance mean, 32 + 43 mW, against the 155 V/cm best point (%):
+
+| Field, set point | SPB | uniform |
+|---|---|---|
+| 200 V/cm, (12.5, 207.5) | 99.61 | 98.81 |
+| 200 V/cm, (12.5, 206) | 99.60 | **98.91** |
+| 155 V/cm, (12, 212) | **99.66** | 97.30 |
+
+- On the same grid and power, 200 V/cm is 1.5–1.6 % better for the uniform start and 0.05 % worse for SPB. The
+  200 V/cm points were optimised at 60 mW, and the 32 + 43 split at 155 V/cm, so the 200 V/cm numbers could still
+  improve with a 75 mW re-optimisation.
+- **The CU2 field is now fixed at 155 V/cm (user, 2026-11-03).** The 200 V/cm per-state run at (12.5, 206) was
+  stopped at 12 of 18 chunks and is not used; Steps 21 and 25 at 200 V/cm stay as history.
+
+## Step 26 — 155 V/cm, 75 mW: laser scan with the AOM fixed (2026-11-03)
+
+The AOM was the reason to leave B (12, 212): its band is 200 ± 15 MHz, so 212 MHz is near the edge. With f_AOM fixed
+at the band centre, 200 MHz, a laser scan moves both beams together, δ1 = δ0 + f_AOM − Δ_main = δ0 − 4.52 MHz (a 45°
+line in the (δ0, δ1) plane). Stage `corr` of `scripts/cu2_power_check.py`, on axis (vx = 0, y0 = 0), δ0 = −60 … 140
+MHz in 1 MHz steps, 32 + 43 mW. Figure: `docs/state_cleanup/figures/CU2_corr_scan_e155_f200.{pdf,png}`
+(`scripts/plot_cu2_corr_scan.py 200 32 43 e155 12.5`).
+
+| | SPB | uniform |
+|---|---|---|
+| highest peaks | 5 MHz 99.994 %, 22 MHz 99.982 %, 40 MHz 99.966 % | 5 MHz 99.925 %, 22 MHz 99.889 %, 40 MHz 99.557 % |
+| set point δ0 = 12.5 MHz | 99.84 % | 98.88 % |
+| ≥ 99 % | −13 … 57 MHz | only at the peaks (5–6, 13, 22–23, 40 MHz) |
+| ≥ 98 % | −14 … 63 MHz | 4 … 40 MHz, not continuous |
+
+- The peaks repeat every 17–18 MHz, the EOM frequency. Each uniform-start peak is only 2–3 MHz wide above 98 %;
+  between them the efficiency falls to 80–91 %.
+- The SPB start has a broad plateau: a laser offset of a few MHz costs little.
+- Above 100 MHz both starts fall to a few %, unlike the old 250 V/cm, 80 + 24 mW scan (δ1 − δ0 = −25 MHz there).
+
+## Step 27 — 155 V/cm, 75 mW: do the on-axis peaks survive the acceptance? (2026-11-03)
+
+Proxy (Step 4) at f_AOM = 200 MHz, 32 + 43 mW (%):
+
+| δ0 (MHz) | on axis SPB | on axis uniform | proxy SPB | proxy uniform |
+|---|---|---|---|---|
+| 5 | 99.99 | 99.92 | 99.44 | 95.54 |
+| **12.5** | 99.84 | 98.88 | **99.64** | **97.59** |
+| 13 | 99.87 | 99.07 | 99.55 | 97.27 |
+| 22 | 99.98 | 99.89 | 99.48 | 95.84 |
+| 23 | 99.96 | 99.81 | 99.55 | 96.01 |
+
+- The narrow on-axis peaks lose over the acceptance: |vx| = 0.6 m/s shifts the lines by 2.2 MHz, into the valleys.
+  12–12.5 MHz (Step 20: 12 MHz gives 99.67 / 97.47 %) stays the best. **Set point at 155 V/cm: δ0 = 12.5 MHz,
+  f_AOM = 200 MHz, 32 + 43 mW**; reduced-grid acceptance mean 99.57 % (SPB) / 97.01 % (uniform), Step 21.
+
+## Step 28 — final population of every J=2 level for the CU2 test start (2026-11-03)
+
+For the first CU2 test (CU1 and SPB off) the J=2 molecules reaching CU2 are the four lens levels (P(m_J=0) > 0.5:
+F1=5/2, F=2, m_F=0 and F=3, m_F=0, ±1). Stage `cu2final` of `scripts/cu2_power_check.py` runs each of them alone
+(3 by ±m_F reflection) on the reduced grid at (12.5, 200) MHz and saves the final population of every level
+(`tmp/cu2_power/vz184/cu2final_loss5_d12p5_f200_32_43_e155_result.npz`, 72 trajectories, 184 m/s).
+
+| start level | J=2 left (acceptance mean) |
+|---|---|
+| F=2, m_F=0 (singlet) | 0.49 % |
+| F=3, m_F=0 | 0.74 % |
+| F=3, m_F=±1 | 0.38 % |
+
+- For either lens weighting, 0.49–0.50 % of J=2 is left, **94 % of it in F1 = 3/2** and only 3 % in F=3: decay
+  from B feeds F1 = 3/2, which CU2 pumps weakly (Step 24).
+
+## Step 29 — detection model for the CU2 test (2026-11-03)
+
+`scripts/cu2_detection_test.py`. Probe (user): DET2, locked to the main line, no EOM, flat top 1.5 cm × 1.5 cm,
+15 mW, single pass, same direction as CU2; E = 0. The DET2 light is σ+ about its direction k; the DET field plates
+(E along k) are off for the CU2 test, so the axis is the earth field, taken as 0.5 G vertical (⊥ k, the CU2 field
+axis). Molecules arrive in the zero-field parent (F1, F, m_F) of their CU2 eigenstate (adiabatic ramp, no
+coherences); acceptance |vx| ≤ 1 m/s and |y| ≤ 7.5 mm (probe height). Output: photons per molecule per J=2 level,
+including leakage of the excited level to other rotational states.
+
+Mixed-state |⟨e|d|g⟩| at zero field from each J=2, m_F=0 level (X light, `tmp/q2_me_table.py`):
+
+| line | F1=3/2 F=1 | F1=3/2 F=2 | F1=5/2 F=2 | F1=5/2 F=3 |
+|---|---|---|---|---|
+| R(2) F1'=7/2 F'=4 | 0 | 0 | 0 | 0.31 |
+| R(2) F1'=5/2 F'=3 | 0 | 0.35 | 0.004 | 0.08 |
+| Q(2) F1'=3/2 F'=1 | 0.41 | 0.08 | 0.009 | 0 |
+| Q(2) F1'=3/2 F'=2 | 0.14 | 0.43 | 0.02 | 0.005 |
+| Q(2) F1'=5/2 F'=2 | 0.009 | 0.03 | 0.47 | 0.06 |
+| Q(2) F1'=5/2 F'=3 | 0 | 0.003 | 0.09 | 0.48 |
+
+- The Q(2) lines are nearly diagonal: each sees mainly the ground level with the same (F1, F). Lines are ≥ 230 MHz
+  apart (B J'=2: F1'=5/2 F'=2 at 0, F'=3 at 230, F1'=3/2 F'=1 at 667, F'=2 at 1249 MHz), so only the locked line is
+  modelled.
+- R(2) F1'=5/2 F'=3 does not see F1=5/2 F=2 although ΔF = +1: the R-branch ΔF1 = 0 amplitude (+0.035) is cancelled
+  by the 13 % J'=2 admixture of the B level (−0.031, Tl hyperfine h1 = 28.8 GHz) (`tmp/why_f2_dark.py`).
+
+> **Superseded by Step 32.** The photon numbers below and the readings in Step 30 used centrex in the vertical basis,
+> where its pairwise decay operators are wrong for σ+ light about k. The matrix elements above are unaffected.
+
+Photons per molecule at vx = 0, 15 mW, σ+ (earth field ⊥ k):
+
+| line | F1=3/2 levels | F1=5/2 F=2 | F1=5/2 F=3 |
+|---|---|---|---|
+| R(2) F1'=7/2 F'=4 | 0 | 0.01 | 2.11–2.13 (saturated: same at 7.5 and 30 mW) |
+| Q(2) F1'=5/2 F'=3 | 0.02 | 1.5–2.0 | 2.9–5.2 |
+| Q(2) F1'=3/2 F'=2 | 1.7–2.7 | 0.2–0.4 | 0.04–0.07 |
+
+- R(2) F'=4 (F → F+1) has no dark states for any polarization. The Q lines (ΔF = 0) do: with linear light ∥ B every
+  m_F = 0 level is dark, and with pure σ+ (field along k, only with the DET plates on) the stretched m_F = +F level.
+  With the plates off the light is half π, half σ± about the axis, so there is no full dark state.
+- The 0.01–0.02 photons of F1=5/2 F=2 on F'=4 come from F=2/F=3 mixing by the 0.5 G field.
+- At |vx| = 1 m/s (Doppler 3.7 MHz) the yields drop to 1.0–1.3 (R(2) F'=4) and 0.9–1.8 (Q(2) F1'=3/2 F'=2).
+
+## Step 30 — expected CU2 on/off readings, recommended detection lines (2026-11-03)
+
+> **Numbers superseded by Step 32** (decay-operator issue); the choice of lines and their roles stand.
+
+Mean photons per J=2 molecule over the acceptance, CU2 at (12.5, 200) MHz, σ+ probe (earth field ⊥ k), for the lens
+weightings equal (1/4 each), singlet 2/3 / triplets 1/9 each, and triplet only (1/3 each):
+
+| line (role) | CU2 off | CU2 on | on/off |
+|---|---|---|---|
+| R(2) F1'=7/2 F'=4 (check) | 1.26 / 0.57 / 1.67 | 2.3 / 2.1 / 2.5 × 10⁻⁴ | 1.8 / 3.7 / 1.5 × 10⁻⁴ |
+| Q(2) F1'=5/2 F'=3 (normalization) | 2.43 / 1.89 / 2.75 | ~5 × 10⁻⁴ | 0.02–0.03 % |
+| Q(2) F1'=3/2 F'=2 (residual) | 0.04 / 0.06 / 0.02 | 6.8 / 6.5 / 7.0 × 10⁻³ | large (CU2-off signal tiny) |
+
+True J=2 left 0.49–0.50 %, F1=3/2 left 0.46–0.48 %.
+
+- **R(2) F'=4 sees only F=3**, where 3 % of the residual is: it reads 13–27× below the true residual. It checks that
+  CU2 empties F=3 (frequency, power), and it is saturated and free of dark states.
+- **Q(2) F1'=5/2 F'=3** sees all four lens levels: the CU2-off signal counts the J=2 molecules. Its CU2-off signal
+  over that of R(2) F'=4 measures the lens weighting (0.52 equal, 0.30 for 2/3, 1/9).
+- **Q(2) F1'=3/2 F'=2** sees all 8 F1=3/2 levels and hardly the lens levels: its CU2-on signal is the residual,
+  1.4–1.45 photons per residual molecule, nearly background-free.
+- Lines 2 and 3 together: S_on[Q(2) F1'=3/2 F'=2] / S_off[Q(2) F1'=5/2 F'=3] = 0.28 / 0.34 / 0.25 %, i.e. the
+  F1=3/2 residual times 1/1.68, 1/1.34, 1/1.87. With a field component along k (pure σ+, mF-averaged bound) the
+  factors are 1.66, 1.16, 1.97. One model factor 1.2–2.0 covers every weighting and field direction.
+- For comparison, linear X light ⊥ B gives R(2) F'=4 1.9 / 3.9 × 10⁻⁴ and factors 1.87 / 1.53 (equal / 2/3).
+- **RC on P(2) F'=2** (F'=2 decays only to J=0 F=1, so the lens start becomes triplet-rich): R(2) F'=4 CU2-off ×3
+  (0.57 → 1.67), CU2-on only +17 %, on/off 3.7 → 1.5 × 10⁻⁴ and nearly independent of the weighting (9 % between 0
+  and 10 % singlet). CU2 efficiency unchanged (0.49 → 0.50 % left).
+- No bias magnetic field can be added in the DET region (user), so the earth-field direction is taken as given.
+
+Schematic (slides): `docs/state_cleanup/figures/slides/CU2_test_onoff_obe_e155_d12p5_f200.{png,pdf}`
+(`python scripts/cu2_detection_test.py plot 12.5,200 32 43 e155`). Test plan: `docs/state_cleanup/CU2_test_plan.md`.
+
+## Step 31 — 155 V/cm, 75 mW: vx × y0 map at the set point (2026-11-03)
+
+Stage `map` of `scripts/cu2_power_check.py`: 0.2 m/s × 3 mm grid, vx −1 … 1 m/s, y0 0 … 15 mm (mirrored), at
+(12.5, 200) MHz, 32 + 43 mW, both starts; the 24 reduced-grid points are reused, 42 new per start. Figure
+`docs/state_cleanup/figures/cleanup_map_vx_y_CU2_155Vcm.{pdf,png}` (`scripts/plot_cleanup_maps_current.py cu2_155`).
+
+| | on axis | full-grid mean in acceptance | reduced grid (Step 21) |
+|---|---|---|---|
+| SPB | 99.88 % | 99.56 % | 99.57 % |
+| uniform | 99.18 % | 96.92 % | 97.01 % |
+
+- The uniform start has a shallow dip exactly at vx = 0 (99.18 % against 99.48 / 99.51 % at vx = ∓0.2 m/s); the SPB
+  start a smaller one (99.88 against 99.93 / 99.94 %). Both are best at |vx| ≈ 0.2 m/s.
+- Along vx the uniform start falls to 91 % at |vx| = 1 m/s (y0 = 0), the SPB start to 98.7 %. Along y0 both stay
+  near their on-axis values to ~3 mm and fall to 86 % (uniform) and 98 % (SPB) at 9 mm, vx = 0.2 m/s.
+
+## Step 32 — CU2 test detection recomputed with the axis along k (2026-11-04)
+
+**Why.** centrex builds spontaneous decay from one single-jump operator √(Γ·BR) |g⟩⟨e| per (excited, ground) pair
+(`centrex_tlf/couplings/collapse.py`), and its prepared solvers accept nothing else
+(`lindblad/plan_static.py::_lower_structured_jumps`). Decay therefore never transfers excited coherences into
+ground coherences, and the result depends on the quantization axis. Test: an isotropic X J=2 F1=5/2 F=3 ensemble on
+Q(2) F1'=5/2 F'=3 (15 mW, vx = 0, B = 1 mG) must give the same photon number for every polarization:
+
+| light | centrex (pairwise decay) | coherent decay C_q (numpy, dense expm) |
+|---|---|---|
+| linear z | 4.75 | 4.66 |
+| linear x | 4.13 | 4.66 |
+| σ+ about k = y (vertical axis, used in Steps 29–30) | 4.01 | 2.77 |
+| σ+ about z (axis along k) | 2.72 | 2.77 |
+
+The numpy integrator reproduces centrex exactly with the pairwise operators. With the axis along the light's symmetry
+axis (z for linear z, k for σ+) pairwise decay is within ~2 % of coherent decay; otherwise per-level errors reach
+~75 % (e.g. vertical m_F = ±3 on Q(2) F1'=5/2 F'=3: 5.16 instead of 2.97).
+
+**Method (default `pol k` in `scripts/cu2_detection_test.py`).** Axis along k, where the DET2 light is pure σ+
+(centrex run `spk`, B along k). The CU2 populations (m_F about the vertical CU2 field) are rotated onto k:
+n(F1, F, m_F) = Σ_m' |d^F_{m'm}(π/2)|² n_k(F1, F, m'). The rotation creates coherences Δm' = ±2, ±4, ±6, which do
+not contribute while the probe is symmetric about k; the 0.5 G earth field (⊥ k, plates off) turns a molecule by
+≤ 0.4 rad in the 81.5 µs probe and is neglected. Example: the three F=3 triplets (m_F = 0, ±1, 1/3 each) map onto
+k as m' = 0, ±1, ±2, ±3 → 0.125, 0.073, 0.104, 0.260 each (⟨J_k²⟩ = 17/3, against ⟨J_z²⟩ = 2/3 vertically).
+Checks: `pol spc` = exact (vertical axis, earth field 0.5 G vertical ⊥ k, coherent decay; `yields_coherent`),
+`pol kiso` = alignment scrambled between CU2 and the probe (m'-averaged).
+
+Photons per molecule at vx = 0, 15 mW (m_F about the vertical):
+
+| line | F1=3/2 levels | F1=5/2 F=2 | F1=5/2 F=3 |
+|---|---|---|---|
+| R(2) F1'=7/2 F'=4 | 0 | 0.01–0.02 | 2.12–2.13 |
+| Q(2) F1'=5/2 F'=3 | 0.01 | 0.92–1.05 | 2.54–2.86 |
+| Q(2) F1'=3/2 F'=2 | 1.45–1.91 | 0.22–0.33 | 0.04–0.08 |
+
+Readings over the acceptance, CU2 at (12.5, 200) MHz, 32 + 43 mW, lens weighting equal / 2/3 (singlet) / triplet
+only; axis along k (exact check in brackets where it differs):
+
+| line (role) | S_off, photons/molecule | S_on, photons/molecule | S_on/S_off |
+|---|---|---|---|
+| R(2) F'=4 (check) | 1.35 / 0.61 / 1.80 | 2.6 / 2.3 / 2.7 × 10⁻⁴ | 1.9 / 3.8 / 1.5 × 10⁻⁴ |
+| Q(2) F1'=5/2 F'=3 (normalization) | 2.02 / 1.41 / 2.39 (2.05 / 1.38 / 2.44) | 4.6 × 10⁻⁴ | 0.02–0.03 % |
+| Q(2) F1'=3/2 F'=2 (residual) | 0.04 / 0.06 / 0.03 | 5.8 / 5.7 / 5.9 × 10⁻³ | large |
+
+- R(2) F'=4 is saturated and has no dark states, so it hardly changed (on/off was 1.8 / 3.7 / 1.5 × 10⁻⁴): it reads
+  13–33× below the true residual.
+- Q(2) F1'=5/2 F'=3: the singlet (F1=5/2 F=2) gives 0.92 photons, not 1.82, so S_off is 13–25 % lower than in
+  Step 30. S_off[R(2) F'=4] / S_off[Q(2) F1'=5/2 F'=3] = 0.67 (equal), 0.43 (2/3), 0.75 (triplet only).
+- Q(2) F1'=3/2 F'=2: 1.24 photons per residual F1=3/2 molecule (was 1.41–1.45).
+- Lines 2 and 3 together: S_on[Q(2) F1'=3/2 F'=2] / S_off[Q(2) F1'=5/2 F'=3] = 0.29 / 0.41 / 0.25 % (axis along k),
+  0.28 / 0.41 / 0.24 % (exact), 0.28 / 0.40 / 0.24 % (alignment scrambled), against a true F1=3/2 residual of
+  0.47 / 0.46 / 0.48 %: model factor 1.6 / 1.1 / 1.9–2.0. One factor 1.1–2.0 covers every weighting and treatment;
+  the R(2) F'=4 / Q(2) F1'=5/2 F'=3 CU2-off ratio pins the weighting and with it the factor.
+- RC on P(2) F'=2 (triplet-rich start): R(2) F'=4 S_off ×3 (0.61 → 1.80), S_on +18 %, on/off 3.8 → 1.5 × 10⁻⁴.
+- Not yet checked for the same issue: the CU2 and CU1 cleanup OBEs (X/Z light with the axis along E, where ±m_F are
+  degenerate and decay-transferred coherences do not dephase).
+
+Schematic updated: `docs/state_cleanup/figures/slides/CU2_test_onoff_obe_e155_d12p5_f200.{png,pdf}`.

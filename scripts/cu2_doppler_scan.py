@@ -30,6 +30,7 @@ SIGMA_Y_CU2 = 7.5e-3                                      # m, 3 cm full 4-sigma
 INITS = ("uniform", "spb")
 CHUNK, THREADS = 40, 8
 SLOTS = ["detuning0", "detuning1", "vx", "y0"]
+OBE = None                                               # set by setup(), for per-state runs
 
 
 def key(v, y):
@@ -49,8 +50,10 @@ def load(t):
 
 
 def setup():
+    global OBE
     t0 = time.perf_counter()
     prepared, _, gidx, info, obe = build(return_obe=True, doppler=True, sigma_y_m=SIGMA_Y_CU2)
+    OBE = obe
     dim = len(obe.QN)
     rho_u = np.zeros((dim, dim), dtype=np.complex128)
     rho_u[gidx, gidx] = 1.0 / len(gidx)
