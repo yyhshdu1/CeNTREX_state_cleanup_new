@@ -76,34 +76,31 @@ and~\ref{sec:model}) and the experimental results  (Sec.~\ref{sec:cu1} \& Sec.~\
 \section{Optical pumping in the electric field}
 \label{sec:pumping}
 
-A cleanup stage drives a transition from the addressed rotational level $J$ of $X$ to $B$. Each
-excitation is followed by spontaneous decay, and since $B$ decays to several rotational levels,
-most decays end in a level that the light does not address: from $B$, $J'=2$, $F'=2$ only
-\SI{37}{\percent} of the decays return to $J=1$, and from $J'=3$, $F'=3$ or $F'=4$ only
-\SI{27}{\percent} return to $J=2$ (Table~\ref{tab:stages}). A molecule is therefore removed
-after one or two photons, provided that every sublevel of the addressed level is excited and none
-is left in a dark superposition. States are labelled $|J,F_1,F,m_F,P\rangle$, with the nuclear
+Each cleanup stage drives a transition from the addressed rotational level $J$ of $X$ to $B$. After excited, molecules will spontaneously decay to several rotational levels. Finally,
+most decays end in a level that the light does not address: for CU1 only
+\SI{37}{\percent} of the decays return to $J=1$, and for CU2 only
+\SI{27}{\percent} return to $J=2$ (Table~\ref{tab:stages}). A molecule is therefore removed from its original rotational level
+after emitting one or two photons. (States are labelled $|J,F_1,F,m_F,P\rangle$, with the nuclear
 spins coupled as $\mathbf J+\mathbf I_1=\mathbf F_1$ and $\mathbf F_1+\mathbf I_2=\mathbf F$;
-primed quantum numbers refer to $B$, and R($J$) denotes $J\to J'=J+1$. The level $J=1$ has 12
-sublevels ($F_1=\tfrac12$: $F=0,1$; $F_1=\tfrac32$: $F=1,2$), $J=2$ has 20.
+primed quantum numbers refer to $B$, and R($J$) denotes $J\to J'=J+1$. delete if defined in the previous chapters) $J=1$ has 12
+sublevels and $J=2$ has 20.
 
-The field, \SI{150}{V/cm} for CU1 and \SI{217}{V/cm} for CU2, defines the quantisation axis $z$;
-$m_F$ remains a good quantum number, while $J$, $F_1$, $F$ and the parity of $B$ are mixed. The
-hyperfine structure of each ground rotational level spans only about \SI{2}{MHz}, but in $B$ the
-Stark interaction splits the $|m_F'|$ sublevels of one hyperfine level by 10--\SI{25}{MHz} each,
-many natural linewidths ($\Gamma/2\pi=\SI{1.61}{MHz}$). A single laser frequency then reaches
-only a few excited sublevels, and for a fixed polarization $N_g$ ground sublevels coupled to
-$N_e<N_g$ excited ones leave at least $N_g-N_e$ superpositions dark. Both schemes use three tools
-against this:
+The electric fields, \SI{150}{V/cm} for CU1 and \SI{217}{V/cm} for CU2, define the quantisation axis $z$.
+In the electric field, $m_F$ remains a good quantum number, while $J$, $F_1$, $F$ and the parity of $B$ are mixed. The
+hyperfine structure of each ground $J$ level spans only about \SI{2}{MHz}, but in excited $J'$ states the
+Stark interaction splits $|m_F'|$ by 10--\SI{25}{MHz} each,
+which is many natural linewidths ($\Gamma/2\pi=\SI{1.61}{MHz}$). A single laser frequency then can only reach a few excited sublevels. For a fixed polarization $N_g$ ground sublevels coupled to
+$N_e$ excited ones leave at least $N_g-N_e$ dark states. Both schemes use three tools
+to solve this problem:
 \begin{enumerate}[itemsep=1pt]
-  \item \textbf{reach enough excited sublevels}, with the carrier placed between them, with
-        phase-modulation sidebands, or with a second beam on a second hyperfine level;
-  \item \textbf{switch the polarization} between X ($\perp\mathbf E$) and Z ($\parallel\mathbf E$)
-        at \SI{0.5}{MHz}, so that a superposition dark for one is bright for the other;
-  \item \textbf{use field mixing}, which makes zero-field-forbidden transitions driveable. For
+  \item \textbf{use field to mix ground states}, which makes zero-field-forbidden transitions driveable. For
         example, $|J=1,F_1=\tfrac12,F=0\rangle$ cannot be excited to $F'=2$ at zero field, but at
         \SI{150}{V/cm} it carries a \SI{29}{\percent} admixture of $|F_1=\tfrac32,F=2\rangle$,
         through which CU1 pumps it.
+  \item \textbf{reach more excited sublevels}, with the carrier placed between two excited states, with
+        phase-modulation sidebands, or with a second beam on a second hyperfine level;
+  \item \textbf{switch the polarization} between X ($\perp\mathbf E$) and Z ($\parallel\mathbf E$)
+        at \SI{0.5}{MHz} to mix bright and dark states;
 \end{enumerate}
 
 \begin{table}[htbp]
