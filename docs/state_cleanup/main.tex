@@ -72,7 +72,12 @@ state-preparation stage C (SPC) would otherwise transfer to $J=1$. Both stages p
 optically through the $B\,{}^3\Pi_1$ state into other rotational levels, in the applied electric
 field. This chapter first describes the pumping schemes and the simulation model
 (Secs.~\ref{sec:pumping} and~\ref{sec:model}), and then the simulations and test results of each
-stage (Secs.~\ref{sec:cu1} and~\ref{sec:cu2}).
+stage (Secs.~\ref{sec:cu1} and~\ref{sec:cu2}). The cleanup chambers and field electrodes were
+designed by Jianhui Li, a PhD student in the group, and we assembled them together. All
+simulations are built on the \code{centrex-tlf} package~\cite{centrextlf}, written by Olivier
+Grasdijk, a postdoc in the group. The rest of the work described here is my own: the design of the
+CU1 and CU2 pumping schemes, the cleanup simulations and the optimisation of the set points, and the
+tests on the SPB setup, from taking the data to the analysis.
 
 
 % =====================================================================
@@ -319,24 +324,31 @@ stay within about \SI{1}{mrad}.
 \label{sec:cu1_test}
 
 \paragraph{Setup and method.} CU1 was tested on the SPB setup between 2026-10-16 and
-2026-10-21~\cite{CU1GroupMeeting2026}. The $J=1$ molecules are prepared by rotational cooling (RC)
-and the first adiabatic passage of SPA (AP1). AP1 transfers all four $J=0$ hyperfine sublevels to the
-four mainly-$m_J=0$ levels of $J=1$: the triplet $|F_1=\tfrac32,F=2,m_F=0,\pm1\rangle$ and the
-singlet $|F_1=\tfrac32,F=1,m_F=0\rangle$~\cite{Grasdijk2025AP}. RC on P(2) $F_1'=3/2$, $F'=2$
-enhances $J=0$, $F=1$, so the triplet dominates. The lens ($\pm\SI{24.7}{kV}$) hardly acts on these
-molecules. CU1 is \SI{2.5}{m} from the cell, at \SI{156}{V/cm}, with \SI{50}{mW} (about \SI{45}{mW}
-entering the multipass) in a \SI{2}{cm} beam.
-
-The detection laser, \SI{3.15}{m} from the cell, drives R(1) $F_1'=5/2$, $F'=3$. This line couples
-only the five $F_1=\tfrac32$, $F=2$ sublevels and has no dark state. As long as every $F=2$ molecule
-is pumped out during the detection, the ratio of two signals is therefore the ratio of the $F=2$
-populations. The detection beam propagates parallel to CU1 and accepts $|v_x|$ up to about
-1.2--\SI{1.7}{m/s}. In the final experiment, the detection is \SI{8}{m} downstream behind a
-\SI{2}{cm} aperture and accepts only $|v_x|\leq\SI{0.22}{m/s}$. To cancel source and absorption
-drifts, a shutter in the CU1 beam alternates between open and closed on consecutive ablation shots,
-in bursts of 10 open and 10 closed shots on one target spot. The remaining fraction
-$r=A_{\mathrm{open}}/A_{\mathrm{closed}}$ is the ratio of the fitted fluorescence amplitudes, and the
-efficiency is $\etac=1-r$, with uncertainties from a bootstrap over bursts.
+2026-10-21~\cite{CU1GroupMeeting2026}. The basic idea is to detect the $J=1$ molecules with CU1 on
+and off and to take the ratio of the two signals. The conditions were:
+\begin{itemize}[itemsep=1pt]
+  \item \textbf{molecules}: $J=1$, prepared by rotational cooling (RC) on P(2) $F_1'=3/2$, $F'=2$ and
+        the first adiabatic passage of SPA (AP1). AP1 transfers all four $J=0$ hyperfine sublevels
+        to the four mainly-$m_J=0$ levels of $J=1$, the triplet
+        $|F_1=\tfrac32,F=2,m_F=0,\pm1\rangle$ and the singlet
+        $|F_1=\tfrac32,F=1,m_F=0\rangle$~\cite{Grasdijk2025AP}; RC on $F'=2$ enhances $J=0$, $F=1$,
+        so the triplet dominates. The lens ($\pm\SI{24.7}{kV}$) hardly acts on these molecules.
+        Forward velocity about \SI{145}{m/s}.
+  \item \textbf{CU1}: \SI{2.5}{m} from the cell, \SI{156}{V/cm}, \SI{50}{mW} (about \SI{45}{mW}
+        entering the multipass) in a \SI{2}{cm} beam, 13 passes, raised to about 17 during the test.
+  \item \textbf{detection}: \SI{3.15}{m} from the cell, R(1) $F_1'=5/2$, $F'=3$, parallel to CU1,
+        accepting $|v_x|$ up to about 1.2--\SI{1.7}{m/s}. In the final experiment the detection is
+        \SI{8}{m} downstream behind a \SI{2}{cm} aperture and accepts only
+        $|v_x|\leq\SI{0.22}{m/s}$.
+  \item \textbf{shutter}: in the CU1 beam, open and closed on consecutive ablation shots, in bursts
+        of 10 open and 10 closed shots on one target spot.
+\end{itemize}
+The detection line couples only the five $F_1=\tfrac32$, $F=2$ sublevels and has no dark state. As
+long as every $F=2$ molecule is pumped out during the detection, the ratio of two signals is
+therefore the ratio of the $F=2$ populations. Because the shutter alternates on every shot, source
+and absorption drifts cancel in the remaining fraction $r=A_{\mathrm{open}}/A_{\mathrm{closed}}$, the
+ratio of the fitted fluorescence amplitudes. The efficiency is $\etac=1-r$, with uncertainties from a
+bootstrap over bursts.
 
 \paragraph{Progress and final result.} Within two days the remaining fraction fell from 0.099 to
 0.026 (Fig.~\ref{fig:cu1_progress}). Most of the gain came from the alignment of the multipass. A
@@ -346,7 +358,8 @@ with the incoming beam, so that the laser is perpendicular to the molecular beam
 from $F'=1$ to $F'=2$. With $F'=1$ the singlet dominates, and CU1 pumps part of it into $F=2$, where
 R(1) sees it; with CU1 closed, R(1) cannot see the singlet, so these molecules add only to the
 open-shutter signal. Finally, the set point was moved to the measured optimum, which lies
-4--\SI{6}{MHz} (UV) below the predicted $+19$ to $+\SI{20}{MHz}$. The final run, 2000 shots with
+4--\SI{6}{MHz} (UV) below the predicted $+19$ to $+\SI{20}{MHz}$; the origin of this offset is not
+yet understood. The final run, 2000 shots with
 alignment C, gave $r=0.026\ [0.024,0.028]$ (Fig.~\ref{fig:cu1_final}), i.e.
 \begin{equation*}
   \etac=\SI{97.4(2)}{\percent}.
@@ -605,17 +618,23 @@ found two optima one EOM period apart; it is documented in the full report.
 \label{sec:cu2_test}
 
 \paragraph{Setup.} CU2 was tested on the SPB setup on 2026-11-07 and
-2026-11-08~\cite{CU2GroupMeeting2026}, at \SI{217}{V/cm} with $\delta_0/2\pi=+\SI{13}{MHz}$,
-$\fAOM=\SI{209}{MHz}$ and 20 + \SI{30}{mW}. On the axis this point lies on the same plateau as the
-set point (SPB source levels above \SI{99}{\percent} for $\delta_0/2\pi=8$--\SI{15}{MHz}). The
-detection laser, \SI{24}{mW} in a $1.5\times\SI{1.5}{cm}$ beam, drives one of four R(2) lines
-(Table~\ref{tab:cu2_test_lines}). It can only be $\sigma^+$ circularly polarised. With its field
-plates off, the detection region is field-free, and the quantisation axis is the earth field, which
-is vertical and perpendicular to $\mathbf k$. About this axis the light is
-$\tfrac12\pi+\tfrac14\sigma^++\tfrac14\sigma^-$.
-
-As for CU1, a shutter in the CU2 beam alternates on consecutive shots, here in 50 bursts of 20 shots
-per line. The ratio $R_l=S^{\mathrm{on}}_l/S^{\mathrm{off}}_l$ of line $l$ comes from a template fit:
+2026-11-08~\cite{CU2GroupMeeting2026}. As for CU1, the basic idea is to compare the detection
+signals with CU2 on and off. The conditions were:
+\begin{itemize}[itemsep=1pt]
+  \item \textbf{molecules}: the $J=2$ molecules focused by the lens, forward velocity
+        \SI{156}{m/s}.
+  \item \textbf{CU2}: \SI{217}{V/cm}, $\delta_0/2\pi=+\SI{13}{MHz}$, $\fAOM=\SI{209}{MHz}$,
+        20 + \SI{30}{mW}. On the axis this point lies on the same plateau as the set point (SPB
+        source levels above \SI{99}{\percent} for $\delta_0/2\pi=8$--\SI{15}{MHz}).
+  \item \textbf{detection}: \SI{24}{mW} in a $1.5\times\SI{1.5}{cm}$ beam, on one of four R(2)
+        lines (Table~\ref{tab:cu2_test_lines}). The light can only be $\sigma^+$ circularly
+        polarised. With the detection field plates off, the region is field-free and the
+        quantisation axis is the earth field, vertical and perpendicular to $\mathbf k$; about this
+        axis the light is $\tfrac12\pi+\tfrac14\sigma^++\tfrac14\sigma^-$.
+  \item \textbf{shutter}: in the CU2 beam, alternating on consecutive shots, 50 bursts of 20 shots
+        per line (500 shots with CU2 on and 500 with CU2 off).
+\end{itemize}
+The ratio $R_l=S^{\mathrm{on}}_l/S^{\mathrm{off}}_l$ of line $l$ comes from a template fit:
 the mean open-shutter trace is fitted as $R_l$ times the mean closed-shutter trace plus a linear
 baseline, with errors from a bootstrap over bursts (Fig.~\ref{fig:cu2_traces}). During the test the
 singlet ratio on line B fell from 0.37, with too little CU2 power and a misaligned multipass, to 0.10
@@ -632,15 +651,21 @@ after the realignment, and to 0.006 at the final laser frequency.
   \label{fig:cu2_traces}
 \end{figure}
 
-\paragraph{A line ratio is not a level efficiency.} At $E=0$ each detection line couples several of
-the four $J=2$ hyperfine groups $F\equiv(F_1,F)$ (Table~\ref{tab:cu2_test_lines}). Line A sees only
+\paragraph{A line ratio is not a level efficiency.} Ideally, each detection line would see only one
+$J=2$ group, and its on/off ratio would directly be the residual of that group. No such line exists
+at $E=0$: each line couples several of the four $J=2$ hyperfine groups $F\equiv(F_1,F)$
+(Table~\ref{tab:cu2_test_lines}). Line A sees only
 $F_1=\tfrac52$, $F=3$ (the triplet). Line B sees the singlet $F_1=\tfrac52$, $F=2$ and, through a
 weaker component, the triplet. Line C sees the triplet and $F_1=\tfrac32$, $F=2$, and line D sees all
 four. CU2 cleans the groups differently and pumps part of the lens molecules into $F_1=\tfrac32$, so
 the weights of the groups in each signal change between the two shutter states. For example, with
 CU2 off the signal on C is \SI{99}{\percent} triplet crosstalk, while with CU2 on \SI{95}{\percent}
 of it comes from $F_1=\tfrac32$, $F=2$ molecules pumped in by CU2. The \SI{2.6}{\percent} on C is
-therefore not the efficiency of any one level.
+therefore not the efficiency of any one level. Instead, the populations of the four groups are solved
+from the four line ratios together, with the probe photon yields of each group (below). The result is
+checked in two ways: the measured line ratios are compared with those predicted directly by the CU2
+OBE, without any solving (Table~\ref{tab:cu2_test_lines}), and the solution is repeated with other
+start compositions and with flux drifts (\emph{Assumptions} below).
 
 \begin{table}[htbp]
   \centering
@@ -664,8 +689,7 @@ therefore not the efficiency of any one level.
   \end{tabular}
 \end{table}
 
-\paragraph{Solving for the groups.} The populations of the groups are therefore solved from all four
-lines together. The signal of line $l$ is $S^x_l=\sum_F\eta^x_{lF}N^x_F$ ($x=\mathrm{off},\mathrm{on}$),
+\paragraph{Solving for the groups.} The signal of line $l$ is $S^x_l=\sum_F\eta^x_{lF}N^x_F$ ($x=\mathrm{off},\mathrm{on}$),
 where $N^x_F$ is the number of molecules in group $F$ and $\eta^x_{lF}$ the number of probe photons per
 molecule. Before CU2 the lens passes only the lens sublevels $L_F$ ($F=3$, $m_F=0,\pm1$; $F=2$,
 $m_F=0$), and $F_1=\tfrac32$ is assumed empty. The composition before CU2 then has only one free
@@ -699,13 +723,17 @@ residual's own $m_F$ and $v_x$:
   \eta_l(F,m_F;v_x)}{\sum_{i\in L}w_i\sum_{v_x,y_0}W(v_x,y_0)\sum_{m_F\in F}P_{i;F,m_F}(v_x,y_0)}.
   \label{eq:etaon}
 \end{equation}
-Here $\#L_F$ is the number of lens sublevels of $F$, $W=G\times{}$the $y_0$ weight (so
-$\sum_{y_0}W=G$), $L=L_{F=3}\cup L_{F=2}$ the four start sublevels with weights
-$w_i=f_{F(i)}/\#L_{F(i)}$, and $P_{i;F,m_F}$ the population in $(F,m_F)$ after CU2 of a molecule
-started in $i$, from the CU2 OBE at the test settings and $v_z=\SI{156}{m/s}$. In
-$\eta^{\mathrm{on}}$ the sum runs over all $2F+1$ sublevels, because CU2 redistributes $m_F$. With
-CU2 off every molecule stays in its start sublevel, so $\eta^{\mathrm{off}}$ is $\eta^{\mathrm{on}}$
-with $P_{i;F,m_F}\to\delta_{i,(F,m_F)}$. The molecules left by CU2 sit at large $|v_x|$, off the
+Here
+\begin{itemize}[itemsep=0pt]
+  \item $\#L_F$ is the number of lens sublevels of $F$;
+  \item $W(v_x,y_0)$ is $G(v_x)$ times the $y_0$ weight, so that $\sum_{y_0}W=G$;
+  \item $L=L_{F=3}\cup L_{F=2}$ are the four start sublevels, with weights $w_i=f_{F(i)}/\#L_{F(i)}$;
+  \item $P_{i;F,m_F}(v_x,y_0)$ is the population in $(F,m_F)$ after CU2 of a molecule started in $i$,
+        from the CU2 OBE at the test settings and $v_z=\SI{156}{m/s}$. The sum over $m_F$ runs over
+        all $2F+1$ sublevels, because CU2 redistributes $m_F$.
+\end{itemize}
+With CU2 off every molecule stays in its start sublevel, so $\eta^{\mathrm{off}}$ is
+$\eta^{\mathrm{on}}$ with $P_{i;F,m_F}\to\delta_{i,(F,m_F)}$. The molecules left by CU2 sit at large $|v_x|$, off the
 probe resonance, so $\eta^{\mathrm{on}}<\eta^{\mathrm{off}}$ for the crosstalk terms
 (Table~\ref{tab:cu2_test_lines}); with the lens $v_x$ distribution instead, the total residual would
 come out \SI{0.2}{\percent} lower. The errors are from a Monte Carlo over $R_l$ and $r$.
@@ -767,16 +795,27 @@ alternates on every shot, and enter only through $r$: a \SI{20}{\percent} drift 
 runs moves $f_t$ to 0.38--0.52, inside the range above. The probe power (15 instead of \SI{24}{mW})
 and the $m_F$ distribution of the residual change the result by less than its statistical error.
 
-One discrepancy remains. With CU2 off, the signals of C and D relative to A are $0.36\pm0.06$ and
-$0.42\pm0.07$, while the model gives 0.59 and 0.70. These runs are 8--\SI{33}{min} apart, so flux
-drift may contribute, but the weak crosstalk components are also a candidate. The main components
-saturate at 1--\SI{2}{mW}, while the weak ones are not yet saturated at \SI{24}{mW}, and the probe
-OBE at an effective \SI{7.5}{mW} gives 0.34 and 0.43. If the weak yields are overestimated,
-$\eta^{\mathrm{on}}_{C,F=3}$ is too large and the $F_1=\tfrac32$, $F=2$ residual is underestimated.
-A direct test is detection on P(2) $F_1'=1/2$, $F'=1$, which sees only $F_1=\tfrac32$ (0.6--0.8
-photons per molecule, at most 0.03 for $F_1=\tfrac52$). It measures the $F_1=\tfrac32$ residual
-without crosstalk and checks that $F_1=\tfrac32$ is empty before CU2. At the model residual, its
-CU2-on signal is about $0.7\sigma$ per 500-shot run, so about 17 runs are needed for $3\sigma$.
+\paragraph{An unexplained discrepancy.} With CU2 off, the signals of C and D relative to A are
+$0.36\pm0.06$ and $0.42\pm0.07$, while the model gives 0.59 and 0.70: the measured ratios are about
+\SI{40}{\percent} lower. Two causes were considered.
+\begin{enumerate}[itemsep=1pt]
+  \item \textbf{Flux drift.} These runs are 8--\SI{33}{min} apart, much longer than the A and B pair
+        (4--7\,min), so a drift of the molecular flux may contribute and cannot be excluded.
+  \item \textbf{Probe yields of the weak components.} Without CU2, lines C and D see the lens
+        molecules only through weak crosstalk components. The main components saturate at
+        1--\SI{2}{mW}, but the weak ones are not yet saturated at \SI{24}{mW}, so their yields
+        depend on the intensity that the molecules actually see. The probe OBE at an effective
+        \SI{7.5}{mW} gives 0.34 and 0.43, in agreement with the data. Such a low effective
+        intensity has not been checked independently, and the groups have not yet been solved
+        again with these yields.
+\end{enumerate}
+The discrepancy therefore remains unexplained. It matters for the result: if the weak yields are
+overestimated, $\eta^{\mathrm{on}}_{C,F=3}$ is too large and the $F_1=\tfrac32$, $F=2$ residual is
+underestimated. A direct test is detection on P(2) $F_1'=1/2$, $F'=1$, which sees only
+$F_1=\tfrac32$ (0.6--0.8 photons per molecule, at most 0.03 for $F_1=\tfrac52$). It measures the
+$F_1=\tfrac32$ residual without crosstalk and checks that $F_1=\tfrac32$ is empty before CU2. At the
+model residual, its CU2-on signal is about $0.7\sigma$ per 500-shot run, so about 17 runs are needed
+for $3\sigma$.
 
 % =====================================================================
 \section{Conclusions and outlook}
@@ -827,6 +866,17 @@ populate. In the first test on the SPB setup, CU2 removed \SI{98.9(6)}{\percent}
 population, solved group by group from four detection lines, in agreement with the model
 (\SI{99.3}{\percent}). About half of the residual is in $F_1=\tfrac32$, $F=2$, pumped in by CU2
 itself.
+
+Both tests differ from the final experiment in ways that these results do not cover. The CU1 test
+cleaned molecules from AP1, which populate the four mainly-$m_J=0$ levels of $J=1$, not the
+SPB-related levels that SPB will populate, and its detection accepted $|v_x|$ up to
+1.2--\SI{1.7}{m/s} instead of \SI{0.22}{m/s}; the offset of its measured optimum from the prediction
+is not understood. The CU2 test started only from the lens levels, so neither the stretched
+$m_F=\pm3$ sublevels nor the molecules that CU1 pumps into $J=2$ were tested. It ran at 20 +
+\SI{30}{mW} instead of 32 + \SI{43}{mW}, and its set point was optimised for
+$v_z=\SI{184}{m/s}$ while the molecules moved at \SI{156}{m/s}. With the detection plates off, its
+result also relies on the probe yields of the $E=0$ model, and the assumption that $F_1=\tfrac32$ is
+empty before CU2 is untested.
 
 Next steps:
 \begin{enumerate}[itemsep=1pt]
