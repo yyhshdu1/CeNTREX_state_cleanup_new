@@ -81,7 +81,7 @@ b.plot(xl + 0.12, 100 * C3["Rm"], "D", color=col3, mfc="white", ms=7, mew=1.6, l
 for xi, r0, r3 in zip(xl, C0["Rm"], C3["Rm"]):
     b.text(xi, 4.35, f"{100 * r0:.2f} → {100 * r3:.2f}", ha="center", fontsize=8)
 b.set_xticks(xl, lines, fontsize=8)
-b.set(ylabel="on/off ratio $R_l$ (%)", ylim=(-1, 4.8), title="(b) line on/off ratios, no solving (model: 0 → 3 %)")
+b.set(ylabel="on/off ratio $R_l$ (%)", ylim=(-1, 4.8), title=f"(b) line on/off ratios, no solving (model: 0 → {100 * X:g} %)")
 b.axhline(0, color="k", lw=0.6)
 b.legend(fontsize=7.5, loc="upper left", bbox_to_anchor=(0, 0.9))
 
