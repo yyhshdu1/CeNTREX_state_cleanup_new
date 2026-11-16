@@ -164,17 +164,15 @@ def draw(a, numbers_y=None):
 draw(aL)
 aL.set(ylabel="left after CU2 (% of all $J=2$ before CU2)", ylim=(-3, 100))
 aL.set_title("full scale, 0–100 % of $J=2$", fontsize=9)
-box = Rectangle((-0.42, ZOOM[0]), 4.84, ZOOM[1] - ZOOM[0], fill=False, ec="k", lw=1.2, zorder=5)
+box = Rectangle((-0.42, ZOOM[0]), 4.84, ZOOM[1] - ZOOM[0], fc="0.93", ec="0.65", lw=0.9, zorder=0)
 aL.add_patch(box)
-aL.annotate("all points in here", (2.0, ZOOM[1]), xytext=(2.0, 14), ha="center", fontsize=8.5,
-            arrowprops=dict(arrowstyle="->", lw=0.9))
 draw(aR, numbers_y=-0.95)
 aR.set(ylim=ZOOM)
 aR.set_title(f"zoom of the box: {ZOOM[0]:g} to {ZOOM[1]:g} % (numbers below = solved central values)", fontsize=9)
 aR.legend(fontsize=7.5, loc="upper left")
 for yb in ZOOM:
     fig3.add_artist(ConnectionPatch(xyA=(4.42, yb), coordsA=aL.transData, xyB=(0, (yb - ZOOM[0]) / (ZOOM[1] - ZOOM[0])),
-                                    coordsB=aR.transAxes, color="0.35", lw=0.9, ls="--"))
+                                    coordsB=aR.transAxes, color="0.7", lw=0.8, ls="--"))
 fig3.suptitle(fig1._suptitle.get_text(), fontsize=8.5)
 fig3.subplots_adjust(left=0.06, right=0.99, bottom=0.12, top=0.84)
 for ext in ("png", "pdf"):
