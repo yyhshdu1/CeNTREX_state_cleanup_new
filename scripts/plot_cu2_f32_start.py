@@ -2,7 +2,7 @@
 
     python scripts/plot_cu2_f32_start.py [x_percent]     # default 3
     -> docs/state_cleanup/figures/cu2_residual_lines/f32_start_0_vs_3.{png,pdf}         (a) + (b)
-    -> docs/state_cleanup/figures/cu2_residual_lines/f32_start_0_vs_3_groups.{png,pdf}  (a) only
+    -> docs/state_cleanup/figures/cu2_residual_lines/f32_start_0_vs_3_groups.{png,pdf}  (a) only; _groups_0to100: same on a 0-100 % axis
 
 Same solver as scripts/cu2_test_line_combinations.py, which uses only the shutter on/off ratios R_l (flux drifts
 cancel shot by shot) plus S_B/S_A of two adjacent runs for f_t. The F1=3/2 share before CU2 is split over its
@@ -119,26 +119,25 @@ for ext in ("png", "pdf"):
     fig1.savefig(f"{out}_groups.{ext}", dpi=160)
 print(f"{out}_groups.png")
 
-# the same four groups on a 0-1 % scale (total left out: it is above 1 %, quoted in the title instead)
+# the same groups plus the total on the full 0-100 % scale: every residual is a small fraction of J=2
 fig2, a = plt.subplots(figsize=(8.6, 5.2))
-x4 = np.arange(4)
 for C, dm, col, name in [(C0, -0.14, col0, "F1=3/2 empty"), (C3, +0.14, col3, f"{100 * X:g} % in F1=3/2")]:
-    a.plot(x4 + dm, 100 * C["model"], "D", color=col, mfc="white", ms=7, mew=1.6, label=f"CU2 OBE, {name}")
-a.errorbar(x4, y[:4], e[:4], fmt="o", color=col3, capsize=3, ms=6,
+    a.plot(xs + dm, 100 * np.append(C["model"], C["model_tot"]), "D", color=col, mfc="white", ms=7, mew=1.6,
+           label=f"CU2 OBE, {name}")
+a.errorbar(xs, y, e, fmt="o", color=col3, capsize=3, ms=6,
            label=f"solved from 4 lines: {100 * X:g} % in F1=3/2 before CU2 (5:3 over F=2, F=1)")
-for xi, yi, ei in zip(x4, y, e):
-    a.text(xi, 0.955, f"{yi:.2f} ± {ei:.2f} %", ha="center", fontsize=8, color=col3)
-a.set_xticks(x4, lab[:4])
-a.set(ylabel="left after CU2 (% of all $J=2$ before CU2)", ylim=(0, 1), xlim=(-0.5, 3.5))
-a.set_title(f"Residual per group, 0–1 % scale (numbers = solved values).  $J=2$ total: solved "
-            f"{100 * C3['tot']:.2f} ± {100 * C3['tot_err']:.2f} %, OBE {100 * C0['model_tot']:.2f} / "
-            f"{100 * C3['model_tot']:.2f} %", fontsize=8.5)
-a.legend(fontsize=7.5, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=2, frameon=False)
+for xi, yi, ei in zip(xs, y, e):
+    a.text(xi, 6, f"{yi:.2f}\n± {ei:.2f} %", ha="center", fontsize=8, color=col3)
+a.axvline(3.5, color="0.7", lw=0.8)
+a.set_xticks(xs, lab)
+a.set(ylabel="left after CU2 (% of all $J=2$ before CU2)", ylim=(0, 100), xlim=(-0.5, 4.5))
+a.set_title("Residual per group on the full 0–100 % scale (numbers = solved values)", fontsize=9)
+a.legend(fontsize=7.5, loc="upper right")
 fig2.suptitle(fig1._suptitle.get_text(), fontsize=8.5)
 fig2.tight_layout()
 for ext in ("png", "pdf"):
-    fig2.savefig(f"{out}_groups_0to1.{ext}", dpi=160)
-print(f"{out}_groups_0to1.png")
+    fig2.savefig(f"{out}_groups_0to100.{ext}", dpi=160)
+print(f"{out}_groups_0to100.png")
 for k, C in (("0", C0), ("x", C3)):
     print(k, "f_t", C["f"][0] / (C["f"][0] + C["f"][1]), "n", np.round(100 * C["n"], 3), "tot", round(100 * C["tot"], 3),
           "+-", round(100 * C["tot_err"], 3), "model", np.round(100 * C["model"], 3), round(100 * C["model_tot"], 3),
