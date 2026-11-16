@@ -95,16 +95,16 @@ for ext in ("png", "pdf"):
     fig.savefig(f"{out}.{ext}", dpi=160)
 print(out.with_suffix(".png"))
 
-# single panel (a) only, model diamonds set off from the solved points as in (b)
+# single panel (a) only: solved points for the x % start only, at the centre; both OBE starts set off as in (b)
 fig1, a = plt.subplots(figsize=(8.6, 5.0))
-for C, ds, dm, col, name in [(C0, -0.10, -0.24, col0, "F1=3/2 empty before CU2 (report)"),
-                             (C3, +0.10, +0.24, col3, f"{100 * X:g} % in F1=3/2 before CU2 (5:3 over F=2, F=1)")]:
-    y = 100 * np.append(C["n"], C["tot"]); e = 100 * np.append(C["err"], C["tot_err"])
-    m = 100 * np.append(C["model"], C["model_tot"])
-    a.errorbar(xs + ds, y, e, fmt="o", color=col, capsize=3, ms=6, label=f"solved from 4 lines: {name}")
-    a.plot(xs + dm, m, "D", color=col, mfc="white", ms=7, mew=1.6, label=f"CU2 OBE, {name.split(' before')[0]}")
-    for xi, yi in zip(xs + ds, y):
-        a.text(xi, -0.95, f"{yi:.2f}", ha="center", fontsize=7.5, color=col)
+for C, dm, col, name in [(C0, -0.14, col0, "F1=3/2 empty"), (C3, +0.14, col3, f"{100 * X:g} % in F1=3/2")]:
+    a.plot(xs + dm, 100 * np.append(C["model"], C["model_tot"]), "D", color=col, mfc="white", ms=7, mew=1.6,
+           label=f"CU2 OBE, {name}")
+y = 100 * np.append(C3["n"], C3["tot"]); e = 100 * np.append(C3["err"], C3["tot_err"])
+a.errorbar(xs, y, e, fmt="o", color=col3, capsize=3, ms=6,
+           label=f"solved from 4 lines: {100 * X:g} % in F1=3/2 before CU2 (5:3 over F=2, F=1)")
+for xi, yi in zip(xs, y):
+    a.text(xi, -0.95, f"{yi:.2f}", ha="center", fontsize=7.5, color=col3)
 a.axhline(0, color="k", lw=0.6)
 a.axvline(3.5, color="0.7", lw=0.8)
 a.set_xticks(xs, lab)
