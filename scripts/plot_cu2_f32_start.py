@@ -1,7 +1,8 @@
 """CU2 test: residual per group with F1=3/2 empty before CU2 (report) vs 3 % in F1=3/2 (P(2) F'=1 detection).
 
     python scripts/plot_cu2_f32_start.py [x_percent]     # default 3
-    -> docs/state_cleanup/figures/cu2_residual_lines/f32_start_0_vs_3.{png,pdf}
+    -> docs/state_cleanup/figures/cu2_residual_lines/f32_start_0_vs_3.{png,pdf}         (a) + (b)
+    -> docs/state_cleanup/figures/cu2_residual_lines/f32_start_0_vs_3_groups.{png,pdf}  (a) only
 
 Same solver as scripts/cu2_test_line_combinations.py, which uses only the shutter on/off ratios R_l (flux drifts
 cancel shot by shot) plus S_B/S_A of two adjacent runs for f_t. The F1=3/2 share before CU2 is split over its
@@ -93,6 +94,30 @@ out = ROOT / "docs" / "state_cleanup" / "figures" / "cu2_residual_lines" / f"f32
 for ext in ("png", "pdf"):
     fig.savefig(f"{out}.{ext}", dpi=160)
 print(out.with_suffix(".png"))
+
+# single panel (a) only, model diamonds set off from the solved points as in (b)
+fig1, a = plt.subplots(figsize=(8.6, 5.0))
+for C, ds, dm, col, name in [(C0, -0.10, -0.24, col0, "F1=3/2 empty before CU2 (report)"),
+                             (C3, +0.10, +0.24, col3, f"{100 * X:g} % in F1=3/2 before CU2 (5:3 over F=2, F=1)")]:
+    y = 100 * np.append(C["n"], C["tot"]); e = 100 * np.append(C["err"], C["tot_err"])
+    m = 100 * np.append(C["model"], C["model_tot"])
+    a.errorbar(xs + ds, y, e, fmt="o", color=col, capsize=3, ms=6, label=f"solved from 4 lines: {name}")
+    a.plot(xs + dm, m, "D", color=col, mfc="white", ms=7, mew=1.6, label=f"CU2 OBE, {name.split(' before')[0]}")
+    for xi, yi in zip(xs + ds, y):
+        a.text(xi, -0.95, f"{yi:.2f}", ha="center", fontsize=7.5, color=col)
+a.axhline(0, color="k", lw=0.6)
+a.axvline(3.5, color="0.7", lw=0.8)
+a.set_xticks(xs, lab)
+a.set(ylabel="left after CU2 (% of all $J=2$ before CU2)", ylim=(-1.1, 2.0),
+      title="Residual per group (numbers below = solved central values)")
+a.legend(fontsize=7.5, loc="upper left")
+fig1.suptitle("CU2 test 11-08 (217 V/cm, (13, 209) MHz, 20 + 30 mW, 156 m/s, DET 24 mW plates off):\n"
+              f"effect of {100 * X:g} % of $J=2$ in $F_1=3/2$ before CU2. Only shutter on/off ratios enter; "
+              "$f_t$ from $S_B/S_A$ of adjacent runs.", fontsize=8.5)
+fig1.tight_layout()
+for ext in ("png", "pdf"):
+    fig1.savefig(f"{out}_groups.{ext}", dpi=160)
+print(f"{out}_groups.png")
 for k, C in (("0", C0), ("x", C3)):
     print(k, "f_t", C["f"][0] / (C["f"][0] + C["f"][1]), "n", np.round(100 * C["n"], 3), "tot", round(100 * C["tot"], 3),
           "+-", round(100 * C["tot_err"], 3), "model", np.round(100 * C["model"], 3), round(100 * C["model_tot"], 3),
