@@ -138,6 +138,48 @@ fig2.tight_layout()
 for ext in ("png", "pdf"):
     fig2.savefig(f"{out}_groups_0to100.{ext}", dpi=160)
 print(f"{out}_groups_0to100.png")
+
+# combined: 0-100 % on the left, the points boxed, the box zoomed into the -1..2 % panel on the right
+from matplotlib.patches import ConnectionPatch, Rectangle  # noqa: E402
+
+ZOOM = (-1.1, 2.0)
+fig3, (aL, aR) = plt.subplots(1, 2, figsize=(14, 5.4), gridspec_kw=dict(width_ratios=[1, 1.45], wspace=0.12))
+
+
+def draw(a, numbers_y=None):
+    for C, dm, col, name in [(C0, -0.14, col0, "F1=3/2 empty"), (C3, +0.14, col3, f"{100 * X:g} % in F1=3/2")]:
+        a.plot(xs + dm, 100 * np.append(C["model"], C["model_tot"]), "D", color=col, mfc="white", ms=7, mew=1.6,
+               label=f"CU2 OBE, {name}")
+    a.errorbar(xs, y, e, fmt="o", color=col3, capsize=3, ms=6,
+               label=f"solved from 4 lines: {100 * X:g} % in F1=3/2 before CU2 (5:3 over F=2, F=1)")
+    if numbers_y is not None:
+        for xi, yi in zip(xs, y):
+            a.text(xi, numbers_y, f"{yi:.2f}", ha="center", fontsize=7.5, color=col3)
+    a.axhline(0, color="k", lw=0.6)
+    a.axvline(3.5, color="0.7", lw=0.8)
+    a.set_xticks(xs, lab)
+    a.set_xlim(-0.5, 4.5)
+
+
+draw(aL)
+aL.set(ylabel="left after CU2 (% of all $J=2$ before CU2)", ylim=(-3, 100))
+aL.set_title("full scale, 0–100 % of $J=2$", fontsize=9)
+box = Rectangle((-0.42, ZOOM[0]), 4.84, ZOOM[1] - ZOOM[0], fill=False, ec="k", lw=1.2, zorder=5)
+aL.add_patch(box)
+aL.annotate("all points in here", (2.0, ZOOM[1]), xytext=(2.0, 14), ha="center", fontsize=8.5,
+            arrowprops=dict(arrowstyle="->", lw=0.9))
+draw(aR, numbers_y=-0.95)
+aR.set(ylim=ZOOM)
+aR.set_title(f"zoom of the box: {ZOOM[0]:g} to {ZOOM[1]:g} % (numbers below = solved central values)", fontsize=9)
+aR.legend(fontsize=7.5, loc="upper left")
+for yb in ZOOM:
+    fig3.add_artist(ConnectionPatch(xyA=(4.42, yb), coordsA=aL.transData, xyB=(0, (yb - ZOOM[0]) / (ZOOM[1] - ZOOM[0])),
+                                    coordsB=aR.transAxes, color="0.35", lw=0.9, ls="--"))
+fig3.suptitle(fig1._suptitle.get_text(), fontsize=8.5)
+fig3.subplots_adjust(left=0.06, right=0.99, bottom=0.12, top=0.84)
+for ext in ("png", "pdf"):
+    fig3.savefig(f"{out}_groups_zoom.{ext}", dpi=160)
+print(f"{out}_groups_zoom.png")
 for k, C in (("0", C0), ("x", C3)):
     print(k, "f_t", C["f"][0] / (C["f"][0] + C["f"][1]), "n", np.round(100 * C["n"], 3), "tot", round(100 * C["tot"], 3),
           "+-", round(100 * C["tot_err"], 3), "model", np.round(100 * C["model"], 3), round(100 * C["model_tot"], 3),
