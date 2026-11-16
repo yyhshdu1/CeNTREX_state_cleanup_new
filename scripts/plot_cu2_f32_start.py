@@ -163,18 +163,18 @@ def draw(a, numbers_y=None):
 
 draw(aL)
 aL.set(ylabel="left after CU2 (% of all $J=2$ before CU2)", ylim=(-3, 100))
-aL.set_title("full scale, 0–100 % of $J=2$", fontsize=9)
+aL.set_title("full scale, 0–100 %", fontsize=10.5)
 box = Rectangle((-0.42, ZOOM[0]), 4.84, ZOOM[1] - ZOOM[0], fc="0.93", ec="0.65", lw=0.9, zorder=0)
 aL.add_patch(box)
 draw(aR, numbers_y=-0.95)
 aR.set(ylim=ZOOM)
-aR.set_title(f"zoom of the box: {ZOOM[0]:g} to {ZOOM[1]:g} % (numbers below = solved central values)", fontsize=9)
+aR.set_title(f"zoom: {ZOOM[0]:g} to {ZOOM[1]:g} % (numbers = solved values)", fontsize=10.5)
 aR.legend(fontsize=7.5, loc="upper left")
 for yb in ZOOM:
     fig3.add_artist(ConnectionPatch(xyA=(4.42, yb), coordsA=aL.transData, xyB=(0, (yb - ZOOM[0]) / (ZOOM[1] - ZOOM[0])),
                                     coordsB=aR.transAxes, color="0.7", lw=0.8, ls="--"))
-fig3.suptitle(fig1._suptitle.get_text(), fontsize=8.5)
-fig3.subplots_adjust(left=0.06, right=0.99, bottom=0.12, top=0.84)
+fig3.suptitle(f"CU2 test 11-08: $J=2$ left after CU2 per group ({100 * X:g} % in $F_1=3/2$ before CU2)", fontsize=13)
+fig3.subplots_adjust(left=0.06, right=0.99, bottom=0.12, top=0.87)
 for ext in ("png", "pdf"):
     fig3.savefig(f"{out}_groups_zoom.{ext}", dpi=160)
 print(f"{out}_groups_zoom.png")
