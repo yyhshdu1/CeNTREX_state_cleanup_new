@@ -32,6 +32,9 @@ RED, BLUE, GREEN = "#d1495b", "#1f6fb4", "#6a9a3a"
 
 f_aom, t_aom = A.curves("spb")[13.0]
 t_eom = g.load("eomfreq_loss5_d14p5_f209_32_43_e217_spb", len(EOM_FREQS))
+EOM_RANGE = (15.0, 18.0)                                   # MHz the EOM can actually be tuned over
+keep = (np.array(EOM_FREQS) >= EOM_RANGE[0]) & (np.array(EOM_FREQS) <= EOM_RANGE[1])
+EOM_FREQS, t_eom = list(np.array(EOM_FREQS)[keep]), t_eom[keep]
 t_beta = g.load("beta_loss5_35_25_spb", len(BETA_POINTS) * len(BETAS)).reshape(len(BETA_POINTS), len(BETAS))
 t_pol = g.load("polfreq_loss5_35_25_spb", len(POL_FREQS))
 for name, v in (("f_AOM", t_aom), ("f_EOM", t_eom), ("beta", t_beta), ("pol", t_pol)):
@@ -58,6 +61,7 @@ for a, title, xl, used, cond, series in panels:
     a.set_xlabel(xl)
     a.legend(fontsize=7.5, loc="lower left", bbox_to_anchor=(0, 0.06))
     a.text(used, 97.05, f"  used: {used:g}", fontsize=8, va="bottom")
+ax[1].set_xlim(EOM_RANGE[0] - 0.2, EOM_RANGE[1] + 0.2)
 ax[3].set_xscale("log")
 ax[3].set_xticks(POL_FREQS, [f"{f:g}" for f in POL_FREQS])
 ax[0].set_ylabel("cleanup of the SPB start (%)")
