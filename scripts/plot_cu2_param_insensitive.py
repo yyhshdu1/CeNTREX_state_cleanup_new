@@ -53,20 +53,20 @@ for a, title, xl, used, cond, series in panels:
     a.axvline(used, color="k", lw=0.8)
     for x, y, col, lab in series:
         a.plot(x, y, "-o", color=col, lw=1.8, ms=4.5,
-               label=f"{lab}: spread {y.max() - y.min():.2f} % over the plotted range")
+               label=f"{lab}: spread {y.max() - y.min():.2f} %")
     a.set_title(f"{title}\n{cond}", fontsize=9.5)
     a.set_xlabel(xl)
-    a.legend(fontsize=7.5, loc="upper left")
-    a.text(used, 98.63, f"  used: {used:g}", fontsize=8, va="bottom")
+    a.legend(fontsize=7.5, loc="lower left", bbox_to_anchor=(0, 0.06))
+    a.text(used, 97.05, f"  used: {used:g}", fontsize=8, va="bottom")
 ax[3].set_xscale("log")
 ax[3].set_xticks(POL_FREQS, [f"{f:g}" for f in POL_FREQS])
 ax[0].set_ylabel("cleanup of the SPB start (%)")
-ax[0].set_ylim(98.6, 100.0)
-ax[0].text(0.03, 0.10, "CU2 test 98.9(6) %", transform=ax[0].transAxes, color="#a02c3c", fontsize=8.5)
+ax[0].set_ylim(97.0, 100.0)
+ax[0].text(185, 98.38, "CU2 test 98.9(6) %", color="#a02c3c", fontsize=8.5)
 fig.suptitle("CU2 cleanup of the SPB start (lens levels) vs the laser-modulation parameters: "
              "near the values we use, the changes stay below the ±0.6 % CU2-test error", fontsize=11.5)
 fig.text(0.5, 0.005, "Stored six-trajectory proxy runs (no new simulation), $v_z$ 184 m/s, $\\sigma_{v_x}$ 0.65 m/s, "
-         "5 %/pass, 3 cm beam. Black line: value used. Red band: CU2 test 98.9(6) %.", ha="center", va="bottom",
+         "5 %/pass, 3 cm beam. Black line: value used. Red band: CU2 test 98.9(6) %. Spread = max − min over the plotted range.", ha="center", va="bottom",
          fontsize=8.5, color="0.35")
 fig.tight_layout(rect=(0, 0.04, 1, 1))
 for ext in ("png", "pdf"):
