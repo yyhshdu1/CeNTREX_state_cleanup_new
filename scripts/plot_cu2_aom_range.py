@@ -1,6 +1,6 @@
 """CU2 cleanup vs f_AOM over the full 185-215 MHz range (200 +- 15 MHz) at 217 V/cm, for three delta0.
 
-    python scripts/plot_cu2_aom_range.py
+    python scripts/plot_cu2_aom_range.py [delta0 ...]     # e.g. 13 -> only the CU2-test detuning, file suffix _d13
     -> docs/state_cleanup/figures/slides/CU2_aom_range_217_spb.{pdf,png}   (SPB start only; the earlier
        CU2_aom_range_217 with the uniform start as well is kept)
 
@@ -46,9 +46,13 @@ def curves(init):
     return out
 
 
-# SPB start (lens levels) only; the uniform start is not drawn
+# SPB start (lens levels) only; the uniform start is not drawn. Optional argv: delta0 values to draw (e.g. 13)
+ONLY = [float(v) for v in sys.argv[1:]] or list(D0S)
+SFX = "" if len(sys.argv) < 2 else "_d" + "_".join(f"{v:g}".replace(".", "p") for v in ONLY)
 fig, a = plt.subplots(figsize=(10.5, 4.8))
 for d, (f, t) in curves("spb").items():
+    if d not in ONLY:
+        continue
     col, what = D0S[d]
     a.plot(f, t, "-o", color=col, lw=2.2 if d == 14.5 else 1.4, ms=5 if d == 14.5 else 4,
            label=f"$\\delta_0$ = {d:g} MHz ({what}): {t.min():.2f}–{t.max():.2f} %, spread {t.max() - t.min():.2f} %")
@@ -61,11 +65,11 @@ a.text(184, 98.66, "CU2 test 98.9(6) % (group-solved; 20 + 30 mW, 156 m/s)", col
 a.set(xlabel="$f_{AOM}$ (MHz)", ylabel="cleanup of the SPB start (%)", xticks=np.arange(185, 216, 5), xlim=(183, 217),
       ylim=(98.6, 100.0))
 a.set_title("CU2 cleanup of the SPB start (lens levels) vs $f_{AOM}$ = 200 ± 15 MHz, 217 V/cm", fontsize=11)
-a.legend(fontsize=8, loc="upper left")
+a.legend(fontsize=8.5 if len(ONLY) == 1 else 8, loc="upper left")
 fig.text(0.5, 0.005, "32 + 43 mW, 5 %/pass, 3 cm beam, $v_z$ 184 m/s, $\\sigma_{v_x}$ 0.65 m/s (six-trajectory proxy). "
          "Grey band: 205–211 MHz. $f_{AOM}$ moves only the $F'=4$ beam.", ha="center", va="bottom", fontsize=8.5,
          color="0.35")
 fig.tight_layout(rect=(0, 0.04, 1, 1))
 for ext in ("png", "pdf"):
-    fig.savefig(FIG / f"CU2_aom_range_217_spb.{ext}", dpi=160)
-print(FIG / "CU2_aom_range_217_spb.png")
+    fig.savefig(FIG / f"CU2_aom_range_217_spb{SFX}.{ext}", dpi=160)
+print(FIG / f"CU2_aom_range_217_spb{SFX}.png")
