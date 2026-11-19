@@ -15,6 +15,10 @@ carrier Delta'_laser = delta0 + f_AOM - Delta_main above its main line. Both bea
 +-Delta_EOM = 17.5 MHz (beta = 1.5).
 At the set point (14.5, 209) MHz: blue carrier on mF'=+-2, its +1 order on mF'=+-1; red Delta'_laser = 8.9 MHz,
 carrier on mF'=0 (9.6 MHz), its -1 order near mF'=+-2 (-11.2 MHz).
+With the extra argument `plus` (-> ..._Pplus.{png,pdf}) the P'=+ parent branch is drawn too (simulation keeps it,
+retain_opposite_parity_levels=True). At 217 V/cm every |mF'|>=1 level of both branches is a ~40/60 parity mixture,
+so both branches are driven; mF'=0 stays parity-pure and P'=+ mF'=0 is dark from J=2+ (strength 0.001, light grey).
+At the set point the red +1 order lands on F'=4 P'=+ mF'=+-1 (24.3 MHz), ~29 % of the red-beam excitation.
 Ground: the X J=2 sublevels at 217 V/cm form two clusters about 1.4 MHz apart (0-0.30 and 1.17-1.74 MHz).
 """
 import sys
@@ -32,28 +36,35 @@ plt.rcParams.update({"font.family": "sans-serif", "font.sans-serif": ["Arial", "
                      "mathtext.fontset": "dejavusans"})
 
 BLUE, RED, GREY = "#1010e0", "#e0301e", "0.4"
-D0, F_AOM = (float(sys.argv[1]), float(sys.argv[2])) if len(sys.argv) > 2 else (14.5, 209.0)
+PLUS = "plus" in sys.argv[1:]  # also draw the P'=+ (opposite-parity parent) branch
+NUM = [a for a in sys.argv[1:] if a != "plus"]
+D0, F_AOM = (float(NUM[0]), float(NUM[1])) if len(NUM) > 1 else (14.5, 209.0)
 SFX = "" if (D0, F_AOM) == (14.5, 209.0) else f"_d{D0:g}_f{F_AOM:g}".replace(".", "p")
+SFX += "_Pplus" if PLUS else ""
 F_EOM = 17.5
 U = 0.055                      # drawing units per MHz inside a manifold (compressed)
-Y3, Y4 = 10.0, 16.0            # F'=3 and F'=4 main resonances (gap NOT to scale)
+Y3, Y4 = (10.0, 18.6) if PLUS else (10.0, 16.0)   # F'=3 and F'=4 main resonances (gap NOT to scale)
 W = 1.0                        # bar width = one mF' column
 
 z = np.load(CACHE)
 rows, dmain = z["rows"], float(z["delta_main"])
 d1 = D0 + F_AOM - dmain
-pos = {k: {int(r[1]): r[3] for r in rows if r[0] == k and r[2] < 0} for k in (0, 1)}   # P' = - only
+pos = {k: {int(r[1]): r[3] for r in rows if r[0] == k and r[2] < 0} for k in (0, 1)}   # P' = -
+posp = {k: {int(r[1]): r[3] for r in rows if r[0] == k and r[2] > 0} for k in (0, 1)}  # P' = +
 y3 = {m: Y3 + U * p for m, p in pos[0].items()}
 y4 = {m: Y4 + U * p for m, p in pos[1].items()}
+y3p = {m: Y3 + U * p for m, p in posp[0].items()}
+y4p = {m: Y4 + U * p for m, p in posp[1].items()}
+Y_HDR = (max(y4p.values()) + 0.55) if PLUS else (Y4 + U * (d1 + F_EOM) + 0.75)
 
-fig, ax = plt.subplots(figsize=(13.0, 6.6))
+fig, ax = plt.subplots(figsize=(13.0, 7.6) if PLUS else (13.0, 6.6))
 ax.set_xlim(-8.6, 6.6)
-ax.set_ylim(-0.9, 19.6)
+ax.set_ylim(-0.9, Y_HDR + 0.9)
 ax.axis("off")
 
 
-def bar(m, y, lw=2.2):
-    ax.plot([m - W / 2, m + W / 2], [y, y], color="k", lw=lw, solid_capstyle="butt", zorder=3)
+def bar(m, y, lw=2.2, c="k"):
+    ax.plot([m - W / 2, m + W / 2], [y, y], color=c, lw=lw, solid_capstyle="butt", zorder=3)
 
 
 def arrow(p0, p1, c, lw=1.5, ms=12):
@@ -71,10 +82,16 @@ for m, y in y4.items():
     bar(m, y)
 ax.text(-8.5, Y4 + 0.4, "$|B,\\ J'=3,\\ F_1'=7/2,\\ F'=4,\\ -\\rangle$", fontsize=13, va="center")
 ax.text(-8.5, Y3 + 0.4, "$|B,\\ J'=3,\\ F_1'=7/2,\\ F'=3,\\ -\\rangle$", fontsize=13, va="center")
+if PLUS:                                           # P'=+ parent branch (Stark-mixed Lambda doublet partner)
+    for yy in (y3p, y4p):
+        for m, y in yy.items():          # mF'=0 stays pure P=+ (no Stark mixing): dark from J=2+, light grey
+            bar(m, y, lw=1.6 if m == 0 else 2.2, c="0.75" if m == 0 else "k")
+    for F, yy in ((3, y3p), (4, y4p)):
+        ax.text(-8.5, np.mean(list(yy.values())) + 0.15,
+                f"$|B,\\ J'=3,\\ F_1'=7/2,\\ F'={F},\\ +\\rangle$", fontsize=13, va="center")
 for m in range(-4, 5):
-    ax.text(m, Y4 + U * (d1 + F_EOM) + 0.75, f"{m:+d}" if m else "0", ha="center", va="bottom", fontsize=10.5,
-            color=GREY)
-ax.text(-4.9, Y4 + U * (d1 + F_EOM) + 0.75, "$m_F'$ =", ha="right", va="bottom", fontsize=11, color=GREY)
+    ax.text(m, Y_HDR, f"{m:+d}" if m else "0", ha="center", va="bottom", fontsize=10.5, color=GREY)
+ax.text(-4.9, Y_HDR, "$m_F'$ =", ha="right", va="bottom", fontsize=11, color=GREY)
 
 # ~200 MHz brace between the two manifolds (gap drawn smaller than to scale)
 xb = 5.6
