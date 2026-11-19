@@ -11,7 +11,8 @@ drawn to scale in MHz:
   Comb = EOM sidebands, f_EOM = 17.5 MHz, beta = 1.5; tick length ~ J_n(beta)^2 (n = -2..2), centred at the
   carrier detuning delta from the main pair (CU2 test: delta0 = 13 MHz, f_AOM = 209 MHz,
   delta1 = delta0 + f_AOM - Delta_main = 13 + 209 - 214.6 = 7.4 MHz; Delta_main from CU2_test_line_frequencies.md).
-Branching at E = 0 from scripts/cu2_decay_branching.py (0.53 to J=2+, 0.47 to J=4+).
+Branching at 217 V/cm from `scripts/cu2_decay_branching.py 217` (range over |mF'| >= 1 of F'=3 and F'=4):
+J=2+ 0.21-0.32, J=3- 0.38-0.59, J=4+ 0.18-0.29, J=5- 0.012-0.019, J=1- <= 2.6e-5; mF'=0: 0.53 / 0.47 to J=2+ / 4+.
 """
 from pathlib import Path
 
@@ -56,16 +57,16 @@ def wavy(x0, y0, x1, y1, c="k", lw=1.1, n=14, amp=0.09):
 
 
 # ---- ground X levels (schematic) -------------------------------------------------------------------------
-X_LEV = {2: (0.0, 4.6, 0.0, "k", 3.2), 3: (5.2, 6.8, 1.3, GREY, 2.0), 4: (7.4, 9.4, 2.8, "k", 3.2),
-         5: (10.0, 11.6, 4.5, GREY, 2.0)}
+X_LEV = {2: (0.0, 4.6, 0.0, "k", 3.2), 3: (5.2, 6.8, 1.3, "k", 3.2), 4: (7.4, 9.4, 2.8, "k", 3.2),
+         5: (10.0, 11.6, 4.5, "k", 3.2)}
 X_LAB = {2: "$|J=2^{+}\\rangle$", 3: "$|J=3^{-}\\rangle$", 4: "$|J=4^{+}\\rangle$", 5: "$|J=5^{-}\\rangle$"}
 for J, (x0, x1, y, c, lw) in X_LEV.items():
     level(x0, x1, y, lw=lw, c=c)
     ax.text((x0 + x1) / 2, y - 0.25, X_LAB[J], ha="center", va="top", fontsize=14, color=c)
 ax.text(2.3, -0.95, "CU2 cleans this level (hyperfine not shown)", ha="center", va="top", fontsize=10.5,
         color="0.35")
-ax.text(8.4, 2.05, "not addressed: population here\nhas left $J=2$ (cleaned)", ha="center", va="top",
-        fontsize=10, color="0.35")
+ax.text(9.6, 1.55, "$J=3,4,5$ not addressed: population\nthere has left $J=2$ (cleaned)", ha="center",
+        va="top", fontsize=10, color="0.35")
 ax.text(14.6, 0.0, "$X\\,^1\\Sigma^+$", ha="right", va="center", fontsize=16)
 
 # ---- excited B levels (to scale in MHz) ------------------------------------------------------------------
@@ -76,7 +77,7 @@ for y, lab in ((Y_F3, "$F'=3$"), (Y_F4, "$F'=4$")):
     ax.text(8.7, y, lab, ha="left", va="center", fontsize=15)
 ax.text(4.4, Y_F4 + 0.75, "$B\\,^3\\Pi_1$,  $|J'=3^{-},\\,F_1'=7/2\\rangle$", ha="center", va="bottom",
         fontsize=15)
-ax.text(8.7, Y_F3 - 0.85, "grey band: spread of the\n$m_F'$ sublevels at 217 V/cm", ha="left", va="center",
+ax.text(9.3, Y_F3 - 0.85, "grey band: spread of the\n$m_F'$ sublevels at 217 V/cm", ha="left", va="center",
         fontsize=9.5, color="0.35")
 # splitting and scale bar
 ax.annotate("", (10.0, Y_F4), (10.0, Y_F3), arrowprops=dict(arrowstyle="<->", color="k", lw=1.0))
@@ -95,14 +96,17 @@ for x, y_lev, d, col, name in ((1.4, Y_F3, D0, RED, "$F'=3$ beam"), (3.0, Y_F4, 
         ax.plot([x - 0.45 - w, x - 0.45], [yc + n * F_EOM * MHZ] * 2, color=col, lw=2.0, zorder=5)
     ax.text(x + 0.2, 4.6, name, rotation=90, ha="left", va="center", fontsize=12.5, color=col)
 
-# ---- decays (branching at E = 0) --------------------------------------------------------------------------
-wavy(4.6, Y_F3 - 0.05, 4.0, 0.12)
-ax.text(4.55, 4.3, "0.53", fontsize=13)
-wavy(7.0, Y_F3 - 0.05, 8.3, 2.92)
-ax.text(7.95, 5.7, "0.47", fontsize=13)
-ax.text(12.9, 6.6, "decay branching at $E=0$, same for\n$F'=3$ and $F'=4$; at 217 V/cm the\n"
-        "Stark-mixed $|m_F'|\\geq1$ levels also\ndecay to $J=3^-$, $J=5^-$ (grey)",
-        ha="center", va="center", fontsize=10, color="0.35")
+# ---- decays (branching at 217 V/cm, scripts/cu2_decay_branching.py 217) ---------------------------------
+for (x0, x1, y1), lab, (tx, ty) in (((4.4, 3.9, 0.12), "0.21–0.32", (4.45, 4.3)),
+                                    ((5.7, 6.0, 1.42), "0.38–0.59", (6.05, 5.2)),
+                                    ((7.2, 8.4, 2.92), "0.18–0.29", (7.95, 6.1)),
+                                    ((8.3, 10.6, 4.62), "0.01–0.02", (9.75, 6.9))):
+    wavy(x0, Y_F3 - 0.05, x1, y1)
+    ax.text(tx, ty, lab, fontsize=12.5)
+ax.text(12.9, 6.2, "decay branching at 217 V/cm: range over the\n$|m_F'|\\geq1$ sublevels of $F'=3$ and $F'=4$\n"
+        "(Stark-mixed $\\Lambda$ doublet, so also $J=3^-$, $5^-$);\n"
+        "$m_F'=0$: only $J=2^+$ (0.53) and $J=4^+$ (0.47);\nto $J=1^-$: $\\leq 3\\times10^{-5}$",
+        ha="center", va="center", fontsize=10, color="0.35", linespacing=1.4)
 
 # ---- title and beam settings ------------------------------------------------------------------------------
 ax.text(-1.1, 15.75, "CU2: R(2) $F_1'=7/2$, $F'=3$ and $F'=4$ at $E$ = 217 V/cm", ha="left", va="top",
