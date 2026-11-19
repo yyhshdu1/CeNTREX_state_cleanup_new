@@ -35,9 +35,9 @@ F_EOM, BETA = 17.5, 1.5
 D0, F_AOM, D_MAIN = 13.0, 209.0, 214.551
 D1 = D0 + F_AOM - D_MAIN
 
-fig, ax = plt.subplots(figsize=(12.0, 7.6))
-ax.set_xlim(-1.2, 15.2)
-ax.set_ylim(-1.3, 15.8)
+fig, ax = plt.subplots(figsize=(10.8, 7.6))
+ax.set_xlim(-1.2, 13.4)
+ax.set_ylim(-0.9, 15.8)
 ax.axis("off")
 
 
@@ -63,11 +63,7 @@ X_LAB = {2: "$|J=2^{+}\\rangle$", 3: "$|J=3^{-}\\rangle$", 4: "$|J=4^{+}\\rangle
 for J, (x0, x1, y, c, lw) in X_LEV.items():
     level(x0, x1, y, lw=lw, c=c)
     ax.text((x0 + x1) / 2, y - 0.25, X_LAB[J], ha="center", va="top", fontsize=14, color=c)
-ax.text(2.3, -0.95, "CU2 cleans this level (hyperfine not shown)", ha="center", va="top", fontsize=10.5,
-        color="0.35")
-ax.text(9.6, 1.55, "$J=3,4,5$ not addressed: population\nthere has left $J=2$ (cleaned)", ha="center",
-        va="top", fontsize=10, color="0.35")
-ax.text(14.6, 0.0, "$X\\,^1\\Sigma^+$", ha="right", va="center", fontsize=16)
+ax.text(13.2, 0.0, "$X\\,^1\\Sigma^+$", ha="right", va="center", fontsize=16)
 
 # ---- excited B levels (to scale in MHz) ------------------------------------------------------------------
 for y, lab in ((Y_F3, "$F'=3$"), (Y_F4, "$F'=4$")):
@@ -77,13 +73,9 @@ for y, lab in ((Y_F3, "$F'=3$"), (Y_F4, "$F'=4$")):
     ax.text(8.7, y, lab, ha="left", va="center", fontsize=15)
 ax.text(4.4, Y_F4 + 0.75, "$B\\,^3\\Pi_1$,  $|J'=3^{-},\\,F_1'=7/2\\rangle$", ha="center", va="bottom",
         fontsize=15)
-ax.text(9.3, Y_F3 - 0.85, "grey band: spread of the\n$m_F'$ sublevels at 217 V/cm", ha="left", va="center",
-        fontsize=9.5, color="0.35")
-# splitting and scale bar
+# hyperfine splitting
 ax.annotate("", (10.0, Y_F4), (10.0, Y_F3), arrowprops=dict(arrowstyle="<->", color="k", lw=1.0))
 ax.text(10.15, (Y_F3 + Y_F4) / 2, "179.9 MHz\n($E=0$)", ha="left", va="center", fontsize=11.5)
-ax.plot([12.2, 12.2], [Y_F3, Y_F3 + 50 * MHZ], color="k", lw=2)
-ax.text(12.35, Y_F3 + 25 * MHZ, "50 MHz", ha="left", va="center", fontsize=10.5)
 
 # ---- laser beams ------------------------------------------------------------------------------------------
 pn = {n: jv(n, BETA) ** 2 for n in range(-2, 3)}
@@ -108,21 +100,10 @@ for (x0, x1, y1), lab, (tx, ty) in (((4.4, 3.9, 0.12), "0.21–0.32", (4.45, 4.3
                                     ((8.3, 10.6, 4.62), "0.01–0.02", (9.75, 6.9))):
     wavy(x0, Y_F3 - 0.05, x1, y1)
     ax.text(tx, ty, lab, fontsize=12.5)
-ax.text(12.9, 6.2, "decay branching at 217 V/cm: range over the\n$|m_F'|\\geq1$ sublevels of $F'=3$ and $F'=4$\n"
-        "(Stark-mixed $\\Lambda$ doublet, so also $J=3^-$, $5^-$);\n"
-        "$m_F'=0$: only $J=2^+$ (0.53) and $J=4^+$ (0.47);\nto $J=1^-$: $\\leq 3\\times10^{-5}$",
-        ha="center", va="center", fontsize=10, color="0.35", linespacing=1.4)
 
 # ---- title and beam settings ------------------------------------------------------------------------------
 ax.text(-1.1, 15.75, "CU2: R(2) $F_1'=7/2$, $F'=3$ and $F'=4$ at $E$ = 217 V/cm", ha="left", va="top",
         fontsize=16, fontweight="bold")
-ax.text(15.1, 15.0, "one laser; $F'=4$ beam = $F'=3$ beam + $f_{AOM}$ (209 MHz)\n"
-        f"carriers: $\\delta_0$ = +{D0:g} MHz ($F'=3$), $\\delta_1$ = +{D1:.1f} MHz ($F'=4$)\n"
-        f"EOM on both beams: $f_{{EOM}}$ = {F_EOM:g} MHz, $\\beta$ = {BETA:g} (comb: $\\propto J_n(\\beta)^2$)\n"
-        "X/Z polarization switched at 0.5 MHz, the two beams in antiphase",
-        ha="right", va="top", fontsize=10.5, color="0.25", linespacing=1.5)
-ax.text(15.1, -1.25, "Excited levels to scale; X levels and the X–B gap not to scale. "
-        "$\\delta$ measured from each beam's main pair.", ha="right", va="bottom", fontsize=9, color="0.45")
 
 fig.tight_layout()
 for ext in ("png", "pdf"):
