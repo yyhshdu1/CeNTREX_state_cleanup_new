@@ -95,6 +95,11 @@ for x, y_lev, d, col, name in ((1.4, Y_F3, D0, RED, "$F'=3$ beam"), (3.0, Y_F4, 
         w = 1.6 * p
         ax.plot([x - 0.45 - w, x - 0.45], [yc + n * F_EOM * MHZ] * 2, color=col, lw=2.0, zorder=5)
     ax.text(x + 0.2, 4.6, name, rotation=90, ha="left", va="center", fontsize=12.5, color=col)
+# the F'=4 beam is made from the F'=3 beam by the AOM
+ax.add_patch(FancyArrowPatch((1.48, 1.7), (2.92, 1.7), arrowstyle="-|>", mutation_scale=16, lw=1.6,
+                             color="0.2", connectionstyle="arc3,rad=-0.35", zorder=6))
+ax.text(2.2, 2.25, "AOM", ha="center", va="bottom", fontsize=12, fontweight="bold", color="0.2")
+ax.text(2.2, 1.45, "+$f_{AOM}$\n(209 MHz)", ha="center", va="top", fontsize=10, color="0.2", linespacing=1.2)
 
 # ---- decays (branching at 217 V/cm, scripts/cu2_decay_branching.py 217) ---------------------------------
 for (x0, x1, y1), lab, (tx, ty) in (((4.4, 3.9, 0.12), "0.21–0.32", (4.45, 4.3)),
