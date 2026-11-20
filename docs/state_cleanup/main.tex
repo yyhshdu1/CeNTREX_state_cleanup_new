@@ -1,6 +1,6 @@
 % =====================================================================
 %  CeNTREX rotational-state cleanup: CU1 (X, J=1) and CU2 (X, J=2)
-%  Thesis-chapter version (~20 pages): schemes, OBE model, CU1 simulation and
+%  Thesis-chapter version (~25 pages): schemes, OBE model, CU1 simulation and
 %  test on the SPB setup, CU2 set point at the measured 217 V/cm and CU2 test.
 %  The full-length report with every scan, check and table is main_full.tex.
 %  Compile: latexmk -pdf main.tex
@@ -150,69 +150,392 @@ tools to solve this problem:
 \section{Model}
 \label{sec:model}
 
-\paragraph{Molecular States.} Both $X$ and $B$ states are computed with \code{centrex-tlf}~\cite{centrextlf}.
-Each eigenstate is
-labelled by the state in zero $E$ field with the largest overlap which adiabaticly evolves from zero field to the applied field. The OBE system keeps all sublevels of the addressed
-ground level and all $m_F'$ of the addressed excited hyperfine levels. For CU2
-both $\Lambda$-doublet components are kept in the hamiltonian because the field mixes them strongly; for CU1 including the opposite parity states only changes the cleanup efficiency by $6\times10^{-6}$. Every other rotational level of $X$ that molecules can decay to is compacted into one level because no light acts on these
-levels (Table~\ref{tab:stages}).
+The cleanup is simulated one molecule at a time. A molecule enters the field region in an incoherent
+mixture of the sublevels of the addressed rotational level, crosses the 13 passes of the multipass in
+\SI{5}{cm}, and the population that is still in the addressed level is read out at the end. Its
+internal state is described by a density matrix $\rho$, which evolves under the Lindblad master
+equation (optical Bloch equations, OBE) of the field-dressed $X$ and $B$ states, coupled by the
+light and damped by spontaneous decay. The following subsections describe, in the order in which the
+model is built, the states that are kept (Sec.~\ref{sec:model_states}), their coupling by the light
+(Sec.~\ref{sec:model_coupling}), spontaneous decay (Sec.~\ref{sec:model_decay}), the light seen by
+the molecule along its trajectory (Sec.~\ref{sec:model_laser}), the initial states and observables
+(Sec.~\ref{sec:model_obs}) and the integration (Sec.~\ref{sec:model_num}). CU1 and CU2 are built by
+the same code, from \code{centrex-tlf}~\cite{centrextlf}, and differ only in the parameters of
+Table~\ref{tab:stages}. The assumptions are collected in Table~\ref{tab:assumptions}.
 
-\paragraph{Hamiltonian and decay.} The Hamiltonians include the rotation,the hyperfine and nuclear
-spin--rotation interactions, the $\Lambda$-doubling of $B$, and the Stark and Zeeman interactions.
-The Hamiltonian is calculated in the applied electric field, with a \SI{1e-3}{\gauss} magnetic field along vertical $z$ axis that creates the degeneracy of the $\pm m_F$ pairs. In the rotating-wave approximation, with $\hbar=1$, the
-Hamiltonian is
+\subsection{States}
+\label{sec:model_states}
+
+\paragraph{Hamiltonians and fields.} The $X$ and $B$ Hamiltonians include the rotation (for $X$ with
+the quartic centrifugal-distortion term), the magnetic hyperfine and nuclear spin--rotation
+interactions of the two nuclei, the $\Lambda$-doubling of $B$, and the Stark and Zeeman interactions.
+They are diagonalised in the applied field, $\mathbf E=E\hat{\mathbf z}$ with $z$ vertical, over
+$J=0\ldots J'+2$ for $X$ and $J'=1\ldots J'+2$ for $B$, where $J'$ is the addressed excited level
+($J'=2$ for CU1, 3 for CU2), each in the full hyperfine basis and, for $B$, with both parities. At
+these fields a larger basis changes the energies by less than \SI{0.1}{kHz}. A magnetic field of
+\SI{1e-3}{\gauss} along $z$ is added. It has no effect on the cleanup, but it lifts the degeneracy of
+the $\pm m_F$ pairs. Without it, the two eigenvectors of a degenerate pair are an arbitrary mixture
+of $+m_F$ and $-m_F$ that depends on the linear-algebra library, and X-polarised light, which couples
+to both members of a pair, would see an ill-defined coupling.
+
+\paragraph{What the field does to the states.} In the field only $m_F$, the projection of the total
+angular momentum on $\mathbf E$, remains a good quantum number. The other quantum numbers are mixed,
+but very differently in $X$ and in $B$.
+\begin{itemize}[itemsep=1pt]
+  \item In $X$, neighbouring rotational levels are tens of GHz apart, so $J$ is mixed only weakly. The
+        field mainly mixes the hyperfine levels $(F_1,F)$ within one $J$; all sublevels of one $J$
+        lie within \SI{2.4}{MHz} ($J=1$ at \SI{150}{V/cm}) or \SI{1.7}{MHz} ($J=2$ at
+        \SI{217}{V/cm}). The ground sublevels are therefore
+        superpositions of the zero-field hyperfine states; for example,
+        $|J=1,F_1=\tfrac12,F=0\rangle$ carries \SI{29}{\percent} of $|F_1=\tfrac32,F=2\rangle$ at
+        \SI{150}{V/cm}. These admixtures make transitions driveable that are forbidden at zero field
+        (Sec.~\ref{sec:pumping}).
+  \item In $B$ ($\Omega=\pm1$), every hyperfine level consists of two $\Lambda$-doublet components of
+        opposite parity, only \SI{13.9}{MHz} apart for $J'=2$, $F_1'=\tfrac52$, $F'=2$ and
+        \SI{5.1}{MHz} apart for $J'=3$, $F_1'=\tfrac72$, $F'=3$. The field couples the two
+        components in first order, with a matrix element proportional to $m_F'$. In the cleanup
+        fields this coupling is much larger than the $\Lambda$ splitting. At \SI{217}{V/cm} the two
+        $|m_F'|=3$ sublevels of $J'=3$, $F'=3$ are \SI{93}{MHz} apart, and each is a 53:47 mixture of
+        the two parities. Only $m_F'=0$ stays parity-pure (\SI{99.9}{\percent}), because the
+        first-order term vanishes there. This is the linear Stark splitting of the $m_F'$ sublevels
+        that the pumping schemes have to deal with (Sec.~\ref{sec:pumping}). In addition, the
+        hyperfine interaction mixes neighbouring $J'$, already at zero field: the $J'=3$,
+        $F_1'=\tfrac72$ levels contain \SI{7}{\percent} of $J'=4$.
+\end{itemize}
+
+\paragraph{Labels.} Each eigenstate in the field is labelled by the zero-field basis state
+$|J,F_1,F,m_F,P\rangle$ with which it has the largest overlap; primed numbers refer to $B$. With both
+parities of $B$ mixed almost equally, this largest overlap is barely above one half (0.49--0.56 for
+$|m_F'|\geq1$ at \SI{217}{V/cm}), so the assignment was checked against adiabatic following: the
+field is raised from zero in steps of \SI{0.5}{V/cm}, and at every step each eigenvector is matched to
+the one of the previous step with the largest overlap. At 150 and \SI{217}{V/cm} both methods give
+the same label to all 280 $B$ states of $J'=1$--5. For $X$ the two methods agree up to about
+\SI{10}{kV/cm}. A label such as $P'=-$ therefore names the zero-field parent of a state, not its
+parity.
+
+\paragraph{Kept states and compaction.} The diagonalised basis contains several hundred states, but
+only a few interact with the light. The OBE system keeps
+\begin{itemize}[itemsep=1pt]
+  \item all sublevels of the addressed ground level (12 for $J=1$, 20 for $J=2$), with all
+        coherences;
+  \item all $m_F'$ sublevels of the addressed excited hyperfine level or levels;
+  \item every other rotational level of $X$ that the excited states decay to, each
+        \emph{compacted} into a single level.
+\end{itemize}
+Compaction is exact for the cleanup: no light acts on these levels, so only their total population,
+fed by decay, matters. All other $B$ states are not dynamical levels; they enter only through the
+mixing they produce in the kept states. The resulting models have 21 levels for CU1 and 56 for CU2
+(Table~\ref{tab:stages}).
+
+\paragraph{Opposite-parity levels.} The parity mixing of the kept $B$ states is always included,
+through the diagonalisation. The question is only whether the partner sublevels of the other parity
+parent must also be kept as dynamical levels, and that depends on whether the light reaches them.
+For CU1 the partners of $J'=2$, $F'=2$, $P'=+$ lie above the driven sublevels; at the CU1 laser
+frequency the nearest partners that can be excited are \SI{40}{MHz} ($25\,\Gamma$) away, and keeping
+them changes the cleanup by only $6\times10^{-6}$. They are therefore left out. For CU2 the partners
+of $F'=3$ and $F'=4$ lie inside the frequency range covered by the phase-modulation sidebands of the
+two beams. At the set point of Sec.~\ref{sec:cu2_opt}, about \SI{30}{\percent} of the excitation by
+the $F'=4$ beam goes to the $|m_F'|=1$ sublevels of the $P'=+$ parent, through the first upper
+sideband (weak-field estimate with the Doppler width). All 32 excited sublevels of $F'=3$ and $F'=4$
+are therefore kept.
+
+\subsection{Coupling to the light}
+\label{sec:model_coupling}
+
+\paragraph{Coupling matrices.} The light is described in the laser frame, in which $z$ is along
+$\mathbf E$ and $x$ is horizontal, along the molecular beam; the light propagates horizontally,
+across the molecular beam. For each beam $k$ and each polarization $p\in\{X,Z\}$, with
+$\hat{\boldsymbol\epsilon}_X=\hat{\mathbf x}\perp\mathbf E$ and
+$\hat{\boldsymbol\epsilon}_Z=\hat{\mathbf z}\parallel\mathbf E$, the coupling matrix is
+\begin{equation}
+  M^{(p)}_{k,eg}=\frac{\langle e|\,\mathbf d\cdot\hat{\boldsymbol\epsilon}_p\,|g\rangle}{d_{XB}},
+  \qquad d_{XB}=\SI{2.6675506e-30}{C\,m},
+  \label{eq:M}
+\end{equation}
+between the field-dressed states $g$ of the addressed ground level and $e$ of the excited level of
+beam $k$. Z light drives $\Delta m_F=0$ and X light $\Delta m_F=\pm1$. Whether a pair is coupled is
+decided by the magnitude of this mixed-state matrix element, not by the zero-field selection rules.
+At zero field the two agree exactly; in the field, the admixtures described above make nominally
+forbidden pairs driveable, and the pumping schemes rely on this.
+
+\paragraph{Main pair and normalisation.} Each beam has a main pair $(g_0,e_0)$
+(Table~\ref{tab:stages}), which serves two purposes. First, the detuning $\delta_k$ of beam $k$ is
+measured from the resonance of its main pair,
+\begin{equation}
+  \omega_k=\omega_{e_0g_0}(E)+\delta_k,
+  \label{eq:detuning}
+\end{equation}
+so $\delta_k>0$ is a blue detuning. Because the main resonance itself moves with the field, a fixed
+$\delta_k$ is a different laser frequency at a different field. Second, the coupling matrices are
+divided by the main-pair element $m_k=M^{(X)}_{k,e_0g_0}$, so that the main pair is driven at
+exactly the Rabi rate $\Omega_k$ and every other pair at $\Omega_kM_{eg}/m_k$. The conversion from
+laser intensity to $\Omega_k$ uses the same $m_k$ (Eq.~\eqref{eq:rabi}), so the result does not
+depend on which pair is chosen as the main pair, provided that it is a strong one: $|m_k|$ is 0.100
+for CU1 and 0.095 and 0.224 for the two CU2 beams.
+
+\paragraph{Hamiltonian.} In the rotating-wave approximation, with $\hbar=1$ and all energies in
+angular frequency units, the Hamiltonian is
 \begin{equation}
   H(t)=H_0-\sum_k\delta_k\Pi_k
-  +\frac12\sum_k\Bigl[\Omega_k(t)\sum_{p\in\{X,Z\}}g_{p,k}(t)\,\frac{M^{(p)}_k}{m_k}+\mathrm{h.c.}\Bigr],
+  +\frac12\sum_k\Bigl[\Omega_k(t)\sum_{p\in\{X,Z\}}g_{p,k}(t)\,\frac{M^{(p)}_k}{m_k}+\mathrm{h.c.}\Bigr].
   \label{eq:H}
 \end{equation}
-where $H_0$ holds the field-dressed energies, $\Pi_k$ projects onto the excited states of beam $k$,
-and the detuning $\delta_k$ is measured from the main resonance of beam $k$. $M^{(p)}_k$ is the
-dipole matrix between the field-dressed states for polarization $p$, normalised by the main-pair
-element $m_k$, and $g_{p,k}(t)$ is the polarization gate. Whether two states are coupled is
-therefore decided by the mixed-state matrix element, not by the zero-field selection rules. Phase
-modulation enters as $\Omega_k\to\Omega_k e^{\mathrm i\beta\sin\omega_{\mathrm m}t}$. For CU2 both
-beams are written in the rotating frame of beam 0, so the couplings of beam 1 carry
-$e^{2\pi\mathrm i\fAOM t}$. The excited states decay at $\Gamma=1/\tau=\SI{1.01e7}{s^{-1}}$
-($\tau=\SI{99}{ns}$). The branching ratios are computed between the dressed states, into every $X$
-level, and the master equation is
+$H_0$ holds the field-dressed energies of the kept levels in the rotating frame, in which the main
+pair of beam 0 is degenerate at $\delta_0=0$; what remains are the hyperfine and Stark splittings.
+$\Pi_k$ projects onto the excited states of beam $k$. $\Omega_k(t)$ is the Rabi rate of the main pair
+along the trajectory, complex when the light is phase-modulated, and $g_{p,k}(t)\in\{0,1\}$ is the
+polarization gate (Sec.~\ref{sec:model_laser}). For CU2 the two beams address two hyperfine levels
+of the same $J'$, and all of $B$, $J'=3$ is put in the rotating frame of beam 0. $\Pi_0$ then
+projects onto all 32 excited sublevels, there is no separate $\delta_1\Pi_1$ term, and the couplings
+of beam 1 carry the phase factor $e^{\mathrm i(\omega_1-\omega_0)t}=e^{2\pi\mathrm i\fAOM t}$. The
+detuning $\delta_1$ enters only through this phase, via Eq.~\eqref{eq:aom}. The change of frame is
+exact, but the integrator has to resolve the \SI{5}{ns} period of the phase factor. Each beam couples
+only to its own excited level. The neglected couplings of
+beam 0 to $F'=4$ and of beam 1 to $F'=3$ are detuned by more than \SI{77}{MHz} ($48\,\Gamma$) at
+the set point, including the third-order sidebands, and by more than \SI{45}{MHz} anywhere in the
+scanned range.
+
+\subsection{Spontaneous decay}
+\label{sec:model_decay}
+
+Every excited state decays at the rate $\Gamma=1/\tau=\SI{1.01e7}{s^{-1}}$
+($\Gamma/2\pi=\SI{1.61}{MHz}$, $\tau=\SI{99}{ns}$). The branching ratios $b_{e\to g}$ are computed
+from the dipole matrix elements between the field-dressed states, to every $X$ state of the
+diagonalised basis, and normalised to one; decays into a compacted level are summed into that
+level. The field-dressed branching is what makes the removal efficient. For CU2, the $P'=-$ parent
+of $J'=3$ decays at zero field only to $J=2$ and $J=4$. At \SI{217}{V/cm} the $|m_F'|\geq1$
+sublevels of $F'=3$ and $F'=4$ decay to
+\begin{equation*}
+  J=2:\ 0.21\text{--}0.32,\quad J=3:\ 0.38\text{--}0.59,\quad J=4:\ 0.18\text{--}0.29,\quad
+  J=5:\ 0.012\text{--}0.019,
+\end{equation*}
+depending on the sublevel. The decays to $J=3$ come from the opposite-parity admixture, and those to
+$J=5$ from its $J'=4$ part; the parity-pure $m_F'=0$ sublevels decay only to $J=2$ and $J=4$ (0.53
+and 0.47). Averaged over the driven sublevels, \SI{27}{\percent} of the CU2 decays and
+\SI{37}{\percent} of the CU1 decays return to the addressed level (Table~\ref{tab:stages}). With one
+collapse operator per pair, the master equation is
 \begin{equation}
   \dot\rho=-\mathrm i[H,\rho]+\sum_{e,g}\Bigl(C_{eg}\rho C_{eg}^\dagger-\tfrac12\{C_{eg}^\dagger
   C_{eg},\rho\}\Bigr),\qquad C_{eg}=\sqrt{\Gamma b_{e\to g}}\,|g\rangle\langle e|.
   \label{eq:lindblad}
 \end{equation}
-With one collapse operator per pair, decay transfers populations but no ground-state coherences.
-The system is closed: $\mathrm{Tr}\,\rho=1$ to $10^{-14}$. Decay to $X(v\geq1)$ is not modelled;
-this can only underestimate the cleanup.
+Two simplifications follow from this form.
+\begin{itemize}[itemsep=1pt]
+  \item Decay transfers populations, but no coherences between ground sublevels; that would require one
+        collapse operator per emitted polarization component. The cleanup depends on total
+        populations, so the effect is expected to be small, but it is not zero where dark
+        superpositions matter.
+  \item Decay to the excited vibrational levels $X(v\geq1)$ is not modelled. A molecule that decays
+        there is lost from the addressed level, while the model returns part of that decay to it, so
+        the neglect can only underestimate the cleanup.
+\end{itemize}
+Every rotational level that the kept states decay to is in the model, so the system is closed:
+$\mathrm{Tr}\,\rho=1$ to $10^{-14}$ along every trajectory.
 
-\paragraph{Laser and trajectory.} The light crosses the molecular beam 13 times in a two-prism
-multipass. Each pass is Gaussian, with $\sigs=\SI{0.75}{mm}$ along the molecular beam and $\sigy$
-equal to a quarter of the beam height across it. Some power is lost at every pass, so the $p$-th
-pass in optical order carries the power fraction $(1-L)^{p-1}$, where $L$ is the loss per pass. The
-passes add incoherently in intensity, and $|\Omega_k|\propto\sqrt{I_k}$. In the laser frame, $z$ is
-along the electric field (vertical in the laboratory) and $x$ is horizontal, along the molecular
-beam; the light propagates horizontally across the molecular beam. Consecutive passes
-counter-propagate. A molecule with transverse velocity $v_x$ along the light therefore sees the
-detuning $\delta+k_Lv_x$ in half of the passes and $\delta-k_Lv_x$ in the others
-($k_Lv_x/2\pi=\SI{3.68}{MHz}$ per m/s at \SI{271.7}{nm}), and no laser frequency compensates both.
+\subsection{Laser field along the trajectory}
+\label{sec:model_laser}
 
-One molecule is followed through \SI{5}{cm} at the mean forward velocity, with fixed $v_x$ and a
-fixed offset $y_0$ along the beam height. The figure of merit is the cleanup efficiency
-$\etac=1-\sum_{i\in J}\rho_{ii}(T)$, the fraction of the molecules removed from the addressed level.
-To compare with experiment, the results on a grid over $(v_x,y_0)$ are averaged with the Gaussian
-distribution of a simulated lensed beam, within the acceptance of the detection laser
-(Table~\ref{tab:stages}). This \emph{mean in acceptance} is the number quoted for the transverse
-distribution. Because the master equation is linear in $\rho(0)$, one trajectory per starting
-sublevel gives the result for any incoherent initial mixture.
+The molecule sees the light change in time as it crosses the multipass. Four time dependences enter
+$\Omega_k(t)$, $g_{p,k}(t)$ and $\delta_k$ in Eq.~\eqref{eq:H}; Fig.~\ref{fig:model_laser} shows them
+for CU2.
 
-\paragraph{Numerics.} The master equation is integrated with the adaptive Dormand--Prince
-method~\cite{Dormand1980} of the Rust backend of \code{centrex-tlf}. Versions 0.2.5 and 0.3.0 agree
-to $10^{-6}$ for CU1. The relative and absolute tolerances are $10^{-7}$ and $10^{-9}$; the CU2
-scans use $10^{-6}$ and $10^{-8}$, which changed the CU2 optimum at \SI{200}{V/cm} by only
-$3\times10^{-5}$. A CU1 trajectory takes about \SI{0.5}{s} in a scan and a CU2 trajectory about
-\SI{40}{s}, because of the \SI{200}{MHz} phase factor of the second beam and the \SI{17.5}{MHz}
-modulation. Scans are stored with their parameters in HDF5 files (\code{results/}), and the scripts
-are in \code{scripts/}.
+\paragraph{Multipass geometry and intensity.} The light crosses the molecular beam 13 times in a
+two-prism multipass. The pass centres lie at $s_n=n\times\SI{3.5}{mm}$ ($n=1\ldots13$) along the
+molecular beam. Some power is lost at every pass, so the pass that is crossed $p$-th in optical
+order carries the power fraction $(1-L)^{p-1}$, where $L$ is the loss per pass. In a two-prism
+multipass the optical order of the spatially ordered passes is $p_n=(1,12,3,10,5,8,7,6,9,4,11,2,13)$:
+the strongest and the weakest passes alternate. Each pass is an elliptical Gaussian, with
+$\sigs=\SI{0.75}{mm}$ along the molecular beam (full $4\sigma$ width \SI{3}{mm}) and $\sigy$ equal
+to a quarter of the beam height across it. The passes add incoherently in intensity,
+\begin{equation}
+  I_k(s,y)=P_k\sum_{n=1}^{13}\frac{(1-L)^{p_n-1}}{2\pi\sigs\sigy}
+  \exp\Bigl[-\frac{(s-s_n)^2}{2\sigs^2}-\frac{y^2}{2\sigy^2}\Bigr],
+  \label{eq:intensity}
+\end{equation}
+where $P_k$ is the power of beam $k$ entering the multipass; interference between passes is
+neglected. With $L=\SI{5}{\percent}$ the 13 passes carry 9.73 times the power of the first, and with
+$L=\SI{10}{\percent}$ 7.46 times. The Rabi rate of the main pair follows from the local intensity,
+\begin{equation}
+  |\Omega_k(t)|=|m_k|\,d_{XB}\sqrt{\frac{2I_k(vt,y_0)}{c\,\varepsilon_0}},
+  \label{eq:rabi}
+\end{equation}
+for a molecule moving at the forward velocity $v$ at the height $y_0$. The peak values are listed in
+Table~\ref{tab:rabi}. All beams drive the main pair below saturation, $\Omega_k<\Gamma$, so a
+molecule scatters photons at a rate well below $\Gamma/2$. At \SI{184}{m/s} a molecule crosses the
+FWHM of one pass in \SI{9.6}{\micro s} and the whole multipass in \SI{272}{\micro s}.
+
+\begin{table}[htbp]
+  \centering
+  \caption[Peak Rabi rates]{Peak intensity (on the axis, in the first pass) and main-pair Rabi rate of each
+  beam, before phase modulation; $s_0=2|\Omega|^2/\Gamma^2$ is the on-resonance saturation parameter.}
+  \label{tab:rabi}
+  \small
+  \begin{tabular}{lcccccc}
+    \toprule
+    beam & $P$ & height & $I_{\mathrm{peak}}$ & $|\Omega|/2\pi$ & $|\Omega|/\Gamma$ & $s_0$ \\
+    \midrule
+    CU1, R(1) $F'=2$ & \SI{80}{mW} & \SI{3}{cm} & \SI{0.23}{W/cm^2} & \SI{0.53}{MHz} & 0.33 & 0.21 \\
+    CU1 test & \SI{50}{mW} & \SI{2}{cm} & \SI{0.21}{W/cm^2} & \SI{0.51}{MHz} & 0.32 & 0.20 \\
+    CU2, R(2) $F'=3$ & \SI{32}{mW} & \SI{3}{cm} & \SI{0.09}{W/cm^2} & \SI{0.32}{MHz} & 0.20 & 0.08 \\
+    CU2, R(2) $F'=4$ & \SI{43}{mW} & \SI{3}{cm} & \SI{0.12}{W/cm^2} & \SI{0.86}{MHz} & 0.54 & 0.58 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{model_laser_trajectory.pdf}
+  \caption[Laser model along the trajectory]{Laser model of CU2 along the trajectory (32 + \SI{43}{mW},
+  \SI{3}{cm} beam, \SI{5}{\percent} loss per pass, on the axis). (a) Main-pair Rabi rate of the two beams
+  versus position along the molecular beam, and time at \SI{184}{m/s}; the numbers are the optical
+  order $p_n$ of each pass. In the shaded passes the light propagates in the opposite direction, so a
+  molecule with transverse velocity $v_x$ sees the Doppler shift $-k_Lv_x$ instead of $+k_Lv_x$.
+  (b) Polarization of the two beams during the first pass: square-wave X/Z switching at \SI{0.5}{MHz},
+  in antiphase. (c) Power fractions of the carrier and the sidebands of the \SI{17.5}{MHz} phase
+  modulation, $\beta=1.5$.}
+  \label{fig:model_laser}
+\end{figure}
+
+\paragraph{Polarization switching.} For a fixed polarization, the number of addressed ground
+sublevels is larger than the number of excited sublevels they couple to (12 against 5 for CU1; 20
+against 14 and 18 for the two CU2 beams, counting both parity parents), so at least the difference is
+dark: superpositions of ground
+sublevels that the light does not couple to at all. The polarization is therefore switched between X
+and Z with a square wave,
+\begin{equation}
+  g_{Z,0}(t)=\tfrac12\bigl[1+\operatorname{sgn}\sin(2\pi f_{\mathrm p}t)\bigr],\qquad
+  g_{X,0}(t)=1-g_{Z,0}(t),
+\end{equation}
+at $f_{\mathrm p}=\SI{0.5}{MHz}$, i.e.\ about five switching periods per pass
+(Fig.~\ref{fig:model_laser}b). A state that is dark for one polarization is in general bright for the
+other. The switching is instantaneous and keeps the power constant. In CU2 the two beams pass the
+polarization EOM with orthogonal polarizations, so they switch in antiphase:
+$g_{Z,1}=g_{X,0}$ and $g_{X,1}=g_{Z,0}$.
+
+\paragraph{Phase modulation.} In CU2 the components driven by each beam spread over about
+\SI{90}{MHz}. The laser is therefore phase-modulated by one EOM before the AOM,
+\begin{equation}
+  \Omega_k(t)\to\Omega_k(t)\,e^{\mathrm i\beta\sin(2\pi f_{\mathrm m}t)},\qquad
+  f_{\mathrm m}=\SI{17.5}{MHz},\quad\beta=1.5,
+\end{equation}
+with the same modulation, including its phase, on both beams. This puts sidebands at
+$n\times\SI{17.5}{MHz}$ with power fractions $J_n(\beta)^2$: 0.262 in the carrier, 0.311 in each
+first-order sideband, 0.054 in each second-order and 0.004 in each third-order sideband
+(Fig.~\ref{fig:model_laser}c). CU1 uses no phase modulation.
+
+\paragraph{Doppler shift.} In the two-prism multipass the light reverses its direction after every
+crossing. Because the optical order $p_n$ alternates between odd and even numbers, the direction of
+the light also alternates from one spatial pass to the next. A molecule with velocity $v_x$ along
+the light therefore sees the detuning
+\begin{equation}
+  \delta_k\to\delta_k+\sigma(vt)\,k_Lv_x,\qquad \sigma(s)=\pm1,
+  \label{eq:doppler}
+\end{equation}
+where $k_Lv_x/2\pi=\SI{3.68}{MHz}$ per m/s at \SI{271.7}{nm} and $\sigma$ changes sign half-way
+between two passes, where the intensity is negligible (shading in Fig.~\ref{fig:model_laser}a). The
+molecule thus sees the laser at $\delta+k_Lv_x$ in half of the passes and at $\delta-k_Lv_x$ in the
+other half. No laser frequency compensates both, which is why the transverse velocity matters far
+more than a common frequency offset of the same size. In CU2 both beams share the multipass and see
+the same shift.
+
+\paragraph{AOM.} The two CU2 beams differ in frequency by the AOM frequency, Eq.~\eqref{eq:aom}. In
+the model this fixes the detuning of beam 1, $\delta_1=\delta_0+2\pi[\fAOM-\Dmain(E)]$. The two powers
+are set independently.
+
+\subsection{Initial states and observables}
+\label{sec:model_obs}
+
+\paragraph{Trajectory.} The molecule moves at the forward velocity $v$ through \SI{5}{cm}, from
+$s=0$ to $s=\SI{5}{cm}$, with a fixed transverse velocity $v_x$ and a fixed height $y_0$ in the beam.
+Over the \SI{272}{\micro s} a molecule with $|v_x|\leq\SI{1}{m/s}$ moves transversely by less than
+\SI{0.3}{mm}, small against the beam height. The forward velocity is \SI{184}{m/s} for the set-point
+studies and the value measured in each test otherwise (Table~\ref{tab:stages}); no average over the
+forward-velocity spread is taken.
+
+\paragraph{Initial states.} The molecules enter with incoherent populations,
+$\rho(0)=\sum_i w_i|i\rangle\langle i|$, over a set of sublevels $i$ of the addressed level, selected
+by their labels. Four sets are used:
+\begin{itemize}[itemsep=1pt]
+  \item \emph{uniform}: all sublevels with equal weight, the case without any earlier state selection;
+  \item CU1, \emph{SPB-related levels}: the eight $J=1$ sublevels whose $|m_J|=1$ content in the
+        uncoupled basis exceeds one half. SPB transfers the molecules into these levels, so $J=1$
+        molecules left there cannot be told apart from the transferred ones;
+  \item CU1 test, \emph{AP1 levels}: the four mainly-$m_J=0$ sublevels of $J=1$ that AP1 populates
+        (Sec.~\ref{sec:cu1_test});
+  \item CU2, \emph{SPB source levels}: the four $m_J\approx0$ sublevels of $J=2$ that the lens focuses,
+        $|F_1=\tfrac52,F=3,m_F=0,\pm1\rangle$ and $|F_1=\tfrac52,F=2,m_F=0\rangle$.
+\end{itemize}
+The master equation is linear in $\rho(0)$, so one trajectory per starting sublevel gives the result
+for any incoherent mixture, and the residual of each sublevel can be studied on its own
+(Sec.~\ref{sec:cu2_two}).
+
+\paragraph{Cleanup efficiency.} The figure of merit is the fraction of the molecules removed from the
+addressed level $J$,
+\begin{equation}
+  \etac(v_x,y_0)=1-\sum_{i\in J}\rho_{ii}(T),
+\end{equation}
+with the sum over all sublevels of $J$ and $T$ the time at the end of the \SI{5}{cm}. Results quoted
+\emph{on the axis} are for $v_x=0$, $y_0=0$.
+
+\paragraph{Mean in the acceptance.} To compare with an experiment, $\etac$ is averaged over the
+transverse distribution of the molecules that reach the detection laser,
+\begin{equation}
+  \bar\eta_{\mathrm c}=\frac{\iint_A G(v_x)\,Y(y_0)\,\etac(v_x,y_0)\,\mathrm dv_x\,\mathrm dy_0}
+  {\iint_A G(v_x)\,Y(y_0)\,\mathrm dv_x\,\mathrm dy_0},
+  \label{eq:accmean}
+\end{equation}
+where $G$ and $Y$ are Gaussians with $\sigma_{v_x}=\SI{0.65}{m/s}$ and $\sigy=\SI{10.95}{mm}$ (CU1) or
+\SI{10.35}{mm} (CU2), from a simulation of the lensed $J=2$ beam at \SI{25}{kV}, and $A$ is the
+detection acceptance, $|v_x|\leq\SI{1}{m/s}$ and $|y_0|\leq\SI{8.5}{mm}$. The integral is evaluated on
+a grid of trajectories: for CU1, 21 values of $v_x$ from $-1$ to \SI{1}{m/s} and 11 values of $y_0$ from
+0 to \SI{15}{mm}; for CU2, which is about 80 times more expensive, 24 trajectories,
+$v_x=\pm0.2,\pm0.6,\pm\SI{1.0}{m/s}$ and $y_0=0$, 3, 6 and \SI{9}{mm}, which agree with a
+44-trajectory grid to \SI{0.08}{\percent}. Because the remaining fraction changes roughly
+exponentially with the intensity, it is interpolated logarithmically in $y_0$. For the set-point grids
+of CU2 even 24 trajectories per point are too many. Each grid point is then scored with a
+six-trajectory proxy, $v_x=0,\pm\SI{0.6}{m/s}$ with Gaussian weights and $y_0=0$ and \SI{6}{mm} with
+equal weights, and the best points are recomputed on the full grid.
+
+\subsection{Numerics}
+\label{sec:model_num}
+
+The master equation is integrated with the adaptive Dormand--Prince method~\cite{Dormand1980} of the
+Rust backend of \code{centrex-tlf}, starting from a \SI{2}{ns} step. The relative and absolute
+tolerances are $10^{-7}$ and $10^{-9}$. The CU2 scans use $10^{-6}$ and $10^{-8}$, which changed the
+CU2 optimum at \SI{200}{V/cm} by only $3\times10^{-5}$. A CU1 trajectory takes about \SI{0.5}{s} in a
+scan and a CU2 trajectory about \SI{40}{s}: the CU2 model has 56 instead of 21 levels, and the
+integrator has to follow both the \SI{209}{MHz} phase factor of the second beam and the
+\SI{17.5}{MHz} modulation. Detunings, powers, $v_x$, $y_0$ and the modulation and switching settings
+are runtime parameters and are scanned without rebuilding the model; a new field or set of kept
+levels needs a new build. Scans and scripts are in \code{results/} and \code{scripts/}.
+
+\begin{table}[htbp]
+  \centering
+  \caption[Assumptions of the model]{Assumptions of the model and their expected effect on the cleanup.}
+  \label{tab:assumptions}
+  \small
+  \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.33\textwidth}L}
+    \toprule
+    assumption & justification and expected effect \\
+    \midrule
+    labels by largest overlap & identical to adiabatic following at 150 and \SI{217}{V/cm}; none \\
+    other $X$ levels compacted & no light acts on them; exact for $\etac$ \\
+    CU1 without the opposite-parity partners & partners \SI{40}{MHz} from the laser; $6\times10^{-6}$ \\
+    no cross-coupling of the two CU2 beams & detuned by more than \SI{45}{MHz}; negligible \\
+    one collapse operator per pair & no decay-induced ground-state coherences; small \\
+    no decay to $X(v\geq1)$ & conservative: can only lower $\etac$ \\
+    passes add incoherently; Gaussian profiles; fixed loss per pass & separated passes; sets the pass
+      powers, and the fitted loss of a test also absorbs other model errors \\
+    ideal square-wave switching; identical modulation on both CU2 beams & one polarization EOM, one
+      phase EOM before the AOM \\
+    one forward velocity, constant $(v_x,y_0)$ & mean beam conditions; no average over the forward
+      velocity \\
+    lensed-beam transverse distribution & right for the $J=2$ molecules left by SPB; the detected $J=1$
+      molecules have $\sigma_{v_x}=\SI{1.28}{m/s}$ (Sec.~\ref{sec:cu1_test}) \\
+    incoherent initial populations & hyperfine splittings far below the beam temperature \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
 
 % =====================================================================
 \section{CU1}
@@ -242,19 +565,8 @@ Because the Doppler shift alternates in sign from pass to pass, the narrow optim
 sensitive to the transverse velocity. At $+\SI{20.2}{MHz}$ on the axis, the cleanup exceeds
 \SI{99.9}{\percent} only for $|v_x|\leq\SI{0.2}{m/s}$ and \SI{99}{\percent} only for
 $|v_x|\leq\SI{0.4}{m/s}$. It falls to \SI{97.4}{\percent} at \SI{0.5}{m/s} and to \SI{78}{\percent}
-at \SI{1}{m/s} (Fig.~\ref{fig:cu1_vx}). The transverse position matters less: the cleanup is still
-\SI{99.5}{\percent} at $y_0=\SI{12}{mm}$.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{CU1_doppler_vx_y_map.pdf}
-  \caption[CU1: cleanup versus transverse velocity at the on-axis optimum]{CU1 cleanup versus
-  transverse velocity $v_x$ and position $y_0$ at the on-axis optimum, $+\SI{20.2}{MHz}$ (\SI{80}{mW},
-  \SI{4.8}{cm} beam): (a) SPB-related start, (b) uniform 12-level start, logarithmic colour scale with
-  contours at 90, 99 and \SI{99.9}{\percent}; (c) cuts at fixed $y_0$, with the Doppler shift per pass on
-  the top axis.}
-  \label{fig:cu1_vx}
-\end{figure}
+at \SI{1}{m/s}. The transverse position matters less: the cleanup is still \SI{99.5}{\percent} at
+$y_0=\SI{12}{mm}$.
 
 Averaged over the velocities, however, the on-axis optimum is not the best detuning. The reason is
 the ground-state structure in the field: the 12 sublevels of $J=1$ form two groups \SI{2.4}{MHz}
@@ -514,27 +826,13 @@ the SPB source levels and \SI{98.82}{\percent} for a uniform start (Table~\ref{t
   \end{tabular}
 \end{table}
 
-\paragraph{Width of the optimum.} A scan of the laser frequency with the AOM fixed at \SI{209}{MHz}
-shows how wide this optimum is (Fig.~\ref{fig:cu2_scan}). On the axis, the SPB source levels are
-cleaned above \SI{99}{\percent} on a plateau from $\delta_0/2\pi=8$ to \SI{15}{MHz}. Further peaks
-lie at 25, 31 and \SI{49}{MHz}, where EOM sidebands take over the role of the carriers. A uniform
-start is more demanding: it exceeds \SI{99}{\percent} only for $\delta_0/2\pi=12$--\SI{14}{MHz}
-(\SI{99.94}{\percent} at \SI{13}{MHz}) and at 25 and \SI{31}{MHz}. Within the acceptance, the set
-point sits on a narrow plateau in $\delta_0$ but is flat in $\fAOM$ (Table~\ref{tab:cu2_sens}).
-Moving $\delta_0$ by $+\SI{1.5}{MHz}$ costs \SI{0.6}{\percent} (SPB source levels) and
-\SI{1.1}{\percent} (uniform), while $\fAOM=207$ and \SI{209}{MHz} are equivalent. The EOM can stay at
-\SI{17.5}{MHz}. Of the other inputs, the loss per pass and the forward velocity matter most, both
-through the $F_1=\tfrac32$ levels.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{CU2_corr_scan_e217_f209.pdf}
-  \caption[CU2: laser scan at fixed AOM frequency]{CU2 at \SI{217}{V/cm}, 32 + \SI{43}{mW}: cleanup on the
-  axis versus the laser frequency ($\delta_0$, bottom axis; $\delta_1$, top axis) with $\fAOM$ fixed at
-  \SI{209}{MHz}, for the SPB source levels and a uniform start; (b) enlarges the region of the set point
-  (dashed). Stars: maxima.}
-  \label{fig:cu2_scan}
-\end{figure}
+\paragraph{Width of the optimum.} With the AOM fixed at \SI{209}{MHz}, the SPB source levels are
+cleaned above \SI{99}{\percent} on the axis for $\delta_0/2\pi=8$--\SI{15}{MHz}, and a uniform start
+only for 12--\SI{14}{MHz}. Within the acceptance the set point is narrow in $\delta_0$ but flat in
+$\fAOM$ (Table~\ref{tab:cu2_sens}): moving $\delta_0$ by $+\SI{1.5}{MHz}$ costs \SI{0.6}{\percent}
+(SPB source levels) and \SI{1.1}{\percent} (uniform), while $\fAOM=207$ and \SI{209}{MHz} are
+equivalent. Of the other inputs, the loss per pass and the forward velocity matter most, both through
+the $F_1=\tfrac32$ levels.
 
 \begin{table}[htbp]
   \centering
@@ -565,11 +863,9 @@ through the $F_1=\tfrac32$ levels.
 To find which sublevels limit CU2, each $J=2$ sublevel was started alone and the result averaged
 over the acceptance (Fig.~\ref{fig:cu2_perstate}). The four lens levels ($m_J\approx0$) keep
 0.1--\SI{0.5}{\percent}, and $F_1=\tfrac52$, $F=2$ keeps about \SI{0.2}{\percent}. Two groups
-dominate the rest. The eight $F_1=\tfrac32$ sublevels keep \SI{1.9}{\percent} on average, against
-\SI{6.4}{\percent} at \SI{155}{V/cm}, the field assumed before the measurement. The stretched states
-$|F_1=\tfrac52,F=3,m_F=\pm3\rangle$ are a new bottleneck at \SI{217}{V/cm}, with \SI{3.5}{\percent}
-each (\SI{0.14}{\percent} at \SI{155}{V/cm}). They are pumped almost only by the weaker $F'=4$ beam,
-through components far from the main lines. This explains the gap between the two starts: the lens
+dominate the rest. The eight $F_1=\tfrac32$ sublevels keep \SI{1.9}{\percent} on average, and the
+stretched states $|F_1=\tfrac52,F=3,m_F=\pm3\rangle$ \SI{3.5}{\percent} each. The stretched states
+are pumped almost only by the $F'=4$ beam, through components far from the main lines. This explains the gap between the two starts: the lens
 does not populate $m_F=\pm3$, so the SPB source levels are cleaned to \SI{99.6}{\percent}, but a
 uniform start only to \SI{98.8}{\percent}. For the molecules that actually arrive, the residual
 after CU2 is dominated by $F_1=\tfrac32$, into which CU2 itself pumps part of the lens molecules
@@ -577,11 +873,10 @@ after CU2 is dominated by $F_1=\tfrac32$, into which CU2 itself pumps part of th
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{CU2_perstate_217_vs_155.pdf}
+  \includegraphics[width=\textwidth]{CU2_perstate_217.pdf}
   \caption[CU2: residual of each $J=2$ sublevel]{CU2: population left after CU2 when each $J=2$ sublevel is
-  started alone, mean in the detection acceptance (24 trajectories), 32 + \SI{43}{mW}, \SI{5}{\percent}
-  loss per pass, \SI{3}{cm} beam, at the measured field (\SI{217}{V/cm}, set point (14.5, \SI{209}{MHz}))
-  and at the field assumed earlier (\SI{155}{V/cm}, its own set point (12, \SI{212}{MHz})). $m_J\approx0$:
+  started alone, mean in the detection acceptance (24 trajectories), at \SI{217}{V/cm} and the set point
+  (14.5, \SI{209}{MHz}), 32 + \SI{43}{mW}, \SI{5}{\percent} loss per pass, \SI{3}{cm} beam. $m_J\approx0$:
   the four lens levels.}
   \label{fig:cu2_perstate}
 \end{figure}
@@ -597,8 +892,6 @@ axis but at $|v_x|\approx\SI{0.4}{m/s}$, where the Doppler shift brings further 
 reach. As for CU1, the position matters through the intensity of the \SI{3}{cm} beam. The
 lensed-beam distribution used here is right for the $J=2$ molecules that SPB leaves behind;
 molecules that CU1 pumps into $J=2$ have the wider $J=1$ distribution of Sec.~\ref{sec:cu1_test}.
-An earlier optimisation at \SI{200}{V/cm}, with 80 + \SI{24}{mW} and \SI{10}{\percent} loss per pass,
-found two optima one EOM period apart; it is documented in the full report.
 
 \begin{figure}[htbp]
   \centering
@@ -889,6 +1182,8 @@ Next steps:
 \end{enumerate}
 
 % =====================================================================
+\begingroup
+\let\chapter\section   % bibliography as a section, so it does not start a new page
 \begin{thebibliography}{9}
 
 \bibitem{Grasdijk2021}
@@ -917,5 +1212,6 @@ O.~Grasdijk \emph{et al.}, ``Adiabatic passage of $^{205}$TlF with microwaves in
 arXiv:2511.16626.
 
 \end{thebibliography}
+\endgroup
 
 \end{document}
