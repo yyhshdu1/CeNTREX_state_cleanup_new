@@ -150,20 +150,16 @@ tools to solve this problem:
 \section{Model}
 \label{sec:model}
 
-\paragraph{States.} The $X$ and $B$ states are computed with \code{centrex-tlf}~\cite{centrextlf}.
-Its Hamiltonians include rotation with centrifugal distortion, the hyperfine and nuclear
-spin--rotation interactions, the $\Lambda$-doubling of $B$, and the Stark and Zeeman interactions.
-They are diagonalised in the applied electric field, together with a magnetic field of
-\SI{1e-3}{\gauss} along $z$ that lifts the degeneracy of the $\pm m_F$ pairs. Each eigenvector is
-labelled by the bare state with the largest overlap; at 150 and \SI{200}{V/cm} this labelling agrees
-with adiabatic continuation from zero field. The OBE system keeps all sublevels of the addressed
-ground level and all $m_F'$ of the addressed excited hyperfine levels, with all coherences. For CU2
-both $\Lambda$-doublet components are kept, because the field mixes them strongly; for CU1 the
-partner changes the cleanup by only $6\times10^{-6}$. Every other rotational level of $X$ that decay
-can reach is compacted into one level. This is exact for the cleanup, because no light acts on these
+\paragraph{Molecular States.} Both $X$ and $B$ states are computed with \code{centrex-tlf}~\cite{centrextlf}.
+Each eigenstate is
+labelled by the state in zero $E$ field with the largest overlap which adiabaticly evolves from zero field to the applied field. The OBE system keeps all sublevels of the addressed
+ground level and all $m_F'$ of the addressed excited hyperfine levels. For CU2
+both $\Lambda$-doublet components are kept in the hamiltonian because the field mixes them strongly; for CU1 including the opposite parity states only changes the cleanup efficiency by $6\times10^{-6}$. Every other rotational level of $X$ that molecules can decay to is compacted into one level because no light acts on these
 levels (Table~\ref{tab:stages}).
 
-\paragraph{Hamiltonian and decay.} In the rotating-wave approximation, with $\hbar=1$, the
+\paragraph{Hamiltonian and decay.} The Hamiltonians include the rotation,the hyperfine and nuclear
+spin--rotation interactions, the $\Lambda$-doubling of $B$, and the Stark and Zeeman interactions.
+The Hamiltonian is calculated in the applied electric field, with a \SI{1e-3}{\gauss} magnetic field along vertical $z$ axis that creates the degeneracy of the $\pm m_F$ pairs. In the rotating-wave approximation, with $\hbar=1$, the
 Hamiltonian is
 \begin{equation}
   H(t)=H_0-\sum_k\delta_k\Pi_k
