@@ -130,7 +130,7 @@ tools to solve this problem:
     main pair, $|m|$ & $|1,\tfrac32,2,1\rangle\to|2,\tfrac52,2,2,+\rangle$, 0.100 &
       $|2,\tfrac52,3,2\rangle\to|3,\tfrac72,3,3,-\rangle$, 0.095; $|2,\tfrac52,3,0\rangle\to|3,\tfrac72,4,1,-\rangle$, 0.224 \\
     decays back to $J$ & \SI{37}{\percent} & \SI{27}{\percent} \\
-    OBE levels & 21: 12 ($J=1$), 5 ($F'=2$, $P'=+$), 4 compacted & 56: 20 ($J=2$), 32 ($F'=3,4$, both $P'$), 4 compacted \\
+    OBE levels & 26: 12 ($J=1$), 10 ($F'=2$, both $P'$), 4 compacted & 56: 20 ($J=2$), 32 ($F'=3,4$, both $P'$), 4 compacted \\
     power & \SI{80}{mW} (test: \SI{50}{mW}) & \SI{32}{mW} ($F'=3$) + \SI{43}{mW} ($F'=4$) (test: 20 + \SI{30}{mW}) \\
     beam height & \SI{4.8}{cm}; present \SI{3}{cm}; test \SI{2}{cm} & \SI{3}{cm} \\
     phase modulation & none & \SI{17.5}{MHz}, $\beta=1.5$, both beams \\
@@ -224,7 +224,7 @@ only a few interact with the light. The OBE system keeps
 \end{itemize}
 Compaction is exact for the cleanup: no light acts on these levels, so only their total population,
 fed by decay, matters. All other $B$ states are not dynamical levels; they enter only through the
-mixing they produce in the kept states. The resulting models have 21 levels for CU1 and 56 for CU2
+mixing they produce in the kept states. The resulting models have 26 levels for CU1 and 56 for CU2
 (Table~\ref{tab:stages}).
 
 \paragraph{Opposite-parity levels.} The parity mixing of the kept $B$ states is always included,
@@ -232,7 +232,8 @@ through the diagonalisation. The question is only whether the partner sublevels 
 parent must also be kept as dynamical levels, and that depends on whether the light reaches them.
 For CU1 the partners of $J'=2$, $F'=2$, $P'=+$ lie above the driven sublevels; at the CU1 laser
 frequency the nearest partners that can be excited are \SI{40}{MHz} ($25\,\Gamma$) away, and keeping
-them changes the cleanup by only $6\times10^{-6}$. They are therefore left out. For CU2 the partners
+them changes the cleanup by only $6\times10^{-6}$. They are kept nevertheless, so that both stages
+are built in the same way, and the CU1 model has 26 levels instead of 21. For CU2 the partners
 of $F'=3$ and $F'=4$ lie inside the frequency range covered by the phase-modulation sidebands of the
 two beams. At the set point of Sec.~\ref{sec:cu2_opt}, about \SI{30}{\percent} of the excitation by
 the $F'=4$ beam goes to the $|m_F'|=1$ sublevels of the $P'=+$ parent, through the first upper
@@ -397,7 +398,7 @@ FWHM of one pass in \SI{9.6}{\micro s} and the whole multipass in \SI{272}{\micr
 \end{figure}
 
 \paragraph{Polarization switching.} For a fixed polarization, the number of addressed ground
-sublevels is larger than the number of excited sublevels they couple to (12 against 5 for CU1; 20
+sublevels is larger than the number of excited sublevels they couple to (12 against 10 for CU1; 20
 against 14 and 18 for the two CU2 beams, counting both parity parents), so at least the difference is
 dark: superpositions of ground
 sublevels that the light does not couple to at all. The polarization is therefore switched between X
@@ -503,7 +504,7 @@ The master equation is integrated with the adaptive Dormand--Prince method~\cite
 Rust backend of \code{centrex-tlf}, starting from a \SI{2}{ns} step. The relative and absolute
 tolerances are $10^{-7}$ and $10^{-9}$. The CU2 scans use $10^{-6}$ and $10^{-8}$, which changed the
 CU2 optimum at \SI{200}{V/cm} by only $3\times10^{-5}$. A CU1 trajectory takes about \SI{0.5}{s} in a
-scan and a CU2 trajectory about \SI{40}{s}: the CU2 model has 56 instead of 21 levels, and the
+scan and a CU2 trajectory about \SI{40}{s}: the CU2 model has 56 instead of 26 levels, and the
 integrator has to follow both the \SI{209}{MHz} phase factor of the second beam and the
 \SI{17.5}{MHz} modulation. Detunings, powers, $v_x$, $y_0$ and the modulation and switching settings
 are runtime parameters and are scanned without rebuilding the model; a new field or set of kept
@@ -520,7 +521,6 @@ levels needs a new build. Scans and scripts are in \code{results/} and \code{scr
     \midrule
     labels by largest overlap & identical to adiabatic following at 150 and \SI{217}{V/cm}; none \\
     other $X$ levels compacted & no light acts on them; exact for $\etac$ \\
-    CU1 without the opposite-parity partners & partners \SI{40}{MHz} from the laser; $6\times10^{-6}$ \\
     no cross-coupling of the two CU2 beams & detuned by more than \SI{45}{MHz}; negligible \\
     one collapse operator per pair & no decay-induced ground-state coherences; small \\
     no decay to $X(v\geq1)$ & conservative: can only lower $\etac$ \\
