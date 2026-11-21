@@ -285,7 +285,36 @@ $H_0$ holds the field-dressed energies of the kept levels in the rotating frame,
 pair of beam 0 is degenerate at $\delta_0=0$; what remains are the hyperfine and Stark splittings.
 $\Pi_k$ projects onto the excited states of beam $k$. $\Omega_k(t)$ is the Rabi rate of the main pair
 along the trajectory, complex when the light is phase-modulated, and $g_{p,k}(t)\in\{0,1\}$ is the
-polarization gate (Sec.~\ref{sec:model_laser}). For CU2 the two beams address two hyperfine levels
+polarization gate (Sec.~\ref{sec:model_laser}).
+
+\paragraph{Matrix form.} As an illustration, take two ground sublevels, the main ground state $g_0$ and
+another sublevel $g_1$, and two excited sublevels, the main excited state $e_0$ and another sublevel
+$e_1$, of one beam. In the basis $(g_0,g_1,e_0,e_1)$, Eq.~\eqref{eq:H} reads
+\begin{equation}
+  H(t)=\begin{pmatrix}
+    0 & 0 & \tfrac12\Omega^*\mu_{00}^* & \tfrac12\Omega^*\mu_{10}^*\\[2pt]
+    0 & \varepsilon_1 & \tfrac12\Omega^*\mu_{01}^* & \tfrac12\Omega^*\mu_{11}^*\\[2pt]
+    \tfrac12\Omega\,\mu_{00} & \tfrac12\Omega\,\mu_{01} & -\delta & 0\\[2pt]
+    \tfrac12\Omega\,\mu_{10} & \tfrac12\Omega\,\mu_{11} & 0 & \Delta_1-\delta
+  \end{pmatrix},\qquad
+  \mu_{ji}(t)=\sum_{p\in\{X,Z\}}g_p(t)\,\frac{M^{(p)}_{e_jg_i}}{m}.
+  \label{eq:Hmatrix}
+\end{equation}
+The upper-left block holds the ground energies from $g_0$ ($\varepsilon_1$ is at most \SI{2.4}{MHz}
+in CU1), the lower-right block the excited energies from the main resonance, shifted by the detuning
+($\Delta_1$ is a Stark splitting of tens of MHz). The off-diagonal blocks are the light: the main pair
+has $\mu_{00}=1$ when its polarization is on and is driven at $\Omega$, every other pair at
+$\Omega\mu_{ji}$. An entry vanishes when the polarization that is on cannot connect the two $m_F$
+values, so the pattern changes at every switch. With $g_0$ and $e_0$ alone, Eq.~\eqref{eq:Hmatrix} is
+the two-level Hamiltonian
+$\bigl(\begin{smallmatrix}0&\Omega^*/2\\\Omega/2&-\delta\end{smallmatrix}\bigr)$, resonant at
+$\delta=0$; a pair $(g_i,e_j)$ is resonant at $\delta=\Delta_j-\varepsilon_i$. In CU1, for example,
+the $|m_F'|=1$ sublevels of the $P'=+$ parent ($\Delta/2\pi=\SI{18.5}{MHz}$) and the SPB-related levels
+($\varepsilon/2\pi\approx-\SI{2.3}{MHz}$) are resonant at $\delta/2\pi\approx\SI{20.8}{MHz}$. The full
+matrices have 12 ground and 10 excited sublevels for CU1 and 20 and 32 for CU2; the compacted levels
+add only diagonal entries.
+
+For CU2 the two beams address two hyperfine levels
 of the same $J'$, and all of $B$, $J'=3$ is put in the rotating frame of beam 0. $\Pi_0$ then
 projects onto all 32 excited sublevels, there is no separate $\delta_1\Pi_1$ term, and the couplings
 of beam 1 carry the phase factor $e^{\mathrm i(\omega_1-\omega_0)t}=e^{2\pi\mathrm i\fAOM t}$. The
@@ -508,7 +537,7 @@ scan and a CU2 trajectory about \SI{40}{s}: the CU2 model has 56 instead of 26 l
 integrator has to follow both the \SI{209}{MHz} phase factor of the second beam and the
 \SI{17.5}{MHz} modulation. Detunings, powers, $v_x$, $y_0$ and the modulation and switching settings
 are runtime parameters and are scanned without rebuilding the model; a new field or set of kept
-levels needs a new build. Scans and scripts are in \code{results/} and \code{scripts/}.
+levels needs a new build.
 
 \begin{table}[htbp]
   \centering
@@ -544,8 +573,8 @@ levels needs a new build. Scans and scripts are in \code{results/} and \code{scr
 \subsection{Scheme and on-axis optimum}
 
 At \SI{150}{V/cm} the five sublevels of the excited level $B$, $J'=2$, $F_1'=5/2$, $F'=2$, $P'=+$
-form three groups: $m_F'=0$ is the highest, $|m_F'|=1$ lies \SI{17.4}{MHz} below it, and $|m_F'|=2$
-a further \SI{24.4}{MHz} below. The 12 sublevels of $J=1$ span only \SI{2.4}{MHz}. The design
+form three groups: $m_F'=0$ is the highest, $|m_F'|=1$ lies \SI{13.4}{MHz} below it, and $|m_F'|=2$
+a further \SI{18.5}{MHz} below. The 12 sublevels of $J=1$ span only \SI{2.4}{MHz}. The design
 study~\cite{CleanupTheory2024} started from an EOM whose sidebands reach the outer groups. However,
 its scans of detuning against modulation frequency put the minimum of the remaining population at
 zero modulation for every power. A single unmodulated laser near the $|m_F'|=1$ pair, with X/Z
@@ -1145,8 +1174,7 @@ $|v_x|>\SI{1}{m/s}$, which the test detection accepts. With the measured distrib
 reproduces the data, and it predicts more than \SI{99.9}{\percent} within the acceptance of the final
 experiment.
 
-CU2 uses two beams from one laser, on $F'=3$ and $F'=4$ of R(2) $F_1'=7/2$. The two beams are made
-by an AOM and phase-modulated by one EOM. At the measured field of \SI{217}{V/cm}, with
+CU2 uses two beams from one laser, made by an AOM, on $F'=3$ and $F'=4$ of R(2) $F_1'=7/2$. At the measured field of \SI{217}{V/cm}, with
 32 + \SI{43}{mW} and \SI{5}{\percent} loss per pass, the laser and AOM frequencies were optimised
 together. The set point, $\delta_0/2\pi=+\SI{14.5}{MHz}$ and $\fAOM=\SI{209}{MHz}$, removes
 \SI{99.6}{\percent} of the SPB source levels and \SI{98.8}{\percent} of a uniformly populated $J=2$
@@ -1184,6 +1212,7 @@ Next steps:
 % =====================================================================
 \begingroup
 \let\chapter\section   % bibliography as a section, so it does not start a new page
+\singlespacing\small
 \begin{thebibliography}{9}
 
 \bibitem{Grasdijk2021}
